@@ -27,7 +27,7 @@ After that:
 
 - **The agent knows the methodology automatically** — DSH loads `AGENTS.md` at session start.
 - **14 skills** (`mygrace-plan`, `mygrace-execute`, `mygrace-status`, …) appear in the Web GUI skill picker; the agent invokes them as needed.
-- **7 MCP tools** (`mygrace_list_modules`, `mygrace_show_module`, `mygrace_show_phase`, `mygrace_list_verifications`, `mygrace_lint`, `mygrace_show_file`) give the agent a structured, token-efficient read layer over the project graph.
+- **7 MCP tools** (`mygrace_list_modules`, `mygrace_show_module`, `mygrace_show_phase`, `mygrace_list_verifications`, `mygrace_lint`, `mygrace_show_file`, `mygrace_status`) give the agent a structured, token-efficient read layer over the project graph.
 
 Manage the integration: `mygrace install-dsh --dry-run`, `mygrace install-dsh --uninstall`.
 
