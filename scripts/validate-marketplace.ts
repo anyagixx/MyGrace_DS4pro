@@ -142,7 +142,7 @@ check(pkg.bin?.mygrace === "./src/grace.ts", "package.json bin should map 'mygra
 
 // ─── 7. Skills reference only existing CLI commands ─────────────────────
 
-const KNOWN_CLI_COMMANDS = new Set(["lint", "module", "phase", "verification", "file", "install-dsh", "init-dsh"]);
+const KNOWN_CLI_COMMANDS = new Set(["lint", "module", "phase", "verification", "file", "status", "install-dsh", "init-dsh"]);
 for (const skill of expectedSkills) {
   const skillPath = join(skillsDir, skill, "SKILL.md");
   if (!existsSync(skillPath)) continue;
