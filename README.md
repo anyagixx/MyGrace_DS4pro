@@ -28,6 +28,7 @@ After that:
 - **The agent knows the methodology automatically** — DSH loads `AGENTS.md` at session start.
 - **14 skills** (`mygrace-plan`, `mygrace-execute`, `mygrace-status`, …) appear in the Web GUI skill picker; the agent invokes them as needed.
 - **7 MCP tools** (`mygrace_list_modules`, `mygrace_show_module`, `mygrace_show_phase`, `mygrace_list_verifications`, `mygrace_lint`, `mygrace_show_file`, `mygrace_status`) give the agent a structured, token-efficient read layer over the project graph.
+- **A MyGRACE status card in the web sidebar** (`packages/mygrace-status-panel`) — `install-dsh` links it into the profile and inserts its loader row; the harness hot-applies the patch, so a page refresh (F5) is all it takes. No rebuild, no restart.
 
 Manage the integration: `mygrace install-dsh --dry-run`, `mygrace install-dsh --uninstall`.
 
