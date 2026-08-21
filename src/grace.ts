@@ -21,6 +21,7 @@ import { lintCommand } from "./grace-lint";
 import { moduleCommand, phaseCommand, verificationCommand } from "./grace-module";
 import { fileCommand } from "./grace-file";
 import { installDshCommand } from "./grace-install";
+import { initDshCommand } from "./grace-init";
 
 const main = defineCommand({
   meta: { name: "mygrace", version, description: "MyGRACE CLI — scalable GRACE with lazy-loading indexes" },
@@ -31,6 +32,7 @@ const main = defineCommand({
     verification: verificationCommand,
     file: fileCommand,
     "install-dsh": installDshCommand,
+    "init-dsh": initDshCommand,
   },
 });
 

@@ -6,6 +6,12 @@ whenToUse: "A new project needs MyGRACE scaffolding: docs/ indexes, templates, a
 
 Initialize the MyGRACE framework structure for this project.
 
+## Fast Path (CLI)
+
+When the project details are already known, prefer the non-interactive bootstrap:
+`mygrace init-dsh --path . --name <name> --keywords <k1,k2> --annotation "<one line>"`.
+It creates the full docs/ structure and AGENTS.md from templates in one step, then this skill's remaining job is only to review and enrich the artifacts (modules, flows, risks).
+
 ## Steps
 
 1. **Gather project info** from the user:

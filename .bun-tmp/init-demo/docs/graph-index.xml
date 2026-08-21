@@ -1,0 +1,8 @@
+<GraphIndex project="DemoProject" version="1.0.0">
+  <keywords>demo, test</keywords>
+  <annotation>Demo MyGRACE project</annotation>
+
+  <!-- Modules: one line each, never details. Sorted by status: wip > pending > done -->
+  <!-- <M-XXX NAME="ModuleName" TYPE="TYPE" STATUS="pending" PATH="src/path/index.ts" DEPENDS="M-YYY,M-ZZZ" VERIFICATION_REF="V-M-XXX" /> -->
+
+</GraphIndex>

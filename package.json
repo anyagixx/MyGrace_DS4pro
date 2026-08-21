@@ -24,7 +24,9 @@
     "src/grace-mcp-commands.ts",
     "src/grace-common.ts",
     "src/grace-install.ts",
+    "src/grace-init.ts",
     "skills/mygrace",
+    "templates",
     "README.md",
     "LICENSE"
   ],
