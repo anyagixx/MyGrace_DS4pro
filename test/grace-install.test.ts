@@ -4,6 +4,7 @@ import {
   removePatchEntry,
   patchFileHasEntry,
   mcpPatchEntry,
+  panelPatchEntry,
 } from "../src/grace-install";
 
 describe("addPatchEntry", () => {
@@ -116,5 +117,23 @@ describe("buildStatusSnapshot", () => {
     expect(s.lint.errors).toBe(0);
     expect(s.lint.warnings).toBe(0);
     expect(s.modules.byStatus["wip"]).toBe(1);
+  });
+});
+
+describe("panel patch entry", () => {
+  test("panelPatchEntry uses the insert form with the panel id", () => {
+    const entry = panelPatchEntry();
+    expect(entry.split("\n")[0]).toBe("- insert:");
+    expect(entry).toContain("- id: mygrace-status-panel");
+  });
+
+  test("MCP and panel rows coexist and remove independently", () => {
+    let content = "- insert:\n    - id: mcp-mygrace\n      name: '@deepseek-ai/dsh-mcp-client'\n";
+    const withPanel = addPatchEntry(content, panelPatchEntry(), "mygrace-status-panel")!;
+    expect(withPanel).toContain("mcp-mygrace");
+    expect(withPanel).toContain("mygrace-status-panel");
+    const withoutPanel = removePatchEntry(withPanel, "mygrace-status-panel")!;
+    expect(withoutPanel).toContain("mcp-mygrace");
+    expect(withoutPanel).not.toContain("mygrace-status-panel");
   });
 });

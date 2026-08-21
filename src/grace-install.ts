@@ -26,6 +26,7 @@ import {
 } from "node:fs";
 import { join, dirname, basename } from "node:path";
 import { homedir } from "node:os";
+import { spawnSync } from "node:child_process";
 
 // ─── Paths ──────────────────────────────────────────────────────────────
 
@@ -80,42 +81,48 @@ export function mcpPatchEntry(): string {
   ].join("\n");
 }
 
+/** Insert-wrapped row for the web sidebar status card package. */
+export function panelPatchEntry(): string {
+  return ["- insert:", "    - id: mygrace-status-panel", "      name: mygrace-status-panel"].join("\n");
+}
+
 // ─── Patch file editing ─────────────────────────────────────────────────
 
 const ENTRY_ID = "mcp-mygrace";
+const PANEL_ID = "mygrace-status-panel";
 
 export function patchFileHasEntry(content: string): boolean {
   return content.includes(`id: ${ENTRY_ID}`);
 }
 
 /**
- * Add the MyGRACE MCP row to a cordis.patch.yml loader array.
+ * Add an insert-wrapped entry block to a cordis.patch.yml loader array.
  * Returns the new content, or null when the entry is already present.
  */
-export function addPatchEntry(content: string): string | null {
-  if (patchFileHasEntry(content)) return null;
+export function addPatchEntry(content: string, block: string = mcpPatchEntry(), entryId: string = ENTRY_ID): string | null {
+  if (content.includes(`id: ${entryId}`)) return null;
 
   // Empty array literal on its own line: replace that line with the entry.
   const lines = content.split("\n");
   const emptyIdx = lines.findIndex((l) => l.trim() === "[]");
   if (emptyIdx !== -1) {
-    lines[emptyIdx] = mcpPatchEntry();
+    lines[emptyIdx] = block;
     return lines.join("\n");
   }
 
   // Non-empty array: append a top-level entry (entries sit at column 0).
   const body = content.endsWith("\n") ? content : content + "\n";
-  return body + "\n" + mcpPatchEntry() + "\n";
+  return body + "\n" + block + "\n";
 }
 
 /**
- * Remove the MyGRACE MCP row from a cordis.patch.yml loader array.
+ * Remove an entry from a cordis.patch.yml loader array.
  * Handles both the canonical insert-wrapped form (`- insert:` block whose
- * first child is the mygrace entry) and the legacy bare `- id:` form.
+ * first child is the entry) and the legacy bare `- id:` form.
  * Returns the new content, or null when the entry was not present.
  */
-export function removePatchEntry(content: string): string | null {
-  if (!patchFileHasEntry(content)) return null;
+export function removePatchEntry(content: string, entryId: string = ENTRY_ID): string | null {
+  if (!content.includes(`id: ${entryId}`)) return null;
 
   const lines = content.split("\n");
   const out: string[] = [];
@@ -124,7 +131,7 @@ export function removePatchEntry(content: string): string | null {
     const line = lines[i];
 
     // Canonical: `- insert:` block starting with our entry.
-    if (line.trim() === "- insert:" && lines[i + 1]?.trim() === `- id: ${ENTRY_ID}`) {
+    if (line.trim() === "- insert:" && lines[i + 1]?.trim() === `- id: ${entryId}`) {
       i++; // the "- insert:" line
       // Skip the indented children of the insert block.
       while (i < lines.length && (lines[i].trim() === "" || /^\s/.test(lines[i]))) i++;
@@ -132,7 +139,7 @@ export function removePatchEntry(content: string): string | null {
     }
 
     // Legacy (pre-0.1.0 format): bare top-level entry.
-    if (line.trim() === `- id: ${ENTRY_ID}`) {
+    if (line.trim() === `- id: ${entryId}`) {
       i++;
       while (i < lines.length && /^\s/.test(lines[i]) && lines[i].trim() !== "") i++;
       continue;
@@ -239,6 +246,114 @@ function uninstallMcp(profile: string, dryRun: boolean): string[] {
   return actions;
 }
 
+// ─── Status panel (web sidebar card) ────────────────────────────────────
+
+function panelSourceDir(): string {
+  return join(dirname(import.meta.dir), "packages", "mygrace-status-panel");
+}
+
+function profileDir(profile: string): string {
+  return join(dshHome(), "profiles", profile);
+}
+
+function profileHasPanelDep(profile: string): boolean {
+  const pkgPath = join(profileDir(profile), "package.json");
+  if (!existsSync(pkgPath)) return false;
+  try {
+    const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
+    return Boolean(pkg.dependencies?.["mygrace-status-panel"]);
+  } catch {
+    return false;
+  }
+}
+
+function installPanel(profile: string, dryRun: boolean): string[] {
+  const actions: string[] = [];
+  const source = panelSourceDir();
+
+  if (!existsSync(source)) {
+    actions.push(`WARNING: panel package not found at ${source} — skipping status panel`);
+    return actions;
+  }
+
+  // 1. Make the package resolvable from the profile (pnpm file: link).
+  if (!profileHasPanelDep(profile)) {
+    if (dryRun) {
+      actions.push(`would pnpm add file:${source} into profile ${profile}`);
+    } else {
+      const result = spawnSync("pnpm", ["add", `file:${source}`, "--silent"], { cwd: profileDir(profile), encoding: "utf-8" });
+      if (result.status === 0) {
+        actions.push(`installed mygrace-status-panel into profile ${profile} (pnpm)`);
+      } else {
+        actions.push(`WARNING: pnpm add failed (${result.stderr?.split("\n")[0] || `exit ${result.status}`}) — panel skipped`);
+        return actions;
+      }
+    }
+  } else {
+    actions.push(`mygrace-status-panel already in profile ${profile} deps — skipping pnpm step`);
+  }
+
+  // 2. Insert the loader row.
+  const patchPath = profilePatchPath(profile);
+  if (!existsSync(patchPath)) {
+    actions.push(`WARNING: ${patchPath} not found — boot the profile once (dsh web), then re-run install-dsh`);
+    return actions;
+  }
+  const content = readFileSync(patchPath, "utf-8");
+  if (content.includes(`id: ${PANEL_ID}`)) {
+    actions.push(`panel row already present in ${patchPath} — skipping`);
+    return actions;
+  }
+  const next = addPatchEntry(content, panelPatchEntry(), PANEL_ID);
+  if (next === null) {
+    actions.push(`panel row already present in ${patchPath} — skipping`);
+    return actions;
+  }
+  if (dryRun) {
+    actions.push(`would patch ${patchPath} with the ${PANEL_ID} row`);
+    return actions;
+  }
+  copyFileSync(patchPath, `${patchPath}.mygrace-backup`);
+  writeFileSync(patchPath, next);
+  actions.push(`patched ${patchPath} with the ${PANEL_ID} row`);
+  return actions;
+}
+
+function uninstallPanel(profile: string, dryRun: boolean): string[] {
+  const actions: string[] = [];
+
+  const patchPath = profilePatchPath(profile);
+  if (existsSync(patchPath)) {
+    const content = readFileSync(patchPath, "utf-8");
+    const next = removePatchEntry(content, PANEL_ID);
+    if (next !== null) {
+      if (dryRun) {
+        actions.push(`would remove the ${PANEL_ID} row from ${patchPath}`);
+      } else {
+        copyFileSync(patchPath, `${patchPath}.mygrace-backup`);
+        writeFileSync(patchPath, next);
+        actions.push(`removed ${PANEL_ID} row from ${patchPath}`);
+      }
+    }
+  }
+
+  if (profileHasPanelDep(profile)) {
+    if (dryRun) {
+      actions.push(`would pnpm remove mygrace-status-panel from profile ${profile}`);
+    } else {
+      const result = spawnSync("pnpm", ["remove", "mygrace-status-panel", "--silent"], { cwd: profileDir(profile), encoding: "utf-8" });
+      actions.push(
+        result.status === 0
+          ? `removed mygrace-status-panel from profile ${profile} (pnpm)`
+          : `WARNING: pnpm remove failed (${result.stderr?.split("\n")[0] || `exit ${result.status}`})`
+      );
+    }
+  }
+
+  if (actions.length === 0) actions.push("panel not installed — nothing to remove");
+  return actions;
+}
+
 // ─── Command ────────────────────────────────────────────────────────────
 
 export const installDshCommand = defineCommand({
@@ -265,8 +380,16 @@ export const installDshCommand = defineCommand({
     console.log();
 
     const actions = uninstall
-      ? [...uninstallSkills(skillsRoot, args.dryRun === true), ...uninstallMcp(args.profile, args.dryRun === true)]
-      : [...installSkills(skillsRoot, args.dryRun === true), ...installMcp(args.profile, args.dryRun === true)];
+      ? [
+          ...uninstallSkills(skillsRoot, args.dryRun === true),
+          ...uninstallMcp(args.profile, args.dryRun === true),
+          ...uninstallPanel(args.profile, args.dryRun === true),
+        ]
+      : [
+          ...installSkills(skillsRoot, args.dryRun === true),
+          ...installMcp(args.profile, args.dryRun === true),
+          ...installPanel(args.profile, args.dryRun === true),
+        ];
 
     for (const a of actions) console.log(`• ${a}`);
     console.log();
@@ -274,9 +397,9 @@ export const installDshCommand = defineCommand({
     if (args.dryRun) return;
 
     console.log("Done. To activate:");
-    console.log("  1. Restart the harness (dsh web) so the MCP row loads.");
-    console.log("  2. New skills appear in the skill catalog automatically (watched).");
-    console.log("  3. Verify with: mygrace lint (CLI) or the mygrace_* tools in the session.");
+    console.log("  1. MCP tools: restart the harness (dsh web) or open a new session so the row loads.");
+    console.log("  2. Skills appear in the skill catalog automatically (watched).");
+    console.log("  3. Status card: refresh the web page (F5) — the sidebar picks it up via the live patch watcher.");
     console.log("  4. In a project: ensure AGENTS.md exists so the agent follows MyGRACE automatically.");
   },
 });

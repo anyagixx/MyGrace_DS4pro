@@ -1,0 +1,6 @@
+# Bundle layer for the `dsh plugin add` installation path.
+# `mygrace install-dsh` inserts this row into the profile patch directly,
+# so this file doubles as documentation of the entry shape.
+- insert:
+    - id: mygrace-status-panel
+      name: mygrace-status-panel
