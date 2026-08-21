@@ -104,6 +104,17 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         required: ["path", "projectRoot"],
       },
     },
+    {
+      name: "mygrace_status",
+      description: "Aggregated project health from the 3 indexes + lint summary, as JSON. Use for status reports and dashboards.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          path: { type: "string", description: "Project root path" },
+        },
+        required: ["path"],
+      },
+    },
   ],
 }));
 

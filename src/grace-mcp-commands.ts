@@ -13,7 +13,8 @@ export type ToolName =
   | "mygrace_show_phase"
   | "mygrace_list_verifications"
   | "mygrace_lint"
-  | "mygrace_show_file";
+  | "mygrace_show_file"
+  | "mygrace_status";
 
 export type ToolArgs = Record<string, unknown>;
 
@@ -56,6 +57,9 @@ export function buildToolCommand(name: string, args: ToolArgs): string[] {
       if (args.blocks === true) cmd.push("--blocks");
       return cmd;
     }
+    case "mygrace_status": {
+      return ["status", "--path", path, "--format", "json"];
+    }
     default:
       throw new Error(`Unknown tool: ${name}`);
   }
@@ -69,4 +73,5 @@ export const TOOL_NAMES: ToolName[] = [
   "mygrace_list_verifications",
   "mygrace_lint",
   "mygrace_show_file",
+  "mygrace_status",
 ];

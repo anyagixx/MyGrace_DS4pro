@@ -206,6 +206,11 @@ describe("buildToolCommand", () => {
       .toEqual(["file", "show", "src/a.ts", "--root", "/p", "--contracts", "--blocks"]);
   });
 
+  test("mygrace_status maps to status --format json", () => {
+    expect(buildToolCommand("mygrace_status", { path: "/p" }))
+      .toEqual(["status", "--path", "/p", "--format", "json"]);
+  });
+
   test("unknown tool names throw", () => {
     expect(() => buildToolCommand("mygrace_bogus", {})).toThrow(/Unknown tool/);
   });
