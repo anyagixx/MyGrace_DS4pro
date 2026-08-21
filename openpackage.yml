@@ -1,0 +1,6 @@
+name: mygrace
+description: "MyGRACE (Graph-RAG Anchored Code Engineering) - scalable GRACE methodology with lazy-loading indexes, per-module files, and phase-based navigation for large projects (20-200+ modules)."
+version: 0.0.3
+author: osovv
+license: MIT
+keywords: [mygrace, grace, semantic-markup, knowledge-graph, contracts, ai-code-generation, lazy-loading, scalable, index-based, verification, llm-friendly, methodology]

@@ -1,0 +1,7 @@
+{
+  "name": "mygrace",
+  "description": "MyGRACE (Graph-RAG Anchored Code Engineering) — scalable GRACE methodology with lazy-loading indexes for large AI-driven projects",
+  "version": "0.0.3",
+  "author": "osovv",
+  "license": "MIT"
+}

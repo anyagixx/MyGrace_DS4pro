@@ -1,0 +1,8 @@
+<GraphIndex project="TestProject" version="1.0.0">
+  <keywords>test, demo, mygrace</keywords>
+  <annotation>A test project for MyGRACE validation</annotation>
+
+  <M-CONFIG NAME="Config" TYPE="UTILITY" STATUS="done" PATH="src/config/index.ts" DEPENDS="" VERIFICATION_REF="V-M-CONFIG" />
+  <M-AUTH NAME="Authentication" TYPE="CORE_LOGIC" STATUS="wip" PATH="src/auth/index.ts" DEPENDS="M-CONFIG" VERIFICATION_REF="V-M-AUTH" />
+
+</GraphIndex>

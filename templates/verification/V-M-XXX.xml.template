@@ -1,0 +1,22 @@
+<V-M-XXX MODULE="$MODULE_ID" PRIORITY="$PRIORITY" STATUS="pending">
+  <test-files>
+    <file>$TEST_FILE_PATH</file>
+  </test-files>
+
+  <module-checks>
+    <check-1>$VERIFICATION_COMMAND</check-1>
+  </module-checks>
+
+  <scenarios>
+    <scenario-1 kind="success">$SUCCESS_SCENARIO_DESCRIPTION</scenario-1>
+    <scenario-2 kind="failure">$FAILURE_SCENARIO_DESCRIPTION</scenario-2>
+  </scenarios>
+
+  <required-log-markers>
+    <marker-1>[$MODULE_NAME][$FUNCTION_NAME][$BLOCK_NAME]</marker-1>
+  </required-log-markers>
+
+  <notes>
+    <!-- Verification design notes, edge cases, integration considerations -->
+  </notes>
+</V-M-XXX>

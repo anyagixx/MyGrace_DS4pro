@@ -1,0 +1,4 @@
+<VerificationIndex>
+  <V-M-CONFIG MODULE="M-CONFIG" PRIORITY="low" STATUS="done" />
+  <V-M-AUTH MODULE="M-AUTH" PRIORITY="high" STATUS="pending" />
+</VerificationIndex>

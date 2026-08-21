@@ -1,0 +1,12 @@
+<V-M-AUTH MODULE="M-AUTH" PRIORITY="high" STATUS="pending">
+  <test-files><file>src/auth/index.test.ts</file></test-files>
+  <module-checks><check-1>bun test src/auth/index.test.ts</check-1></module-checks>
+  <scenarios>
+    <scenario-1 kind="success">Valid credentials return session</scenario-1>
+    <scenario-2 kind="failure">Invalid credentials throw AUTH_FAILED</scenario-2>
+  </scenarios>
+  <required-log-markers>
+    <marker-1>[Auth][authenticate][BLOCK_VALIDATE]</marker-1>
+    <marker-2>[Auth][authenticate][BLOCK_CREATE_SESSION]</marker-2>
+  </required-log-markers>
+</V-M-AUTH>

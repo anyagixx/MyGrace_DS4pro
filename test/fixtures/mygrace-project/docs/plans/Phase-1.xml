@@ -1,0 +1,5 @@
+<Phase-1 name="Foundation" status="wip">
+  <description>Foundation modules: config and auth</description>
+  <step-1 module="M-CONFIG" description="Config module" status="done" />
+  <step-2 module="M-AUTH" description="Authentication module" status="wip" />
+</Phase-1>

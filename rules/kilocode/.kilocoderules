@@ -1,0 +1,70 @@
+# MyGRACE — Scalable GRACE with Lazy-Loading
+
+This project uses **MyGRACE** (Graph-RAG Anchored Code Engineering) — a scalable variant of GRACE designed for large projects (20-200+ modules).
+
+## Navigation Rule #1 (CRITICAL)
+**ALWAYS start with index files. NEVER scan all per-entity files.**
+
+1. Read `docs/graph-index.xml` first (≤100 lines) — find the module ID
+2. Read `docs/modules/M-XXX.xml` next (30-80 lines) — only the module you need
+3. Done. ~130 lines vs ~6500 in classic GRACE.
+
+**NEVER** read monolithic `knowledge-graph.xml`, `development-plan.xml`, or `verification-plan.xml` — they don't exist in MyGRACE.
+
+## Six Core Principles
+1. **Never Write Code Without a Contract** — MODULE_CONTRACT before code
+2. **Semantic Markup Is Not Comments** — `START_BLOCK`/`END_BLOCK` are navigation anchors
+3. **Knowledge Graph Is Always Current** — `graph-index.xml` never drifts
+4. **Top-Down Synthesis** — Requirements → Technology → Plan → Verification → Contracts → Code
+5. **Verification Is Architecture** — tests, traces, log markers are part of the blueprint
+6. **Governed Autonomy (PCAM)** — Purpose, Constraints, Autonomy, Metrics
+
+## Project Structure
+```
+docs/
+  graph-index.xml              ← ← ← ALWAYS read first (≤100 lines)
+  plan-index.xml               ← Phase index (≤50 lines)
+  verification-index.xml       ← Verification index (≤80 lines)
+  operational-packets.xml      ← Packet templates
+  modules/                     ← Per-module files (M-XXX.xml)
+  plans/                       ← Per-phase files (Phase-N.xml)
+  verification/                ← Per-verification files (V-M-XXX.xml)
+  archive/                     ← Completed phases
+```
+
+## Key Artifacts
+- `MODULE_CONTRACT` in each file — WHAT each module does
+- `START_BLOCK` / `END_BLOCK` — semantic navigation anchors
+- `CHANGE_SUMMARY` — change tracking
+- `docs/modules/M-XXX.xml` — per-module contracts (30-80 lines each)
+- `docs/plans/Phase-N.xml` — per-phase steps (50-200 lines each)
+- `docs/verification/V-M-XXX.xml` — per-module verification (20-60 lines each)
+
+## Module Types
+ENTRY_POINT, CORE_LOGIC, DATA_LAYER, UI_COMPONENT, UTILITY, INTEGRATION
+
+## CLI (if mygrace is installed)
+```bash
+mygrace module index              # Show graph-index.xml
+mygrace module find <query>       # Resolve module IDs
+mygrace module show M-XXX         # Per-module file
+mygrace module show M-XXX --with-verification  # Module + verification
+mygrace module list --status=wip  # Filter modules
+mygrace phase show Phase-N        # Per-phase file
+mygrace verification index        # Show verification-index.xml
+mygrace lint                      # Integrity check
+mygrace file show <path>          # File-local markup
+```
+
+## When Editing Files
+- Preserve MODULE_CONTRACT, MODULE_MAP, CHANGE_SUMMARY
+- Preserve START_BLOCK/END_BLOCK boundaries
+- Update CHANGE_SUMMARY after changes
+- Update graph-index.xml if module interfaces change
+
+## Token Savings
+| Task | Classic GRACE | MyGRACE | Savings |
+|------|--------------|---------|---------|
+| Status check | ~6500 lines | ~230 lines | 96% |
+| Single module work | ~6500 lines | ~180 lines | 97% |
+| Phase execution | ~6500 lines | ~280 lines | 96% |

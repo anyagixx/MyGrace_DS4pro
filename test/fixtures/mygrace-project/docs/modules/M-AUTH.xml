@@ -1,0 +1,19 @@
+<M-AUTH NAME="Authentication" TYPE="CORE_LOGIC" STATUS="wip">
+  <purpose>Handle user authentication and session management</purpose>
+  <path>src/auth/index.ts</path>
+  <depends>M-CONFIG</depends>
+  <verification-ref>V-M-AUTH</verification-ref>
+  <annotations>
+    <fn-authenticate PURPOSE="Verify credentials and create session" />
+    <fn-logout PURPOSE="Destroy active session" />
+    <type-Credentials PURPOSE="Login + password pair" />
+    <type-Session PURPOSE="Active session record" />
+  </annotations>
+  <CrossLink to="M-CONFIG" relation="reads-config" />
+  <contract>
+    <purpose>Authenticate users and manage session lifecycle</purpose>
+    <inputs><param name="credentials" type="Credentials" /></inputs>
+    <outputs><param name="session" type="Session" /></outputs>
+    <errors><error code="AUTH_FAILED" description="Invalid credentials" /></errors>
+  </contract>
+</M-AUTH>

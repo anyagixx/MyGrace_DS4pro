@@ -1,0 +1,35 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "metadata": {
+    "name": "mygrace",
+    "version": "0.0.3",
+    "owner": "osovv",
+    "homepage": "https://github.com/anyagixx/MyGrace"
+  },
+  "plugins": [
+    {
+      "name": "mygrace",
+      "source": "./extensions/mygrace",
+      "version": "0.0.3",
+      "strict": true,
+      "components": {
+        "skills": [
+          { "source": "skills/mygrace/grace-ask", "name": "mygrace-ask" },
+          { "source": "skills/mygrace/grace-cli", "name": "mygrace-cli" },
+          { "source": "skills/mygrace/grace-execute", "name": "mygrace-execute" },
+          { "source": "skills/mygrace/grace-explainer", "name": "mygrace-explainer" },
+          { "source": "skills/mygrace/grace-fix", "name": "mygrace-fix" },
+          { "source": "skills/mygrace/grace-init", "name": "mygrace-init" },
+          { "source": "skills/mygrace/grace-multiagent-execute", "name": "mygrace-multiagent-execute" },
+          { "source": "skills/mygrace/grace-plan", "name": "mygrace-plan" },
+          { "source": "skills/mygrace/grace-refactor", "name": "mygrace-refactor" },
+          { "source": "skills/mygrace/grace-refresh", "name": "mygrace-refresh" },
+          { "source": "skills/mygrace/grace-reviewer", "name": "mygrace-reviewer" },
+          { "source": "skills/mygrace/grace-setup-subagents", "name": "mygrace-setup-subagents" },
+          { "source": "skills/mygrace/grace-status", "name": "mygrace-status" },
+          { "source": "skills/mygrace/grace-verification", "name": "mygrace-verification" }
+        ]
+      }
+    }
+  ]
+}
