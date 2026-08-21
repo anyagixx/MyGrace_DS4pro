@@ -1,6 +1,7 @@
 ---
 name: mygrace-refactor
-description: "Refactor MyGRACE-governed code safely. Updates per-module files AND indexes atomically."
+description: "Refactor MyGRACE-governed code safely, updating per-module files and indexes atomically. Use for rename, move, split, merge, extract, interface changes, or path-only moves."
+whenToUse: "Any structural change to governed modules — rename, move, split, merge, extract, interface-tighten, path-only."
 ---
 
 Refactor without letting architecture, indexes, or verification drift.
@@ -14,7 +15,7 @@ In addition to updating code and per-module files, you MUST update the **index e
 ## LAZY PROCESS
 
 ### Step 1: Classify the Refactor
-Identify type, source/target module IDs and paths from `docs/graph-index.xml`.
+Identify type, source/target module IDs and paths from `docs/graph-index.xml` (MCP: `mygrace_list_modules`).
 
 ### Step 2: Build Refactor Packet
 Source scope, target scope, invariants, and delta summaries for:
@@ -36,11 +37,11 @@ Source scope, target scope, invariants, and delta summaries for:
 3. `docs/verification-index.xml` — update verification entries
 
 ### Step 5: Verify by Blast Radius
-Module-local → integration surfaces → index consistency check
+Module-local → integration surfaces → index consistency check (`mygrace lint --path <root>`, MCP: `mygrace_lint`)
 
 ### Step 6: Review and Refresh
-- Scoped `/mygrace:reviewer` pass
-- Targeted `/mygrace:refresh` on touched modules and indexes
+- Scoped review pass (call the `mygrace-reviewer` skill)
+- Targeted refresh on touched modules and indexes (call the `mygrace-refresh` skill, scoped)
 
 ## Rules
 - **Index updates are mandatory** — refactor is not done until indexes match reality

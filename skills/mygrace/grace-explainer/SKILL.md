@@ -1,11 +1,16 @@
 ---
 name: mygrace-explainer
-description: "Complete MyGRACE methodology reference. Scalable GRACE with lazy-loading indexes, per-module files, and phase-based navigation for large projects."
+description: "Complete MyGRACE methodology reference: lazy-loading indexes, per-module files, phase-based navigation. Use to refresh understanding of how the methodology works before applying other skills."
+whenToUse: "You are unsure about MyGRACE concepts, file layout, or navigation rules and need the reference."
 ---
 
 # MyGRACE — Scalable Graph-RAG Anchored Code Engineering
 
 MyGRACE is a scalable variant of GRACE designed for **large projects** (20-200+ modules). It solves the context-overflow problem of classic GRACE by replacing monolithic XML files with lazy-loading indexes and per-entity files.
+
+## Platform Support
+
+**DeepSeek Harness (DSH) is the primary platform.** The `mygrace-*` skills are installed for the DSH `skill` tool, and AGENTS.md at the project root is auto-loaded by DSH — this skill only adds what AGENTS.md does not cover. Other platforms (Claude Code, Qwen Code, Cursor, etc.) are optional and not part of this distribution.
 
 ## The Problem MyGRACE Solves
 
@@ -30,7 +35,7 @@ LLMs that read these files burn 80-95% of context tokens on irrelevant data. Qua
 2. **NEVER** read `docs/knowledge-graph.xml` — use `docs/modules/M-XXX.xml` per module
 3. **NEVER** read `docs/development-plan.xml` — use `plan-index.xml` + `docs/plans/Phase-N.xml`
 4. **NEVER** read `docs/verification-plan.xml` — use `verification-index.xml` + `docs/verification/V-M-XXX.xml`
-5. Use `mygrace module show M-XXX` for structured output (saves tokens vs raw XML)
+5. Prefer MCP tools (`mygrace_list_modules`, `mygrace_show_module`, `mygrace_show_phase`, `mygrace_list_verifications`, `mygrace_lint`, `mygrace_show_file`) when connected; fall back to direct file reads or the `mygrace` CLI
 6. Archive completed phases to `docs/archive/` — they stay in the index but details move out
 
 ## Six Core Principles
@@ -41,18 +46,20 @@ LLMs that read these files burn 80-95% of context tokens on irrelevant data. Qua
 5. **Verification Is Architecture** — testing, traces, log markers are part of the blueprint
 6. **Governed Autonomy (PCAM)** — Purpose, Constraints, Autonomy, Metrics
 
-## Development Workflow
-1. `/mygrace:init` — create index-based docs/ structure
+## Development Workflow (DSH)
+
+Run each stage via the `skill` tool:
+1. `mygrace-init` — create index-based docs/ structure
 2. Fill `docs/requirements.xml` and `docs/technology.xml`
-3. `/mygrace:plan` — architect modules, updates index + per-module files
-4. `/mygrace:verification` — design tests, updates verification-index + per-entry files
-5. `/mygrace:execute` — sequential module generation
-6. `/mygrace:multiagent` — parallel-safe waves
-7. `/mygrace:refactor` — safe restructuring, updates indexes
-8. `/mygrace:refresh` — sync indexes with per-entity files
-9. `/mygrace:fix` — debug via lazy navigation
-10. `/mygrace:status` — health report (reads only indexes)
-11. `/mygrace:ask` — Q&A over artifacts
+3. `mygrace-plan` — architect modules, updates index + per-module files
+4. `mygrace-verification` — design tests, updates verification-index + per-entry files
+5. `mygrace-execute` — sequential module generation
+6. `mygrace-multiagent-execute` — parallel-safe waves via subagents
+7. `mygrace-refactor` — safe restructuring, updates indexes
+8. `mygrace-refresh` — sync indexes with per-entity files
+9. `mygrace-fix` — debug via lazy navigation
+10. `mygrace-status` — health report (reads only indexes)
+11. `mygrace-ask` — Q&A over artifacts
 
 ## Token Savings
 | Task | Classic GRACE | MyGRACE | Savings |
@@ -63,13 +70,13 @@ LLMs that read these files burn 80-95% of context tokens on irrelevant data. Qua
 
 ## CLI
 ```bash
-mygrace lint --path .                    # integrity check including index sync
-mygrace module index                     # show graph-index.xml
-mygrace module find <query>              # resolve module IDs
-mygrace module show M-XXX                # per-module file (docs/modules/M-XXX.xml)
-mygrace module list --status=wip         # filter by status
-mygrace phase index                      # show plan-index.xml
-mygrace phase show Phase-1               # show specific phase
-mygrace verification index               # show verification-index.xml
-mygrace file show <path> --contracts --blocks  # file-local markup
+mygrace lint --path .                        # integrity check including index sync
+mygrace module index --path .                # show graph-index.xml
+mygrace module find <query> --path .         # resolve module IDs
+mygrace module show M-XXX --path .           # per-module file (docs/modules/M-XXX.xml)
+mygrace module list --status=wip --path .    # filter by status
+mygrace phase index --path .                 # show plan-index.xml
+mygrace phase show Phase-1 --path .          # show specific phase
+mygrace verification index --path .          # show verification-index.xml
+mygrace file show <path> --root . --contracts --blocks  # file-local markup
 ```

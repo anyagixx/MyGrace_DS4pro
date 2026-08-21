@@ -11,11 +11,12 @@
  *   - mygrace_show_file: File-local markup
  */
 
-import { Server } from "npm:@modelcontextprotocol/sdk/dist/cjs/server/index.js";
-import { StdioServerTransport } from "npm:@modelcontextprotocol/sdk/dist/cjs/server/stdio.js";
-import { CallToolRequestSchema, ListToolsRequestSchema } from "npm:@modelcontextprotocol/sdk/dist/cjs/types.js";
+import { Server } from "@modelcontextprotocol/sdk/server";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { buildToolCommand, type ToolArgs } from "./grace-mcp-commands";
 
 const exec = promisify(execFile);
 const MYGRACE_BIN = process.env.MYGRACE_BIN || "mygrace";
@@ -109,40 +110,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
   try {
-    let cmd: string[];
-    switch (name) {
-      case "mygrace_list_modules":
-        cmd = [MYGRACE_BIN, "module", "list", "--path", args.path as string];
-        if (args.status) cmd.push("--status", args.status as string);
-        if (args.type) cmd.push("--type", args.type as string);
-        if (args.format === "json") cmd.push("--format", "json");
-        break;
-      case "mygrace_show_module":
-        cmd = [MYGRACE_BIN, "module", "show", args.id as string, "--path", args.path as string];
-        if (args.withVerification) cmd.push("--with-verification");
-        break;
-      case "mygrace_show_phase":
-        cmd = [MYGRACE_BIN, "module", "show", "--phase", args.name as string, "--path", args.path as string];
-        break;
-      case "mygrace_list_verifications":
-        cmd = [MYGRACE_BIN, "verification", "index", "--path", args.path as string];
-        if (args.priority) cmd.push("--priority", args.priority as string);
-        if (args.format === "json") cmd.push("--format", "json");
-        break;
-      case "mygrace_lint":
-        cmd = [MYGRACE_BIN, "lint", "--path", args.path as string];
-        if (args.format === "json") cmd.push("--format", "json");
-        if (args.allowMissingDocs) cmd.push("--allow-missing-docs");
-        break;
-      case "mygrace_show_file":
-        cmd = [MYGRACE_BIN, "file", "show", args.path as string, "--path", args.projectRoot as string];
-        if (args.contracts) cmd.push("--contracts");
-        if (args.blocks) cmd.push("--blocks");
-        break;
-      default:
-        return { content: [{ type: "text", text: `Unknown tool: ${name}` }], isError: true };
-    }
-    const { stdout, stderr } = await exec(cmd[0], cmd.slice(1), { env: { ...process.env }, timeout: 30_000 });
+    const cmd = buildToolCommand(name, (args ?? {}) as ToolArgs);
+    const { stdout, stderr } = await exec(MYGRACE_BIN, cmd, { env: { ...process.env }, timeout: 30_000 });
     if (stderr && !stdout) return { content: [{ type: "text", text: stderr }], isError: true };
     return { content: [{ type: "text", text: stdout.trim() }] };
   } catch (err: any) {

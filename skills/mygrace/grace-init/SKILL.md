@@ -1,9 +1,10 @@
 ---
 name: mygrace-init
-description: "Bootstrap MyGRACE framework structure for a new project. Creates docs/ with index-based architecture, per-module/phase/verification directories, and templates."
+description: "Bootstrap the MyGRACE docs/ structure (index files, per-module/phase/verification directories) and AGENTS.md for a new project. Use once per project, before planning starts."
+whenToUse: "A new project needs MyGRACE scaffolding: docs/ indexes, templates, and an AGENTS.md that DSH will auto-load."
 ---
 
-Initialize MyGRACE framework structure for this project.
+Initialize the MyGRACE framework structure for this project.
 
 ## Steps
 
@@ -33,10 +34,10 @@ Initialize MyGRACE framework structure for this project.
    - `verification-index.xml` — empty, ready for entries
    - `operational-packets.xml` — full template
 
-4. **Create `AGENTS.md`** and **`QWEN.md`** at project root from templates
+4. **Create `AGENTS.md`** at project root from the template. DSH auto-loads AGENTS.md at session start, so put the canonical methodology rules there — the `mygrace-*` skills assume it is already in context.
 
 5. **Print summary** of all created files and suggest next step:
-   > "Run `/mygrace:plan` to design modules. MyGRACE uses index-based navigation — each module gets its own file in docs/modules/, each phase in docs/plans/. No monolithic XML files."
+   > "Run the `mygrace-plan` skill (via the skill tool) to design modules. MyGRACE uses index-based navigation — each module gets its own file in docs/modules/, each phase in docs/plans/. No monolithic XML files."
 
 ## Important
 - Never create monolithic knowledge-graph.xml, development-plan.xml, or verification-plan.xml
@@ -44,3 +45,4 @@ Initialize MyGRACE framework structure for this project.
 - All phase data goes in `docs/plans/Phase-N.xml`
 - All verification data goes in `docs/verification/V-M-XXX.xml`
 - Index files are the ALWAYS-READ entry points
+- Do not create platform-specific context files (QWEN.md, CLAUDE.md, etc.) — this distribution targets DSH only

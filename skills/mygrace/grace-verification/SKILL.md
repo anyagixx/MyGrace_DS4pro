@@ -1,13 +1,14 @@
 ---
 name: mygrace-verification
-description: "Design verification for MyGRACE projects. Creates per-module verification files and updates verification-index."
+description: "Design verification for MyGRACE projects — scenarios, log markers, evidence per module — with per-entry files. Use before executing modules or when tests are weak or brittle."
+whenToUse: "Before first plan execution, when tests are too brittle or shallow, when bugs recur and logs aren't actionable, or before enabling autonomous execution."
 ---
 
 Design verification with lazy-loading. Creates per-module files, not monolithic XML.
 
 ## Prerequisites
 - `docs/development-plan.xml` does NOT exist in MyGRACE — use `docs/graph-index.xml` + `docs/modules/M-XXX.xml`
-- `docs/verification-index.xml` must exist (created by /mygrace:init)
+- `docs/verification-index.xml` must exist (created by the `mygrace-init` skill)
 - `docs/verification/` directory must exist
 
 ## Key Difference from Classic GRACE
@@ -19,8 +20,8 @@ Instead:
 ## LAZY PROCESS
 
 ### Step 1: Load Context Efficiently
-1. Read `docs/graph-index.xml` (≤100 lines) — find all modules
-2. For target module, read `docs/modules/M-XXX.xml` (30-80 lines)
+1. Read `docs/graph-index.xml` (≤100 lines) — find all modules (MCP: `mygrace_list_modules`)
+2. For target module, read `docs/modules/M-XXX.xml` (30-80 lines) (MCP: `mygrace_show_module`)
 3. If verification already exists, read `docs/verification/V-M-XXX.xml` (20-60 lines)
 4. **DO NOT** scan all modules — focus on one at a time
 
@@ -66,7 +67,7 @@ Module-local → wave-level → phase-level. Make explicit in the verification f
 5. Assessment of autonomous execution safety
 
 ## When to Use
-- Before first `/mygrace:execute` or `/mygrace:multiagent` run
+- Before first plan execution (`mygrace-execute` or `mygrace-multiagent-execute`)
 - When tests are too brittle or too shallow
 - When bugs recur and logs aren't actionable
 - Before enabling autonomous execution for a module

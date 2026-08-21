@@ -13,6 +13,7 @@
 import { defineCommand } from "citty";
 import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
+import { findProjectRoot, parseIndexEntries, listEntityFiles } from "./grace-common";
 
 interface LintIssue {
   severity: "error" | "warning";
@@ -20,34 +21,9 @@ interface LintIssue {
   file?: string;
 }
 
-// ─── Helpers ────────────────────────────────────────────────────────────
-
-function findProjectRoot(startDir: string): string {
-  let dir = startDir;
-  while (dir !== "/") {
-    if (existsSync(join(dir, "docs", "graph-index.xml"))) return dir;
-    dir = join(dir, "..");
-  }
-  throw new Error("MyGRACE project not found. Run in a project with docs/graph-index.xml");
-}
-
-function parseIndexEntries(content: string): { tag: string; attrs: Record<string, string> }[] {
-  const results: { tag: string; attrs: Record<string, string> }[] = [];
-  const regex = /<(M-[\w-]+|V-M-[\w-]+|Phase-\d+)([^>]*?)(?:\/>)/g;
-  let m: RegExpExecArray | null;
-  while ((m = regex.exec(content)) !== null) {
-    const attrs: Record<string, string> = {};
-    const attrRegex = /(\w+)="([^"]*)"/g;
-    let am: RegExpExecArray | null;
-    while ((am = attrRegex.exec(m[2])) !== null) attrs[am[1]] = am[2];
-    results.push({ tag: m[1], attrs });
-  }
-  return results;
-}
-
 // ─── Lint: Index ↔ Per-Entity File Consistency ──────────────────────────
 
-function lintIndexSync(
+export function lintIndexSync(
   root: string,
   indexFile: string,
   entityDir: string,
@@ -70,7 +46,7 @@ function lintIndexSync(
     return issues;
   }
 
-  const files = readdirSync(dirPath).filter((f) => f.startsWith(prefix) && f.endsWith(".xml"));
+  const files = listEntityFiles(dirPath, prefix);
   const fileSet = new Set(files.map((f) => f.replace(".xml", "")));
   const indexSet = new Set(entries.map((e) => e.tag));
 
@@ -119,7 +95,7 @@ function lintIndexSync(
 
 // ─── Lint: Markup in Source Files ───────────────────────────────────────
 
-function lintMarkup(root: string): LintIssue[] {
+export function lintMarkup(root: string): LintIssue[] {
   const issues: LintIssue[] = [];
   const srcDirs = ["src", "lib", "apps", "packages"];
 
@@ -174,7 +150,7 @@ function lintMarkup(root: string): LintIssue[] {
 
 // ─── Lint: Unique XML Tag Conventions ───────────────────────────────────
 
-function lintXmlTags(root: string): LintIssue[] {
+export function lintXmlTags(root: string): LintIssue[] {
   const issues: LintIssue[] = [];
   const xmlDirs = ["docs", "docs/modules", "docs/plans", "docs/verification"];
 
@@ -212,7 +188,7 @@ function lintXmlTags(root: string): LintIssue[] {
 
 // ─── Lint: Verification Reference Integrity ─────────────────────────────
 
-function lintVerificationRefs(root: string): LintIssue[] {
+export function lintVerificationRefs(root: string): LintIssue[] {
   const issues: LintIssue[] = [];
   const modulesDir = join(root, "docs", "modules");
   if (!existsSync(modulesDir)) return issues;

@@ -1,6 +1,7 @@
 ---
 name: mygrace-refresh
-description: "Synchronize MyGRACE indexes with per-entity files. Detects drift between graph-index.xml and docs/modules/, plan-index.xml and docs/plans/, etc."
+description: "Synchronize MyGRACE indexes with per-entity files: detect orphaned, missing, or drifted entries and fix them with user approval. Use after manual edits or when lint reports drift."
+whenToUse: "Indexes may have drifted from per-entity files — after manual edits, failed lint, or merge conflicts in docs/."
 ---
 
 Synchronize MyGRACE indexes with per-entity files.
@@ -8,6 +9,9 @@ Synchronize MyGRACE indexes with per-entity files.
 ## What MyGRACE Refresh Does
 Classic GRACE refresh compares code against monolithic XML.
 MyGRACE refresh compares **indexes against per-entity files**.
+
+## Detecting Drift First (MCP / CLI)
+Before manual review, run `mygrace lint --path <root>` (MCP: `mygrace_lint`) — it reports orphaned, missing, and drifted entries automatically. Refresh then fixes the reported issues.
 
 ## Sync Checks
 
@@ -39,11 +43,10 @@ For each file in `docs/verification/`:
 
 ## Process
 1. **Choose Scope**: `targeted` (specific modules) or `full` (all indexes)
-2. **Scan indexes and per-entity directories**
+2. **Scan indexes and per-entity directories** (prefer MCP tools `mygrace_list_modules` / `mygrace_list_verifications` when connected; fall back to direct reads)
 3. **Compare** — find orphaned, missing, drifted entries
 4. **Report** — structured drift report
 5. **Fix with user approval** — update indexes or create missing files
-6. **Commit** index updates
 
 ## Rules
 - Indexes are the source of truth for navigation — they MUST be current

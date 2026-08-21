@@ -1,0 +1,4 @@
+{"result":{"protocolVersion":"2024-11-05","capabilities":{"tools":{}},"serverInfo":{"name":"mygrace-mcp","version":"0.0.3"}},"jsonrpc":"2.0","id":1}
+{"result":{"content":[{"type":"text","text":"MyGRACE Lint Report\n===================\nErrors:   0\nWarnings: 0\n\n✓ All checks passed. MyGRACE artifacts are consistent."}]},"jsonrpc":"2.0","id":5}
+{"result":{"content":[{"type":"text","text":"[\n  {\n    \"id\": \"V-M-AUTH\",\n    \"MODULE\": \"M-AUTH\",\n    \"PRIORITY\": \"high\",\n    \"STATUS\": \"pending\"\n  }\n]"}]},"jsonrpc":"2.0","id":3}
+{"result":{"content":[{"type":"text","text":"<Phase-1 name=\"Foundation\" status=\"wip\">\n  <description>Foundation modules: config and auth</description>\n  <step-1 module=\"M-CONFIG\" description=\"Config module\" status=\"done\" />\n  <step-2 module=\"M-AUTH\" description=\"Authentication module\" status=\"wip\" />\n</Phase-1>"}]},"jsonrpc":"2.0","id":4}

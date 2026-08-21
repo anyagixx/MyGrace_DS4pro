@@ -9,51 +9,13 @@
  *   mygrace module list [--status=X]  — list modules with filter
  *   mygrace phase index               — show plan-index.xml
  *   mygrace phase show <name>         — show per-phase file from docs/plans/
- *   mygrace verification index        — show verification-index.xml
+ *   mygrace verification index        — show verification-index.xml (with optional filter)
  */
 
 import { defineCommand } from "citty";
-import { readFileSync, existsSync, readdirSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
-
-// ─── Helpers ────────────────────────────────────────────────────────────
-
-function findProjectRoot(startDir: string): string {
-  let dir = startDir;
-  while (dir !== "/") {
-    if (existsSync(join(dir, "docs", "graph-index.xml"))) return dir;
-    dir = join(dir, "..");
-  }
-  throw new Error("MyGRACE project not found. Run in a project with docs/graph-index.xml");
-}
-
-function parseXmlAttributes(line: string): Record<string, string> {
-  const attrs: Record<string, string> = {};
-  const regex = /(\w+)="([^"]*)"/g;
-  let m: RegExpExecArray | null;
-  while ((m = regex.exec(line)) !== null) {
-    attrs[m[1]] = m[2];
-  }
-  return attrs;
-}
-
-function readIndexFile(path: string): { tag: string; attrs: Record<string, string>; raw: string }[] {
-  if (!existsSync(path)) return [];
-  const content = readFileSync(path, "utf-8");
-  const results: { tag: string; attrs: Record<string, string>; raw: string }[] = [];
-  // Match self-closing or opening+closing tags with unique names
-  const tagRegex = /<(M-[\w-]+|V-M-[\w-]+|Phase-\d+)([^>]*?)(?:\/>|>([\s\S]*?)<\/\1>)/g;
-  let m: RegExpExecArray | null;
-  while ((m = tagRegex.exec(content)) !== null) {
-    results.push({ tag: m[1], attrs: parseXmlAttributes(m[2]), raw: m[0] });
-  }
-  return results;
-}
-
-function readPerModuleFile(path: string): string | null {
-  if (!existsSync(path)) return null;
-  return readFileSync(path, "utf-8");
-}
+import { findProjectRoot, readFileOrNull, readIndexFile } from "./grace-common";
 
 // ─── Subcommand: module index ───────────────────────────────────────────
 
@@ -69,7 +31,7 @@ const moduleIndexCmd = defineCommand({
       console.error("Error: docs/graph-index.xml not found. Run /mygrace:init first.");
       process.exit(1);
     }
-    console.log(readFileSync(indexPath, "utf-8"));
+    console.log(readFileOrNull(indexPath));
   },
 });
 
@@ -90,7 +52,7 @@ const moduleFindCmd = defineCommand({
     const entries = readIndexFile(indexPath);
     const query = (args.query || "").toLowerCase();
 
-    let matches = entries.filter((e) => {
+    const matches = entries.filter((e) => {
       const searchable = Object.values(e.attrs).join(" ").toLowerCase();
       const matchesQuery = !query || searchable.includes(query);
       const matchesStatus = !args.status || e.attrs.STATUS === args.status;
@@ -99,7 +61,7 @@ const moduleFindCmd = defineCommand({
     });
 
     if (args.format === "json") {
-      console.log(JSON.stringify(matches.map((m) => m.attrs), null, 2));
+      console.log(JSON.stringify(matches.map((m) => ({ id: m.tag, ...m.attrs })), null, 2));
       return;
     }
 
@@ -144,7 +106,7 @@ const moduleShowCmd = defineCommand({
     const modulePath = join(root, "docs", "modules", `${moduleId}.xml`);
 
     console.log(`=== ${moduleId} ===\n`);
-    const content = readPerModuleFile(modulePath);
+    const content = readFileOrNull(modulePath);
     if (!content) {
       console.error(`Error: docs/modules/${moduleId}.xml not found.`);
       console.error(`Check docs/graph-index.xml for the correct module ID and path.`);
@@ -159,7 +121,7 @@ const moduleShowCmd = defineCommand({
         const verId = verRefMatch[1];
         const verPath = join(root, "docs", "verification", `${verId}.xml`);
         console.log(`\n=== ${verId} ===\n`);
-        const verContent = readPerModuleFile(verPath);
+        const verContent = readFileOrNull(verPath);
         if (verContent) {
           console.log(verContent);
         } else {
@@ -187,7 +149,7 @@ const moduleListCmd = defineCommand({
     const filtered = args.status ? entries.filter((e) => e.attrs.STATUS === args.status) : entries;
 
     if (args.format === "json") {
-      console.log(JSON.stringify(filtered.map((m) => m.attrs), null, 2));
+      console.log(JSON.stringify(filtered.map((m) => ({ id: m.tag, ...m.attrs })), null, 2));
       return;
     }
 
@@ -228,7 +190,7 @@ const phaseIndexCmd = defineCommand({
       console.error("Error: docs/plan-index.xml not found.");
       process.exit(1);
     }
-    console.log(readFileSync(indexPath, "utf-8"));
+    console.log(readFileOrNull(indexPath));
   },
 });
 
@@ -247,16 +209,22 @@ const phaseShowCmd = defineCommand({
       console.error(`Error: docs/plans/${args.name}.xml not found.`);
       process.exit(1);
     }
-    console.log(readFileSync(phasePath, "utf-8"));
+    console.log(readFileOrNull(phasePath));
   },
 });
 
 // ─── Subcommand: verification index ─────────────────────────────────────
 
 const verificationIndexCmd = defineCommand({
-  meta: { name: "index", description: "Show verification-index.xml (lightweight verification index, ≤80 lines)", hidden: true },
+  meta: {
+    name: "index",
+    description: "Show verification-index.xml (lightweight verification index, ≤80 lines); --priority/--format filters apply",
+    hidden: true,
+  },
   args: {
     path: { type: "string", default: ".", description: "Project root" },
+    priority: { type: "string", description: "Filter by priority (high/medium/low)" },
+    format: { type: "string", default: "text", description: "Output format: text or json" },
   },
   run: async ({ args }) => {
     const root = findProjectRoot(args.path);
@@ -265,7 +233,26 @@ const verificationIndexCmd = defineCommand({
       console.error("Error: docs/verification-index.xml not found.");
       process.exit(1);
     }
-    console.log(readFileSync(indexPath, "utf-8"));
+
+    // No filters: preserve the raw-file behavior (fastest, shows comments).
+    if (!args.priority && args.format === "text") {
+      console.log(readFileOrNull(indexPath));
+      return;
+    }
+
+    const entries = readIndexFile(indexPath);
+    const filtered = args.priority
+      ? entries.filter((e) => (e.attrs.PRIORITY || "").toLowerCase() === args.priority.toLowerCase())
+      : entries;
+
+    if (args.format === "json") {
+      console.log(JSON.stringify(filtered.map((e) => ({ id: e.tag, ...e.attrs })), null, 2));
+      return;
+    }
+
+    for (const e of filtered) {
+      console.log(e.raw.replace(/^\s+|\s+$/g, ""));
+    }
   },
 });
 

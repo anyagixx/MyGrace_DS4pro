@@ -1,6 +1,7 @@
 ---
 name: mygrace-plan
-description: "Run the MyGRACE architectural planning phase. Creates per-module files, per-phase files, and updates indexes instead of monolithic XML."
+description: "Run the MyGRACE architectural planning phase: design modules, phases, and verification surfaces; write per-module files and update indexes. Use after requirements and technology exist."
+whenToUse: "Requirements are gathered (docs/requirements.xml, docs/technology.xml) and the module architecture needs to be designed and recorded."
 ---
 
 Run the MyGRACE architectural planning phase.
@@ -9,7 +10,7 @@ Run the MyGRACE architectural planning phase.
 - `docs/requirements.xml` must exist with at least one UseCase
 - `docs/technology.xml` must exist
 - `docs/graph-index.xml`, `docs/plan-index.xml`, `docs/verification-index.xml` must exist
-- If missing, tell user to run `/mygrace:init` first
+- If missing, run the `mygrace-init` skill first
 
 ## Key Difference from Classic GRACE
 **DO NOT** create monolithic `knowledge-graph.xml` or `development-plan.xml`.
@@ -80,3 +81,4 @@ After user approval:
 - Use unique ID tags: M-XXX, Phase-N, step-N, V-M-XXX
 - Get explicit user approval before writing any files
 - Every module gets its own file — no monolithic aggregation
+- After writing artifacts, run `mygrace lint --path <root>` (MCP: `mygrace_lint`) to confirm index ↔ file consistency
