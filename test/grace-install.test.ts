@@ -64,19 +64,42 @@ describe("removePatchEntry", () => {
 });
 
 describe("mcpPatchEntry", () => {
-  test("produces a valid YAML-shaped loader entry", () => {
+  test("produces an insert-wrapped loader entry (required by the cordis loader)", () => {
     const entry = mcpPatchEntry();
-    expect(entry).toContain("- id: mcp-mygrace");
+    const lines = entry.split("\n");
+    expect(lines[0]).toBe("- insert:");
+    expect(lines[1]).toBe("    - id: mcp-mygrace");
     expect(entry).toContain("name: '@deepseek-ai/dsh-mcp-client'");
     expect(entry).toContain("transport: stdio");
     expect(entry).toContain("command: ");
     expect(entry).toContain("grace-mcp.ts");
     // no raw path leaks through unquoted
-    for (const line of entry.split("\n")) {
+    for (const line of lines) {
       if (line.trim().startsWith("command:")) {
         expect(line).toContain("'");
       }
     }
+  });
+
+  test("removePatchEntry handles the canonical insert-wrapped form", () => {
+    const content = [
+      "- id: other-entry",
+      "  name: 'x'",
+      "- insert:",
+      "    - id: mcp-mygrace",
+      "      name: '@deepseek-ai/dsh-mcp-client'",
+      "      config:",
+      "        transport: stdio",
+      "- id: last-entry",
+      "  name: 'y'",
+      "",
+    ].join("\n");
+    const next = removePatchEntry(content)!;
+    expect(next).toContain("- id: other-entry");
+    expect(next).toContain("- id: last-entry");
+    expect(next).not.toContain("mcp-mygrace");
+    expect(next).not.toContain("- insert:");
+    expect(next).not.toContain("transport: stdio");
   });
 });
 

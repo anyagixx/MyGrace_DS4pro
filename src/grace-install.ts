@@ -57,19 +57,26 @@ function yamlSingle(s: string): string {
   return `'${s.replace(/'/g, "''")}'`;
 }
 
+/**
+ * The cordis patch layer (cordis.patch.yml) applies id-targeted overrides to
+ * the composed bundle tree. NEW entries must be added via an `insert:` list —
+ * a bare `- id: <new-id>` is rejected by the loader ("entry not found").
+ * Without a target id, `insert:` appends to the root entry list.
+ */
 export function mcpPatchEntry(): string {
   const bunBinary = process.execPath;
   const mcpScript = join(import.meta.dir, "grace-mcp.ts");
   return [
-    "- id: mcp-mygrace",
-    `  name: '@deepseek-ai/dsh-mcp-client'`,
-    "  config:",
-    "    transport: stdio",
-    "    serverName: mygrace",
-    `    command: ${yamlSingle(bunBinary)}`,
-    "    args:",
-    "      - run",
-    `      - ${yamlSingle(mcpScript)}`,
+    "- insert:",
+    "    - id: mcp-mygrace",
+    "      name: '@deepseek-ai/dsh-mcp-client'",
+    "      config:",
+    "        transport: stdio",
+    "        serverName: mygrace",
+    `        command: ${yamlSingle(bunBinary)}`,
+    "        args:",
+    "          - run",
+    `          - ${yamlSingle(mcpScript)}`,
   ].join("\n");
 }
 
@@ -78,7 +85,7 @@ export function mcpPatchEntry(): string {
 const ENTRY_ID = "mcp-mygrace";
 
 export function patchFileHasEntry(content: string): boolean {
-  return content.includes(`- id: ${ENTRY_ID}`);
+  return content.includes(`id: ${ENTRY_ID}`);
 }
 
 /**
@@ -103,6 +110,8 @@ export function addPatchEntry(content: string): string | null {
 
 /**
  * Remove the MyGRACE MCP row from a cordis.patch.yml loader array.
+ * Handles both the canonical insert-wrapped form (`- insert:` block whose
+ * first child is the mygrace entry) and the legacy bare `- id:` form.
  * Returns the new content, or null when the entry was not present.
  */
 export function removePatchEntry(content: string): string | null {
@@ -110,18 +119,27 @@ export function removePatchEntry(content: string): string | null {
 
   const lines = content.split("\n");
   const out: string[] = [];
-  let skipping = false;
-  for (const line of lines) {
-    if (line.trim() === `- id: ${ENTRY_ID}`) {
-      skipping = true;
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Canonical: `- insert:` block starting with our entry.
+    if (line.trim() === "- insert:" && lines[i + 1]?.trim() === `- id: ${ENTRY_ID}`) {
+      i++; // the "- insert:" line
+      // Skip the indented children of the insert block.
+      while (i < lines.length && (lines[i].trim() === "" || /^\s/.test(lines[i]))) i++;
       continue;
     }
-    if (skipping) {
-      // A new top-level entry (column 0 `- `) ends our block.
-      if (/^- /.test(line)) skipping = false;
-      else continue;
+
+    // Legacy (pre-0.1.0 format): bare top-level entry.
+    if (line.trim() === `- id: ${ENTRY_ID}`) {
+      i++;
+      while (i < lines.length && /^\s/.test(lines[i]) && lines[i].trim() !== "") i++;
+      continue;
     }
+
     out.push(line);
+    i++;
   }
   // If no loader entries remain, keep the file a valid (empty) YAML array.
   if (!out.some((l) => /^- /.test(l))) out.push("[]");
