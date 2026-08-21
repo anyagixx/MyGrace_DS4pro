@@ -3,7 +3,7 @@ import { existsSync, readFileSync, mkdirSync, mkdtempSync, writeFileSync, rmSync
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { findProjectRoot, parseIndexEntries } from "../src/grace-common";
-import { lintIndexSync, lintMarkup, lintVerificationRefs } from "../src/grace-lint";
+import { lintIndexSync, lintMarkup, lintVerificationRefs, collectLintIssues } from "../src/grace-lint";
 import { buildToolCommand } from "../src/grace-mcp-commands";
 
 const FIXTURE_ROOT = import.meta.dir + "/fixtures/mygrace-project";
@@ -142,6 +142,33 @@ describe("source markup on the fixture", () => {
 
   test("fixture verification references resolve", () => {
     expect(lintVerificationRefs(FIXTURE_ROOT)).toEqual([]);
+  });
+});
+
+// ─── collectLintIssues ──────────────────────────────────────────────────
+
+describe("collectLintIssues", () => {
+  test("allowMissingDocs skips document checks on a bare directory", () => {
+    const root = mkdtempSync(join(tmpdir(), "mygrace-bare-"));
+    try {
+      expect(collectLintIssues(root, true)).toEqual([]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("without allowMissingDocs a bare directory reports missing indexes", () => {
+    const root = mkdtempSync(join(tmpdir(), "mygrace-bare2-"));
+    try {
+      const issues = collectLintIssues(root, false);
+      expect(issues.some((i) => i.severity === "error" && i.message.includes("Missing docs/graph-index.xml"))).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("a full project passes with zero issues", () => {
+    expect(collectLintIssues(FIXTURE_ROOT, false)).toEqual([]);
   });
 });
 

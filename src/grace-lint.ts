@@ -12,7 +12,7 @@
 
 import { defineCommand } from "citty";
 import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join, relative, resolve } from "node:path";
 import { findProjectRoot, parseIndexEntries, listEntityFiles } from "./grace-common";
 
 interface LintIssue {
@@ -216,6 +216,45 @@ export function lintVerificationRefs(root: string): LintIssue[] {
   return issues;
 }
 
+// ─── Lint assembly (exported for tests) ─────────────────────────────────
+
+export function collectLintIssues(root: string, allowMissingDocs: boolean): LintIssue[] {
+  const issues: LintIssue[] = [];
+
+  const docsExist = existsSync(join(root, "docs", "graph-index.xml"));
+
+  if (docsExist) {
+    // 1. Index ↔ per-entity file consistency
+    issues.push(...lintIndexSync(root, "graph-index.xml", "modules", "M-"));
+    issues.push(...lintIndexSync(root, "plan-index.xml", "plans", "Phase-"));
+    issues.push(...lintIndexSync(root, "verification-index.xml", "verification", "V-M-"));
+
+    // 2. Verification reference integrity
+    issues.push(...lintVerificationRefs(root));
+
+    // 3. Unique XML tag conventions
+    issues.push(...lintXmlTags(root));
+
+    // 4. Remaining required index files exist
+    if (!allowMissingDocs) {
+      for (const idx of ["graph-index.xml", "plan-index.xml", "verification-index.xml"]) {
+        if (!existsSync(join(root, "docs", idx))) {
+          issues.push({ severity: "error", message: `Missing docs/${idx}`, file: idx });
+        }
+      }
+    }
+  } else if (!allowMissingDocs) {
+    for (const idx of ["graph-index.xml", "plan-index.xml", "verification-index.xml"]) {
+      issues.push({ severity: "error", message: `Missing docs/${idx} — run mygrace init-dsh`, file: idx });
+    }
+  }
+
+  // 5. Markup in source files (independent of docs/)
+  issues.push(...lintMarkup(root));
+
+  return issues;
+}
+
 // ─── Lint Command Export ────────────────────────────────────────────────
 
 export const lintCommand = defineCommand({
@@ -223,36 +262,20 @@ export const lintCommand = defineCommand({
   args: {
     path: { type: "string", default: ".", description: "Project root" },
     format: { type: "string", default: "text", description: "Output format: text or json" },
-    allowMissingDocs: { type: "boolean", default: false, description: "Skip required document checks" },
+    allowMissingDocs: { type: "boolean", default: false, description: "Skip document checks when docs/ is absent" },
   },
   run: async ({ args }) => {
     const issues: LintIssue[] = [];
 
     try {
-      const root = findProjectRoot(args.path);
-
-      // 1. Index ↔ per-entity file consistency
-      issues.push(...lintIndexSync(root, "graph-index.xml", "modules", "M-"));
-      issues.push(...lintIndexSync(root, "plan-index.xml", "plans", "Phase-"));
-      issues.push(...lintIndexSync(root, "verification-index.xml", "verification", "V-M-"));
-
-      // 2. Verification reference integrity
-      issues.push(...lintVerificationRefs(root));
-
-      // 3. Markup in source files
-      issues.push(...lintMarkup(root));
-
-      // 4. Unique XML tag conventions
-      issues.push(...lintXmlTags(root));
-
-      // 5. Required index files exist
-      if (!args.allowMissingDocs) {
-        for (const idx of ["graph-index.xml", "plan-index.xml", "verification-index.xml"]) {
-          if (!existsSync(join(root, "docs", idx))) {
-            issues.push({ severity: "error", message: `Missing docs/${idx}`, file: idx });
-          }
-        }
+      let root: string;
+      try {
+        root = findProjectRoot(args.path);
+      } catch {
+        if (!args.allowMissingDocs) throw new Error("MyGRACE project not found. Run in a project with docs/graph-index.xml");
+        root = resolve(args.path);
       }
+      issues.push(...collectLintIssues(root, args.allowMissingDocs === true));
     } catch (err: any) {
       issues.push({ severity: "error", message: err.message });
     }
