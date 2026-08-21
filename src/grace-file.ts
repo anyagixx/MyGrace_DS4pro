@@ -25,8 +25,13 @@ export const fileCommand = defineCommand({
         }
         const content = readFileSync(args.path, "utf-8");
 
+        // Canonical: START_MODULE_CONTRACT / END_MODULE_CONTRACT
+        // Legacy (accepted for backwards compatibility): === MODULE_CONTRACT === / === END_MODULE_CONTRACT ===
+        const c = `(?:START_MODULE_CONTRACT|===\\s*MODULE_CONTRACT\\s*===)`;
+        const ce = `(?:END_MODULE_CONTRACT|===\\s*END_MODULE_CONTRACT\\s*===)`;
+
         // Extract MODULE_CONTRACT
-        const contractMatch = content.match(/(\/\/|#|--)\s*START_MODULE_CONTRACT[\s\S]*?(\/\/|#|--)\s*END_MODULE_CONTRACT/);
+        const contractMatch = content.match(new RegExp(`(\\/\\/|#|--)\\s*${c}[\\s\\S]*?(\\/\\/|#|--)\\s*${ce}`));
         if (contractMatch) {
           console.log("=== MODULE_CONTRACT ===\n");
           console.log(contractMatch[0]);

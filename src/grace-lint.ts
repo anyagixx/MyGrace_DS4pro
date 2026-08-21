@@ -129,8 +129,12 @@ export function lintMarkup(root: string): LintIssue[] {
             });
           }
 
-          // Check MODULE_CONTRACT presence (warning, not error — not all files need it)
-          if (starts > 2 && !content.includes("START_MODULE_CONTRACT")) {
+          // Check MODULE_CONTRACT presence (warning, not error — not all files need it).
+          // Canonical form is START_MODULE_CONTRACT; the legacy `=== MODULE_CONTRACT ===`
+          // form is accepted too.
+          const hasContract =
+            content.includes("START_MODULE_CONTRACT") || content.includes("=== MODULE_CONTRACT ===");
+          if (starts > 2 && !hasContract) {
             issues.push({
               severity: "warning",
               message: `File has ${starts} semantic blocks but no MODULE_CONTRACT — consider adding one`,

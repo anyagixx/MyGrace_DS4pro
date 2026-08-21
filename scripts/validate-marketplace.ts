@@ -140,6 +140,40 @@ checkAbsolutePaths(join(ROOT, "scripts"));
 check(pkg.name === "@osovv/mygrace-cli", `package.json name should be @osovv/mygrace-cli, got ${pkg.name}`);
 check(pkg.bin?.mygrace === "./src/grace.ts", "package.json bin should map 'mygrace' to ./src/grace.ts");
 
+// ─── 7. Skills reference only existing CLI commands ─────────────────────
+
+const KNOWN_CLI_COMMANDS = new Set(["lint", "module", "phase", "verification", "file", "install-dsh", "init-dsh"]);
+for (const skill of expectedSkills) {
+  const skillPath = join(skillsDir, skill, "SKILL.md");
+  if (!existsSync(skillPath)) continue;
+  const content = readFileSync(skillPath, "utf-8");
+  for (const m of content.matchAll(/\bmygrace\s+([a-z][a-z-]*)/g)) {
+    const cmd = m[1];
+    if (!KNOWN_CLI_COMMANDS.has(cmd)) {
+      check(false, `Skill ${skill}: references unknown CLI command 'mygrace ${cmd}'`, true);
+    }
+  }
+}
+
+// ─── 8. Extension manifest paths resolve ────────────────────────────────
+
+const extDir = join(ROOT, "extensions", "mygrace");
+const extManifestPath = join(extDir, "qwen-extension.json");
+if (existsSync(extManifestPath)) {
+  const manifest = JSON.parse(readFileSync(extManifestPath, "utf-8"));
+  for (const p of [manifest.skills, manifest.agents, manifest.commands].filter(Boolean)) {
+    check(existsSync(join(extDir, p)), `Extension manifest path missing: ${p} (relative to extensions/mygrace/)`);
+  }
+  for (const srv of manifest.mcpServers ?? []) {
+    for (const a of srv.args ?? []) {
+      const resolved = a.replace(/\$\{extensionDir\}/g, extDir);
+      if (resolved.endsWith(".ts")) {
+        check(existsSync(resolved), `Extension MCP script missing: ${resolved}`);
+      }
+    }
+  }
+}
+
 // ─── Report ─────────────────────────────────────────────────────────────
 
 console.log("");

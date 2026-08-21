@@ -6,10 +6,9 @@
   "author": { "name": "osovv", "url": "https://github.com/osovv" },
   "license": "MIT",
   "contextFileName": "QWEN.md",
-  "skills": "skills/",
-  "agents": "agents/",
+  "skills": "../../skills/mygrace",
   "commands": "commands/",
-  "mcpServers": [{ "name": "mygrace-cli", "command": "bun", "args": ["run", "${extensionDir}/src/grace-mcp.ts"] }],
+  "mcpServers": [{ "name": "mygrace-cli", "command": "bun", "args": ["run", "${extensionDir}/../../src/grace-mcp.ts"] }],
   "settings": {
     "mygrace.autoLint": { "type": "boolean", "default": false, "description": "Auto-run mygrace lint after file modifications" },
     "mygrace.lazyNavigation": { "type": "boolean", "default": true, "description": "Always use index-first navigation pattern" },
