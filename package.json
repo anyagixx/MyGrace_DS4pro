@@ -23,6 +23,8 @@
     "src/grace-mcp.ts",
     "src/grace-mcp-commands.ts",
     "src/grace-common.ts",
+    "src/grace-install.ts",
+    "skills/mygrace",
     "README.md",
     "LICENSE"
   ],
