@@ -36,7 +36,7 @@ Prefer the matching skill (via the `skill` tool) over re-deriving the process:
 
 ## MCP Tools (when the mygrace MCP server is connected)
 
-`mygrace_list_modules` · `mygrace_show_module` · `mygrace_show_phase` · `mygrace_list_verifications` · `mygrace_lint` · `mygrace_show_file`
+`mygrace_list_modules` · `mygrace_show_module` · `mygrace_show_phase` · `mygrace_list_verifications` · `mygrace_lint` · `mygrace_show_file` · `mygrace_status`
 
 Prefer MCP tools for index-based reads; fall back to direct file reads when MCP is unavailable.
 

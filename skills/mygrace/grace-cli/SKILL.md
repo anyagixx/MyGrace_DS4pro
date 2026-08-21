@@ -13,6 +13,7 @@ Use the `mygrace` CLI as a fast MyGRACE-aware read/query layer, and the MCP tool
 - `mygrace_list_verifications` — verification entries
 - `mygrace_lint` — integrity check including index sync
 - `mygrace_show_file` — file-local markup
+- `mygrace_status` — aggregated health (module/phase/verification counts + lint) as JSON
 If the MCP server is not connected, fall back to the CLI commands below or direct file reads.
 
 ## CLI Commands
@@ -35,6 +36,8 @@ If the MCP server is not connected, fall back to the CLI commands below or direc
 
 ### General
 - `mygrace lint --path <root>` — integrity check including index synchronization
+- `mygrace status --path <root>` — aggregated health from the 3 indexes + lint
+- `mygrace status --path <root> --format json` — machine-readable health (use for dashboards/panels)
 - `mygrace file show <path> --root <root>` — file-local markup
 - `mygrace file show <path> --root <root> --contracts --blocks` — with contracts and blocks
 

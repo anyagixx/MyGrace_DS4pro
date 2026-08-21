@@ -20,7 +20,8 @@ Show the current state of the MyGRACE project.
 - Paired vs unpaired semantic blocks
 
 ### 3. Index Consistency Check
-Run `mygrace lint --path <root>` (MCP: `mygrace_lint`) instead of manual checks when available:
+One-call shortcut: MCP `mygrace_status` (or `mygrace status --path <root> --format json`) returns module/phase/verification counts plus lint errors/warnings in one JSON call — use it to skip steps 1–3 when only the health summary is needed.
+Otherwise run `mygrace lint --path <root>` (MCP: `mygrace_lint`):
 - Modules in graph-index vs files in docs/modules/
 - Modules in graph-index vs source files with MODULE_CONTRACT
 - Verification entries in verification-index vs files in docs/verification/
