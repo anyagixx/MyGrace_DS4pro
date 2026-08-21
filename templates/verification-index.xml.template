@@ -1,4 +1,4 @@
-<VerificationIndex>
+<VerificationIndex project="$PROJECT_NAME">
   <!-- Verification entries: one line each. Sorted by priority: high > medium > low -->
   <!-- <V-M-XXX MODULE="M-XXX" PRIORITY="high" STATUS="pending" /> -->
 
