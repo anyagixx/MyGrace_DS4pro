@@ -11,7 +11,20 @@
   "bugs": {
     "url": "https://github.com/anyagixx/MyGrace/issues"
   },
-  "keywords": ["mygrace", "grace", "cli", "lint", "bun", "python", "typescript", "semantic-markup", "knowledge-graph", "lazy-loading", "scalable", "index"],
+  "keywords": [
+    "mygrace",
+    "grace",
+    "cli",
+    "lint",
+    "bun",
+    "python",
+    "typescript",
+    "semantic-markup",
+    "knowledge-graph",
+    "lazy-loading",
+    "scalable",
+    "index"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -24,6 +37,7 @@
     "src/grace-mcp-commands.ts",
     "src/grace-common.ts",
     "src/grace-install.ts",
+    "src/grace-status.ts",
     "src/grace-init.ts",
     "skills/mygrace",
     "templates",

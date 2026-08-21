@@ -79,3 +79,19 @@ describe("mcpPatchEntry", () => {
     }
   });
 });
+
+// ─── buildStatusSnapshot ────────────────────────────────────────────────
+
+import { buildStatusSnapshot } from "../src/grace-status";
+
+describe("buildStatusSnapshot", () => {
+  test("summarizes the fixture project", () => {
+    const s = buildStatusSnapshot(import.meta.dir + "/fixtures/mygrace-project");
+    expect(s.modules.total).toBe(2);
+    expect(s.phases.total).toBeGreaterThan(0);
+    expect(s.verifications.total).toBeGreaterThan(0);
+    expect(s.lint.errors).toBe(0);
+    expect(s.lint.warnings).toBe(0);
+    expect(s.modules.byStatus["wip"]).toBe(1);
+  });
+});
