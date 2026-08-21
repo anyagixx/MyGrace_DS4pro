@@ -1,6 +1,6 @@
 {
   "name": "@osovv/mygrace-cli",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "description": "MyGRACE CLI — scalable GRACE methodology with lazy-loading indexes, per-module files, and phase-based navigation for large projects.",
   "license": "MIT",
   "homepage": "https://github.com/anyagixx/MyGrace#readme",

@@ -1,0 +1,12 @@
+<M-CLI NAME="CLI" TYPE="ENTRY_POINT" STATUS="pending">
+  <contract>
+    <purpose>Admin command-line interface</purpose>
+    <path>src/cli/index.ts</path>
+    <depends>M-AUTH,M-ORDERS</depends>
+    <verification-ref>V-M-CLI</verification-ref>
+  </contract>
+  <exports>
+    <export-1 name="runCommand">Primary public function of CLI</export-1>
+  </exports>
+  <CrossLink to="M-AUTH" kind="depends" />
+</M-CLI>

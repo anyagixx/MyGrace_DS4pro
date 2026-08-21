@@ -1,0 +1,4 @@
+<Phase-2 name="Core Domain" status="wip">
+  <step-M-USERS module="M-USERS" description="User profiles and role checks" status="wip" />
+  <step-M-PRODUCTS module="M-PRODUCTS" description="Product catalog queries and stock" status="wip" />
+</Phase-2>

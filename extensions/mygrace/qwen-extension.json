@@ -1,6 +1,6 @@
 {
   "name": "mygrace",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "displayName": "MyGRACE — Scalable GRACE with Lazy-Loading",
   "description": "Scalable GRACE methodology for Qwen Code: index-based navigation, per-module files, phase-based planning. Solves context overflow in large projects (20-200+ modules).",
   "author": { "name": "osovv", "url": "https://github.com/osovv" },

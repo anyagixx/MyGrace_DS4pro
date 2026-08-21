@@ -21,7 +21,7 @@ import { buildToolCommand, type ToolArgs } from "./grace-mcp-commands";
 const exec = promisify(execFile);
 const MYGRACE_BIN = process.env.MYGRACE_BIN || "mygrace";
 
-const server = new Server({ name: "mygrace-mcp", version: "0.0.3" }, { capabilities: { tools: {} } });
+const server = new Server({ name: "mygrace-mcp", version: "0.1.0" }, { capabilities: { tools: {} } });
 
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [

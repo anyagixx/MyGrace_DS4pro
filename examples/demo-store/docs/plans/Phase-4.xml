@@ -1,0 +1,5 @@
+<Phase-4 name="Delivery" status="pending">
+  <step-M-NOTIFY module="M-NOTIFY" description="Email and webhook delivery" status="pending" />
+  <step-M-API module="M-API" description="REST endpoints over the domain" status="pending" />
+  <step-M-CLI module="M-CLI" description="Admin command-line interface" status="pending" />
+</Phase-4>

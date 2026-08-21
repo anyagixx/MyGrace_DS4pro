@@ -1,0 +1,12 @@
+<M-CART NAME="Cart" TYPE="CORE_LOGIC" STATUS="pending">
+  <contract>
+    <purpose>Shopping cart state and totals</purpose>
+    <path>src/cart/index.ts</path>
+    <depends>M-PRODUCTS,M-USERS</depends>
+    <verification-ref>V-M-CART</verification-ref>
+  </contract>
+  <exports>
+    <export-1 name="addItem">Primary public function of Cart</export-1>
+  </exports>
+  <CrossLink to="M-PRODUCTS" kind="depends" />
+</M-CART>

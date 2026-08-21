@@ -1,0 +1,12 @@
+<M-PRODUCTS NAME="Products" TYPE="CORE_LOGIC" STATUS="wip">
+  <contract>
+    <purpose>Product catalog queries and stock</purpose>
+    <path>src/products/index.ts</path>
+    <depends>M-DB</depends>
+    <verification-ref>V-M-PRODUCTS</verification-ref>
+  </contract>
+  <exports>
+    <export-1 name="listProducts">Primary public function of Products</export-1>
+  </exports>
+  <CrossLink to="M-DB" kind="depends" />
+</M-PRODUCTS>

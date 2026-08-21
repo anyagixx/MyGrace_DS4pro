@@ -1,39 +1,45 @@
 # MyGRACE — Scalable GRACE with Lazy-Loading Indexes
 
-**MyGRACE** is a scalable variant of GRACE (Graph-RAG Anchored Code Engineering) designed for **large projects** with 20-200+ modules. It replaces monolithic XML files with lazy-loading indexes and per-entity files, reducing context token usage by **96%**.
+**MyGRACE** is a scalable variant of GRACE (Graph-RAG Anchored Code Engineering) for **large projects** (20-200+ modules) developed by AI agents. It replaces monolithic XML files with lazy-loading indexes and per-entity files, cutting context usage per operation by up to ~90%.
 
-Current version: `0.0.3`
+**Primary platform: DeepSeek Harness.** Install with one command and the agent follows the methodology automatically in every project.
 
-## Platform Support
+Current version: `0.1.0`
 
-MyGRACE works across all major AI coding platforms. Canonical skills live in `skills/mygrace/` and are packaged for each platform:
+## Quick Start (DeepSeek Harness)
 
-| Platform | Packaging | Context File | Install |
-|----------|-----------|-------------|---------|
-| **Claude Code** | `plugins/claude/.claude-plugin/` | `CLAUDE.md` | Marketplace or skills dir |
-| **Qwen Code** | `extensions/mygrace/` | `QWEN.md` | Extension or skills dir |
-| **Gemini CLI** | `plugins/gemini/.gemini-plugin/` | `GEMINI.md` | Skills directory |
-| **OpenCode** | `plugins/opencode/.opencode/` | `AGENTS.md` | Skills directory |
-| **Cursor** | `rules/cursor/` | `.cursorrules` | Copy to project root |
-| **Windsurf** | `rules/windsurf/` | `.windsurfrules` | Copy to project root |
-| **KiloCode** | `rules/kilocode/` | `.kilocoderules` | Copy to project root |
-| **Codex (ChatGPT)** | `rules/codex/` | `CODEX.md` | Copy to project or paste in custom instructions |
-| **GitHub Copilot** | `rules/copilot/` | `.github/copilot-instructions.md` | Copy to project root |
-| **Aider** | `rules/aider/` | `.aider.instructions.md` | Copy to project root |
+```bash
+# 1. Install the CLI
+bun add -g @osovv/mygrace-cli
 
-All 14 skills are **shared** across platforms — only the packaging and context file names differ.
+# 2. Wire MyGRACE into DeepSeek Harness (skills + MCP server)
+mygrace install-dsh
+
+# 3. Restart the harness so the MCP row loads
+dsh web
+
+# 4. Bootstrap a project (docs/ indexes + AGENTS.md)
+cd your-project
+mygrace init-dsh --path . --name YourProject
+```
+
+After that:
+
+- **The agent knows the methodology automatically** — DSH loads `AGENTS.md` at session start.
+- **14 skills** (`mygrace-plan`, `mygrace-execute`, `mygrace-status`, …) appear in the Web GUI skill picker; the agent invokes them as needed.
+- **6 MCP tools** (`mygrace_list_modules`, `mygrace_show_module`, `mygrace_show_phase`, `mygrace_list_verifications`, `mygrace_lint`, `mygrace_show_file`) give the agent a structured, token-efficient read layer over the project graph.
+
+Manage the integration: `mygrace install-dsh --dry-run`, `mygrace install-dsh --uninstall`.
 
 ## The Problem
 
-Classic GRACE stores all modules in monolithic XML files:
+Classic GRACE stores all modules in monolithic XML files. At 15+ modules these grow to thousands of lines, and an agent burns most of its context reading irrelevant data.
 
 | Artifact | 5 modules | 20 modules | 50 modules |
 |----------|-----------|------------|------------|
 | `knowledge-graph.xml` | 150 lines | 800 lines | 2000-5000 lines |
 | `development-plan.xml` | 200 lines | 1200 lines | 3000-8000 lines |
 | `verification-plan.xml` | 100 lines | 600 lines | 1500-4000 lines |
-
-At 15+ modules, LLMs burn 80-95% of context tokens reading irrelevant data. Attention dilution degrades response quality.
 
 ## The MyGRACE Solution
 
@@ -45,39 +51,18 @@ Replace monolithic files with **indexes + per-entity files**:
 | `development-plan.xml` | `plan-index.xml` + `docs/plans/Phase-N.xml` | Index ≤50 lines, phase 50-200 lines |
 | `verification-plan.xml` | `verification-index.xml` + `docs/verification/V-M-XXX.xml` | Index ≤80 lines, entry 20-60 lines |
 
-### Token Savings
+### Measured Token Savings
 
-| Task | Classic GRACE | MyGRACE | Savings |
-|------|--------------|---------|---------|
-| Status check | ~6500 lines | ~230 lines | **96%** |
-| Single module work | ~6500 lines | ~180 lines | **97%** |
-| Phase execution | ~6500 lines | ~280 lines | **96%** |
+Measured with `bun run scripts/measure-context.ts --project examples/demo-store` (12 modules, 4 phases):
 
-### Scalability
+| Operation | Classic GRACE | MyGRACE | Savings |
+|-----------|--------------|---------|---------|
+| Status check (3 indexes) | 363 lines | 39 lines | **89%** |
+| Single module work | 173 lines | 30 lines | **83%** |
+| Phase execution | 31 lines | 14 lines | **55%** |
+| Full verification audit | 159 lines | 159 lines | 0% (reading everything is reading everything) |
 
-| Metric | Classic GRACE | MyGRACE |
-|--------|--------------|---------|
-| Point of degradation | ~15 modules | ~200+ modules |
-| Context per operation | Linear growth | Constant (~200 lines) |
-| Archive support | No | Yes (`docs/archive/`) |
-
-## Project Structure
-
-```
-mygrace-project/
-├── docs/
-│   ├── graph-index.xml          ← ALWAYS read first (≤100 lines)
-│   ├── plan-index.xml           ← Phase index (≤50 lines)
-│   ├── verification-index.xml   ← Verification index (≤80 lines)
-│   ├── operational-packets.xml  ← Packet templates (stays small)
-│   ├── modules/                 ← Per-module files (M-XXX.xml, 30-80 lines each)
-│   ├── plans/                   ← Per-phase files (Phase-N.xml, 50-200 lines each)
-│   ├── verification/            ← Per-verification files (V-M-XXX.xml, 20-60 lines each)
-│   └── archive/                 ← Completed phases (moved when project grows)
-├── AGENTS.md
-├── QWEN.md
-└── src/                         ← Source code with MODULE_CONTRACT, semantic blocks
-```
+Savings grow with project size — the index stays flat while monolithic files grow linearly. The measurement is reproducible: the script synthesizes the classic equivalents by merging index + per-entity files, then compares operation-by-operation.
 
 ## Navigation Rule #1
 
@@ -95,88 +80,88 @@ Right:
 3. Done. 115 lines vs 5000.
 ```
 
-## Install
+## Project Structure
 
-### Skills
-```bash
-# Copy skills to your Qwen Code skills directory
-cp -r skills/mygrace/grace-* ~/.qwen/skills/
+```
+your-project/
+├── docs/
+│   ├── graph-index.xml          ← ALWAYS read first (≤100 lines)
+│   ├── plan-index.xml           ← Phase index (≤50 lines)
+│   ├── verification-index.xml   ← Verification index (≤80 lines)
+│   ├── operational-packets.xml  ← Packet templates (stays small)
+│   ├── requirements.xml         ← Requirements
+│   ├── technology.xml           ← Technology stack
+│   ├── modules/                 ← M-XXX.xml per module (30-80 lines)
+│   ├── plans/                   ← Phase-N.xml per phase (50-200 lines)
+│   ├── verification/            ← V-M-XXX.xml per entry (20-60 lines)
+│   └── archive/                 ← Completed phases
+├── AGENTS.md                    ← Auto-loaded by DeepSeek Harness
+└── src/                         ← Source with MODULE_CONTRACT + semantic blocks
 ```
 
-### CLI
-```bash
-bun add -g @osovv/mygrace-cli
-mygrace lint --path /path/to/project
-```
+## Skills (14, shared across platforms)
 
-### CLI Commands
+| Skill | Purpose |
+|-------|---------|
+| `mygrace-init` | Bootstrap docs/ + AGENTS.md (fast path: `mygrace init-dsh`) |
+| `mygrace-plan` | Design modules/phases/verification, write per-entity files + indexes |
+| `mygrace-verification` | Design test scenarios, log markers, evidence per module |
+| `mygrace-execute` | Implement a phase step by step (current phase + module only) |
+| `mygrace-multiagent-execute` | Parallel waves via DSH subagents |
+| `mygrace-refactor` | Safe restructuring with atomic index updates |
+| `mygrace-refresh` | Sync indexes with per-entity files |
+| `mygrace-reviewer` | Integrity audit (scoped / wave / full) |
+| `mygrace-fix` | Debug: index → module → block |
+| `mygrace-status` | Health report from 3 indexes only (~230 lines) |
+| `mygrace-ask` | Q&A via lazy navigation |
+| `mygrace-cli` | CLI / MCP reference |
+| `mygrace-explainer` | Full methodology reference |
+| `mygrace-setup-subagents` | Ready-to-use DSH subagent role prompts |
+
+## CLI Commands
 
 | Command | What It Does | Context Used |
-|---------|-------------|--------------|
+|---------|--------------|--------------|
+| `mygrace install-dsh` | Install into DeepSeek Harness (skills + MCP) | — |
+| `mygrace init-dsh` | Bootstrap docs/ + AGENTS.md from templates | — |
 | `mygrace module index` | Show graph-index.xml | ≤100 lines |
 | `mygrace module find <query>` | Search modules by name/path/type/status | ≤100 lines |
-| `mygrace module show <id>` | Show per-module file (docs/modules/M-XXX.xml) | 30-80 lines |
+| `mygrace module show <id>` | Show per-module file | 30-80 lines |
 | `mygrace module show <id> --with-verification` | Module + verification file | 50-140 lines |
 | `mygrace module list --status=wip` | Filter modules by status | ≤100 lines |
 | `mygrace phase index` | Show plan-index.xml | ≤50 lines |
 | `mygrace phase show Phase-N` | Show per-phase file | 50-200 lines |
-| `mygrace verification index` | Show verification-index.xml | ≤80 lines |
+| `mygrace verification index [--priority X] [--format json]` | Show/filter verification index | ≤80 lines |
 | `mygrace lint` | Integrity check including index sync | ~230 lines |
-| `mygrace file show <path>` | File-local markup | Source file only |
+| `mygrace file show <path> --root <root> --contracts --blocks` | File-local markup | Source file only |
 
-## Quick Start
+## Example Project
 
-```
-1. /mygrace:init     → Create index-based docs/ structure
-2. Fill requirements.xml + technology.xml
-3. /mygrace:plan     → Design modules, creates index entries + per-module files
-4. /mygrace:verification → Design tests, creates verification entries
-5. /mygrace:execute  → Generate modules sequentially (lazy-loading)
-6. /mygrace:status   → Health report (reads only indexes)
-```
+`examples/demo-store` is a 12-module demo store used for dogfooding: `mygrace lint` passes 0/0, its tests pass, and it feeds `scripts/measure-context.ts`. Regenerate with `bun run scripts/gen-example.ts`.
 
-## Skills
+## Platform Support
 
-| Skill | Purpose | Key Difference from Classic GRACE |
-|-------|---------|-----------------------------------|
-| `/mygrace:init` | Bootstrap project | Creates index files + per-entity directories |
-| `/mygrace:plan` | Design architecture | Writes per-module files + index entries |
-| `/mygrace:execute` | Sequential execution | Reads only current phase + current module |
-| `/mygrace:multiagent` | Parallel waves | Each worker reads only its module |
-| `/mygrace:refactor` | Safe restructuring | Updates indexes atomically |
-| `/mygrace:refresh` | Sync indexes | Detects index ↔ file drift |
-| `/mygrace:reviewer` | Integrity review | Checks index consistency |
-| `/mygrace:fix` | Debug | Lazy: index → module → block |
-| `/mygrace:status` | Health report | Reads only 3 indexes (~230 lines) |
-| `/mygrace:ask` | Q&A | Lazy navigation via indexes |
-| `/mygrace:verification` | Design tests | Per-verification files + index |
-| `/mygrace:cli` | CLI reference | Index-based commands |
-| `/mygrace:explainer` | Methodology ref | Documents scalable architecture |
-| `/mygrace:setup-subagents` | Create agents | Lazy-navigation-aware agents |
+**DeepSeek Harness — primary, fully wired** (skills + MCP + AGENTS.md auto-loading).
 
-## Migration from Classic GRACE
-
-If you have an existing GRACE project with monolithic XML files:
-
-1. Run `mygrace lint --path .` to assess current state
-2. Run `/mygrace:refresh` to split monolithic files into indexes + per-entity files
-3. The tool will:
-   - Create `graph-index.xml` from `knowledge-graph.xml` module entries
-   - Create `docs/modules/M-XXX.xml` for each module
-   - Create `plan-index.xml` from `development-plan.xml` phases
-   - Create `docs/plans/Phase-N.xml` for each phase
-   - Create `verification-index.xml` from `verification-plan.xml` entries
-   - Create `docs/verification/V-M-XXX.xml` for each verification entry
-4. Archive the original monolithic files to `docs/archive/monolithic-backup/`
+| Platform | Packaging | Status |
+|----------|-----------|--------|
+| **DeepSeek Harness** | `mygrace install-dsh` | ✅ Primary |
+| **Qwen Code** | `extensions/mygrace/` | ⚠️ Maintained, not the focus |
+| **Codex / Cursor / Windsurf / KiloCode / Copilot / Aider** | `rules/*` instruction files | ⚠️ Instruction files only |
+| **Claude Code / Gemini CLI / OpenCode** | `plugins/*` | ⚠️ Metadata stubs — context files not yet shipped |
 
 ## Why This Works
 
-Research on LLM attention patterns shows:
-- **Attention dilution**: When relevant info is buried in large context, models miss it
-- **Constant context is better than complete context**: 200 relevant lines outperform 5000 lines with 200 relevant
-- **Index patterns are natural**: Humans use tables of contents before reading chapters — LLMs should too
+When relevant information is buried in a large context, models miss it. Constant, relevant context beats complete context: 40 relevant lines outperform 5000 lines containing 200 relevant ones. Indexes are how humans navigate books — tables of contents before chapters. MyGRACE enforces the same discipline for every operation: index first, details on demand.
 
-MyGRACE enforces the same discipline for every operation: index first, details on demand.
+## Development
+
+```bash
+bun test                              # unit tests (imports real src code)
+bun run scripts/validate-marketplace.ts   # packaging validation
+bun run scripts/gen-example.ts        # regenerate examples/demo-store
+bun run scripts/measure-context.ts    # context savings report
+```
 
 ## License
 

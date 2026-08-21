@@ -1,0 +1,12 @@
+<M-ORDERS NAME="Orders" TYPE="CORE_LOGIC" STATUS="pending">
+  <contract>
+    <purpose>Order creation and lifecycle</purpose>
+    <path>src/orders/index.ts</path>
+    <depends>M-CART,M-USERS,M-DB</depends>
+    <verification-ref>V-M-ORDERS</verification-ref>
+  </contract>
+  <exports>
+    <export-1 name="createOrder">Primary public function of Orders</export-1>
+  </exports>
+  <CrossLink to="M-CART" kind="depends" />
+</M-ORDERS>

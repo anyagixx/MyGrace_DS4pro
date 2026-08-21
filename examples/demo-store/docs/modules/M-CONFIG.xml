@@ -1,0 +1,12 @@
+<M-CONFIG NAME="Config" TYPE="UTILITY" STATUS="done">
+  <contract>
+    <purpose>Load and validate application configuration from env</purpose>
+    <path>src/config/index.ts</path>
+    <depends>none</depends>
+    <verification-ref>V-M-CONFIG</verification-ref>
+  </contract>
+  <exports>
+    <export-1 name="loadConfig">Primary public function of Config</export-1>
+  </exports>
+  <CrossLink to="M-CONFIG" kind="depends" />
+</M-CONFIG>
