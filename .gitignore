@@ -1,0 +1,7 @@
+node_modules/
+*.lock
+!bun.lock
+!.gitignore
+.bun-tmp/
+.bun-install/
+.bun-cache/

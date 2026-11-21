@@ -1,0 +1,32 @@
+{
+  "name": "@osovv/dsh-skill-mygrace",
+  "description": "Bundled DSH skill provider for the MyGRACE methodology (14 MyGRACE skills).",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "assets",
+    "package.json"
+  ],
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-skill": "*",
+    "@deepseek-ai/cordis": "*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anyagixx/MyGrace.git",
+    "directory": "packages/dsh-skill-mygrace"
+  }
+}

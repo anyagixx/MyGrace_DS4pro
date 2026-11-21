@@ -1,0 +1,8 @@
+pre-commit:
+  commands:
+    validate-marketplace:
+      tags: marketplace
+      run: bun run scripts/validate-marketplace.ts
+    test:
+      tags: test
+      run: bun test

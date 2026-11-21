@@ -1,0 +1,11 @@
+<V-M-CONFIG MODULE="M-CONFIG" PRIORITY="low" STATUS="done">
+  <test-files><file>src/config/index.test.ts</file></test-files>
+  <module-checks><check-1>bun test src/config/index.test.ts</check-1></module-checks>
+  <scenarios>
+    <scenario-1 kind="success">Valid config loads without errors</scenario-1>
+    <scenario-2 kind="failure">Missing required field throws CONFIG_INVALID</scenario-2>
+  </scenarios>
+  <required-log-markers>
+    <marker-1>[Config][loadConfig][BLOCK_VALIDATE]</marker-1>
+  </required-log-markers>
+</V-M-CONFIG>

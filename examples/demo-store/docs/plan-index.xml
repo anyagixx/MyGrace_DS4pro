@@ -1,0 +1,6 @@
+<PlanIndex project="DemoStore" version="1.0.0">
+  <Phase-1 name="Foundation" status="done" steps="4" />
+  <Phase-2 name="Core Domain" status="wip" steps="2" />
+  <Phase-3 name="Commerce" status="pending" steps="3" />
+  <Phase-4 name="Delivery" status="pending" steps="3" />
+</PlanIndex>

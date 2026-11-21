@@ -1,0 +1,17 @@
+# MyGRACE DSH bundle — loader rows for the bundle's plugin packages.
+#
+# The MCP mount is done by the host plugin (@osovv/mygrace-dsh): absolute
+# paths are resolved from the installed packages at runtime, so the bundle
+# patch itself stays path-free.
+- insert:
+    - id: mygrace-host
+      name: '@osovv/mygrace-dsh'
+- insert:
+    - id: mygrace-skills
+      name: '@osovv/dsh-skill-mygrace'
+- insert:
+    - id: mygrace-rtk
+      name: '@osovv/dsh-mygrace-rtk'
+- insert:
+    - id: mygrace-panel
+      name: 'mygrace-status-panel'

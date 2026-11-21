@@ -1,0 +1,12 @@
+<M-DB NAME="Database" TYPE="DATA_LAYER" STATUS="done">
+  <contract>
+    <purpose>Connection pool and query helper</purpose>
+    <path>src/db/index.ts</path>
+    <depends>M-CONFIG</depends>
+    <verification-ref>V-M-DB</verification-ref>
+  </contract>
+  <exports>
+    <export-1 name="query">Primary public function of Database</export-1>
+  </exports>
+  <CrossLink to="M-CONFIG" kind="depends" />
+</M-DB>

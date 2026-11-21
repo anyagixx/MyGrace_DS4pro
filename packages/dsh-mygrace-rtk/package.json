@@ -1,0 +1,17 @@
+{
+  "name": "@osovv/dsh-mygrace-rtk",
+  "description": "DSH tool-middleware plugin: rewrites noisy dev commands to `rtk` (token saver) via the tools/execute hook.",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "lib/index.js",
+  "files": ["lib/index.js", "README.md"],
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anyagixx/MyGrace.git",
+    "directory": "packages/dsh-mygrace-rtk"
+  }
+}

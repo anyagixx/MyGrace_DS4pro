@@ -1,0 +1,7 @@
+{
+  "name": "mygrace",
+  "description": "MyGRACE — scalable GRACE methodology with lazy-loading indexes",
+  "version": "0.1.0",
+  "author": "osovv",
+  "license": "MIT"
+}

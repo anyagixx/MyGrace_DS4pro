@@ -1,0 +1,16 @@
+<M-CONFIG NAME="Config" TYPE="UTILITY" STATUS="done">
+  <purpose>Application configuration and environment management</purpose>
+  <path>src/config/index.ts</path>
+  <depends></depends>
+  <verification-ref>V-M-CONFIG</verification-ref>
+  <annotations>
+    <fn-loadConfig PURPOSE="Load and validate config from environment" />
+    <type-AppConfig PURPOSE="Configuration type definition" />
+  </annotations>
+  <contract>
+    <purpose>Manage application configuration</purpose>
+    <inputs></inputs>
+    <outputs><param name="config" type="AppConfig" /></outputs>
+    <errors><error code="CONFIG_INVALID" description="Configuration validation failed" /></errors>
+  </contract>
+</M-CONFIG>

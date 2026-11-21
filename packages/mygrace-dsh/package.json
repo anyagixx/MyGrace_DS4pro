@@ -1,0 +1,21 @@
+{
+  "name": "@osovv/mygrace-dsh",
+  "description": "DSH bundle for MyGRACE: MCP server + 14 skills + status panel — the full MyGRACE project as a DeepSeek Harness plugin.",
+  "version": "0.1.0",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "files": ["cordis.patch.yml", "lib/index.js", "README.md"],
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@osovv/dsh-skill-mygrace": "file:../dsh-skill-mygrace",
+    "@osovv/dsh-mygrace-rtk": "file:../dsh-mygrace-rtk",
+    "@osovv/mygrace-cli": "file:../..",
+    "mygrace-status-panel": "file:../mygrace-status-panel"
+  }
+}

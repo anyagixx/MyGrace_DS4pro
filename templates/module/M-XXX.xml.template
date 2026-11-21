@@ -1,0 +1,32 @@
+<M-XXX NAME="$MODULE_NAME" TYPE="$MODULE_TYPE" STATUS="pending">
+  <purpose>$MODULE_PURPOSE</purpose>
+  <path>$MODULE_PATH</path>
+  <depends>$MODULE_DEPENDS</depends>
+  <verification-ref>$VERIFICATION_REF</verification-ref>
+
+  <annotations>
+    <!-- Public interface only — not private helpers -->
+    <!-- <fn-functionName PURPOSE="What this function does" /> -->
+    <!-- <type-TypeName PURPOSE="What this type represents" /> -->
+    <!-- <export-CONSTANT_NAME PURPOSE="What this constant is for" /> -->
+  </annotations>
+
+  <CrossLink to="$DEPENDENCY_MODULE_ID" relation="$RELATION_DESCRIPTION" />
+
+  <contract>
+    <purpose>$MODULE_PURPOSE</purpose>
+    <inputs>
+      <!-- <param name="paramName" type="Type" description="What this param is for" /> -->
+    </inputs>
+    <outputs>
+      <!-- <param name="returnName" type="Type" description="What is returned" /> -->
+    </outputs>
+    <errors>
+      <!-- <error code="ERROR_CODE" description="When this error occurs" /> -->
+    </errors>
+  </contract>
+
+  <notes>
+    <!-- Implementation notes, design decisions, trade-offs -->
+  </notes>
+</M-XXX>

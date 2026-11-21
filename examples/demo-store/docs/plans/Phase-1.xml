@@ -1,0 +1,6 @@
+<Phase-1 name="Foundation" status="done">
+  <step-M-CONFIG module="M-CONFIG" description="Load and validate application configuration from env" status="done" />
+  <step-M-LOGGER module="M-LOGGER" description="Structured logging with [Module][fn][BLOCK] markers" status="done" />
+  <step-M-DB module="M-DB" description="Connection pool and query helper" status="done" />
+  <step-M-AUTH module="M-AUTH" description="Authenticate users and manage sessions" status="done" />
+</Phase-1>

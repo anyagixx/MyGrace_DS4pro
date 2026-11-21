@@ -1,0 +1,11 @@
+<V-M-API MODULE="M-API" PRIORITY="medium" STATUS="pending">
+  <test-files><file>src/api/index.test.ts</file></test-files>
+  <module-checks><check-1>bun test</check-1></module-checks>
+  <scenarios>
+    <scenario-1 kind="success">handleRequest succeeds on valid input</scenario-1>
+    <scenario-2 kind="failure">handleRequest fails fast on invalid input</scenario-2>
+  </scenarios>
+  <required-log-markers>
+    <marker-1>[HTTP API][handleRequest][BLOCK_VALIDATE]</marker-1>
+  </required-log-markers>
+</V-M-API>

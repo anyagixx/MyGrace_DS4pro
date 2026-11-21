@@ -1,0 +1,94 @@
+# MyGRACE — Scalable Graph-RAG Anchored Code Engineering (DeepSeek Harness)
+
+This project is governed by **MyGRACE**: AI-driven development with lazy-loading indexes and per-entity files. All tasks follow this methodology.
+
+## Navigation Rule #1 (CRITICAL)
+
+**ALWAYS start with index files. NEVER scan all per-entity files.**
+
+| Action | 1. Read first | 2. Then | Context |
+|---|---|---|---|
+| Learn modules | `docs/graph-index.xml` (≤100 lines) | `docs/modules/M-XXX.xml` | ~130 lines |
+| Development plan | `docs/plan-index.xml` (≤50 lines) | `docs/plans/Phase-N.xml` | ~250 lines |
+| Verification | `docs/verification-index.xml` (≤80 lines) | `docs/verification/V-M-XXX.xml` | ~140 lines |
+| Project status | Only the 3 index files | — | ~230 lines |
+
+Monolithic files `knowledge-graph.xml`, `development-plan.xml`, `verification-plan.xml` do **NOT** exist here.
+
+## Skills
+
+Prefer the matching skill (via the `skill` tool) over re-deriving the process:
+
+| Skill | Purpose |
+|---|---|
+| `mygrace-init` | Bootstrap docs/ structure + this AGENTS.md (fast path: `mygrace init-dsh`) |
+| `mygrace-plan` | Design modules/phases/verification, write per-entity files + indexes |
+| `mygrace-verification` | Design test scenarios, log markers, evidence per module |
+| `mygrace-execute` | Implement a phase step by step (current phase + module only) |
+| `mygrace-multiagent-execute` | Parallel waves via DSH subagents |
+| `mygrace-refactor` | Safe restructuring with atomic index updates |
+| `mygrace-refresh` | Sync indexes with per-entity files after drift |
+| `mygrace-reviewer` | Integrity audit (scoped / wave / full) |
+| `mygrace-fix` | Debug: index → module → block |
+| `mygrace-status` | Health report from 3 indexes only |
+| `mygrace-ask` | Q&A via lazy navigation |
+| `mygrace-cli` | CLI/MCP reference |
+
+## MCP Tools (when the mygrace MCP server is connected)
+
+`mygrace_list_modules` · `mygrace_show_module` · `mygrace_show_phase` · `mygrace_list_verifications` · `mygrace_lint` · `mygrace_show_file` · `mygrace_status`
+
+Prefer MCP tools for index-based reads; fall back to direct file reads when MCP is unavailable.
+
+## Six Principles
+
+1. **Never write code without a contract** — every governed file has MODULE_CONTRACT (PURPOSE, SCOPE, DEPENDS, LINKS) before code.
+2. **Semantic markup is load-bearing** — `START_BLOCK_*` / `END_BLOCK_*` are navigation anchors, not comments.
+3. **The knowledge graph is always current** — indexes never drift from reality; update after every change.
+4. **Top-down synthesis** — Requirements → Technology → Plan → Verification → Contracts → Code.
+5. **Verification is architecture** — tests, traces and log markers are part of the blueprint.
+6. **Governed autonomy** — freedom in HOW, not in WHAT; the contract defines WHAT.
+
+## Semantic Markup
+
+```ts
+// START_MODULE_CONTRACT
+//   PURPOSE: ...
+//   SCOPE: ...
+//   DEPENDS: M-XXX
+//   LINKS: docs/modules/M-XXX.xml
+// END_MODULE_CONTRACT
+// START_MODULE_MAP / END_MODULE_MAP
+// START_CHANGE_SUMMARY / END_CHANGE_SUMMARY
+// START_CONTRACT: fnName / END_CONTRACT: fnName
+// START_BLOCK_VALIDATE ... code ... END_BLOCK_VALIDATE
+```
+
+Log format: `[ModuleName][functionName][BLOCK_NAME] message`
+
+## Project Structure
+
+```
+docs/
+  graph-index.xml          # module index — read first (≤100 lines)
+  plan-index.xml           # phase index (≤50 lines)
+  verification-index.xml   # verification index (≤80 lines)
+  operational-packets.xml  # execution packet templates
+  requirements.xml         # requirements
+  technology.xml           # technology stack
+  modules/                 # M-XXX.xml per module (30-80 lines)
+  plans/                   # Phase-N.xml per phase (50-200 lines)
+  verification/            # V-M-XXX.xml per verification entry (20-60 lines)
+  archive/                 # completed phases (moved when project grows)
+AGENTS.md                  # this file
+```
+
+## Editing Rules
+
+1. Preserve MODULE_CONTRACT, MODULE_MAP, CHANGE_SUMMARY on any edit.
+2. Preserve START_BLOCK/END_BLOCK boundaries unless restructuring.
+3. Update CHANGE_SUMMARY after changes.
+4. Update `docs/graph-index.xml` when public interfaces change.
+5. Update verification files when tests change.
+6. If a contract seems wrong — propose a change, do not deviate silently.
+7. Commit + verify after changes; run `mygrace lint` (or the `mygrace_lint` MCP tool) to confirm index consistency.

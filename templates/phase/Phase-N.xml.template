@@ -1,0 +1,8 @@
+<Phase-N name="$PHASE_NAME" status="pending">
+  <description>$PHASE_DESCRIPTION</description>
+
+  <step-1 module="$MODULE_ID_1" description="$STEP_DESCRIPTION" status="pending" />
+  <!-- <step-2 module="$MODULE_ID_2" description="$STEP_DESCRIPTION" status="pending" /> -->
+  <!-- <step-3 module="$MODULE_ID_3" description="$STEP_DESCRIPTION" status="pending" /> -->
+
+</Phase-N>
