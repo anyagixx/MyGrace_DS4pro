@@ -205,7 +205,8 @@ describe("resolveCliCommand", () => {
   test("falls back to the install-dsh launcher under $DSH_HOME", () => {
     const dshHome = tempDir("dsh-");
     mkdirSync(join(dshHome, "mygrace", "bin"), { recursive: true });
-    const launcher = join(dshHome, "mygrace", "bin", "mygrace");
+    const launcherName = process.platform === "win32" ? "mygrace.cmd" : "mygrace";
+    const launcher = join(dshHome, "mygrace", "bin", launcherName);
     writeFileSync(launcher, "#!/bin/sh\nexit 0\n", { mode: 0o755 });
     const result = resolveCliCommand({ env: {}, dshHome });
     expect(result).toEqual({ ok: true, command: launcher, source: "launcher" });
@@ -801,7 +802,9 @@ function runInstallCli(home: string, dshHome: string, args: string[], path: stri
   return { status: result.status ?? -1, stdout: result.stdout ?? "", stderr: result.stderr ?? "" };
 }
 
-describe("installer composition (temp DSH home, never the real ~/.dsh)", () => {
+// The fake dsh/pnpm executables are POSIX shell scripts; Windows runners cannot
+// spawn them, and the DSH itself targets POSIX. Covered on ubuntu/macos.
+describe.skipIf(process.platform === "win32")("installer composition (temp DSH home, never the real ~/.dsh)", () => {
   test("--panel --dry-run plans the LIVE card without writing anything", () => {
     const original = "# patch\n[]\n";
     const { home, dshHome } = makeDshHome(original);

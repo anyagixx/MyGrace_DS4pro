@@ -233,7 +233,8 @@ describe("insertRowInPatch / removeRowFromPatch", () => {
 // ─── Atomic writes / backups ────────────────────────────────────────────
 
 describe("atomicWriteFile", () => {
-  test("writes the content atomically and preserves the previous file mode", () => {
+  // POSIX file-mode semantics (chmod bits) do not exist on Windows.
+  test.skipIf(process.platform === "win32")("writes the content atomically and preserves the previous file mode", () => {
     const dir = tempDir();
     const file = join(dir, "cordis.patch.yml");
     writeFileSync(file, "[]\n", { mode: 0o600 });
@@ -245,7 +246,7 @@ describe("atomicWriteFile", () => {
     expect(readdirSync(dir).filter((name) => name.includes(".mygrace-tmp-"))).toHaveLength(0);
   });
 
-  test("throws a typed error (exit 1) and leaves the original intact when the directory is read-only", () => {
+  test.skipIf(process.platform === "win32")("throws a typed error (exit 1) and leaves the original intact when the directory is read-only", () => {
     const dir = tempDir();
     const sub = join(dir, "readonly");
     mkdirSync(sub);
@@ -480,7 +481,8 @@ function manifestWithProfile(): string {
   return home;
 }
 
-describe("LIVE status panel (--panel)", () => {
+// The fake package manager is a POSIX shell script; covered on ubuntu/macos.
+describe.skipIf(process.platform === "win32")("LIVE status panel (--panel)", () => {
   test("installs the package + row, then uninstall removes both and restores the patch", () => {
     const home = manifestWithProfile();
     const patch = profilePatchPath(home, "web");

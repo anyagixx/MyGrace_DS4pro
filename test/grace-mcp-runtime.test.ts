@@ -45,6 +45,8 @@ import {
 const ROOT = resolve(import.meta.dirname, "..");
 const MCP_ENTRY = resolve(ROOT, "src", "grace-mcp.ts");
 const DEMO = resolve(ROOT, "examples", "demo-store");
+/** buildToolCommand resolves project roots; use the platform-native spelling. */
+const P = resolve("/p");
 
 /**
  * The expected MCP surface: the 17 v1.2 tools plus trace/impact/next/projects
@@ -188,8 +190,8 @@ describe("CLI launcher resolution (no PATH dependency)", () => {
     const launcher = resolveLauncher({
       env: {},
       execPath: "/fake/bin/bun",
-      moduleDir: ROOT + "/src",
-      exists: (path) => path.endsWith("/src/grace.ts"),
+      moduleDir: join(ROOT, "src"),
+      exists: (path) => path.replaceAll("\\", "/").endsWith("/src/grace.ts"),
       isBun: true,
     });
     expect(launcher.source).toBe("checkout");
@@ -202,8 +204,8 @@ describe("CLI launcher resolution (no PATH dependency)", () => {
     const launcher = resolveLauncher({
       env: {},
       execPath: "/fake/bin/node",
-      moduleDir: ROOT + "/src",
-      exists: (path) => path.endsWith("/src/grace.ts"),
+      moduleDir: join(ROOT, "src"),
+      exists: (path) => path.replaceAll("\\", "/").endsWith("/src/grace.ts"),
       isBun: false,
     });
     expect(launcher.command).toBe("/fake/bin/node");
@@ -303,11 +305,11 @@ describe("MCP argument validation", () => {
   });
 
   test("mygrace_trust maps to the CLI trust command (json by default, text on request)", () => {
-    const validated = validateToolArgs("mygrace_trust", { path: "/p" });
+    const validated = validateToolArgs("mygrace_trust", { path: P });
     expect(validated.ok).toBe(true);
     if (!validated.ok) return;
-    expect(buildToolCommand("mygrace_trust", validated.args)).toEqual(["trust", "--path", "/p", "--format", "json"]);
-    expect(buildToolCommand("mygrace_trust", { path: "/p", format: "text" })).toEqual(["trust", "--path", "/p"]);
+    expect(buildToolCommand("mygrace_trust", validated.args)).toEqual(["trust", "--path", P, "--format", "json"]);
+    expect(buildToolCommand("mygrace_trust", { path: P, format: "text" })).toEqual(["trust", "--path", P]);
   });
 
   test("buildToolCommand never emits `undefined` or a literal 'undefined' id", () => {
@@ -334,37 +336,37 @@ describe("MCP argument validation", () => {
       return buildToolCommand(name, validated.args);
     };
 
-    expect(map("mygrace_trace", { id: "M-CART", path: "/p" })).toEqual([
+    expect(map("mygrace_trace", { id: "M-CART", path: P })).toEqual([
       "trace",
       "M-CART",
       "--path",
-      "/p",
+      P,
       "--format",
       "json",
     ]);
-    expect(map("mygrace_impact", { path: "/p" })).toEqual(["impact", "--path", "/p", "--format", "json"]);
-    expect(map("mygrace_impact", { path: "/p", files: "src/a.ts,src/b.ts" })).toEqual([
+    expect(map("mygrace_impact", { path: P })).toEqual(["impact", "--path", P, "--format", "json"]);
+    expect(map("mygrace_impact", { path: P, files: "src/a.ts,src/b.ts" })).toEqual([
       "impact",
       "--path",
-      "/p",
+      P,
       "--files",
       "src/a.ts,src/b.ts",
       "--format",
       "json",
     ]);
-    expect(map("mygrace_impact", { path: "/p", staged: true, since: "HEAD~1", format: "text" })).toEqual([
+    expect(map("mygrace_impact", { path: P, staged: true, since: "HEAD~1", format: "text" })).toEqual([
       "impact",
       "--path",
-      "/p",
+      P,
       "--staged",
       "--since",
       "HEAD~1",
     ]);
-    expect(map("mygrace_next", { path: "/p" })).toEqual(["next", "--path", "/p", "--format", "json"]);
-    expect(map("mygrace_projects", { path: "/p", depth: 3, strict: true })).toEqual([
+    expect(map("mygrace_next", { path: P })).toEqual(["next", "--path", P, "--format", "json"]);
+    expect(map("mygrace_projects", { path: P, depth: 3, strict: true })).toEqual([
       "projects",
       "--path",
-      "/p",
+      P,
       "--depth",
       "3",
       "--strict",
@@ -375,16 +377,16 @@ describe("MCP argument validation", () => {
 
   test("project root resolves explicit path → MYGRACE_PROJECT_ROOT → cwd", () => {
     const tool = getToolDefinition("mygrace_lint")!;
-    expect(resolveProjectRoot(tool, { path: "/explicit/root" }, { env: { MYGRACE_PROJECT_ROOT: "/env/root" }, cwd: "/cwd" })).toBe(
-      "/explicit/root"
+    expect(resolveProjectRoot(tool, { path: resolve("/explicit/root") }, { env: { MYGRACE_PROJECT_ROOT: "/env/root" }, cwd: "/cwd" })).toBe(
+      resolve("/explicit/root")
     );
     expect(resolveProjectRoot(tool, {}, { env: { MYGRACE_PROJECT_ROOT: "/env/root" }, cwd: "/cwd" })).toBe("/env/root");
     expect(resolveProjectRoot(tool, {}, { env: {}, cwd: "/cwd" })).toBe("/cwd");
 
     const showFile = getToolDefinition("mygrace_show_file")!;
     expect(
-      resolveProjectRoot(showFile, { path: "src/a.ts", projectRoot: "/explicit/root" }, { env: {}, cwd: "/cwd" })
-    ).toBe("/explicit/root");
+      resolveProjectRoot(showFile, { path: "src/a.ts", projectRoot: resolve("/explicit/root") }, { env: {}, cwd: "/cwd" })
+    ).toBe(resolve("/explicit/root"));
   });
 });
 
@@ -638,8 +640,8 @@ describe("createMcpServer", () => {
   test("returns a server instance with the mygrace-mcp identity", () => {
     const launcher = resolveLauncher({
       env: {},
-      moduleDir: ROOT + "/src",
-      exists: (path) => path.endsWith("/src/grace.ts"),
+      moduleDir: join(ROOT, "src"),
+      exists: (path) => path.replaceAll("\\", "/").endsWith("/src/grace.ts"),
     });
     const server = createMcpServer(launcher);
     expect(server).toBeDefined();

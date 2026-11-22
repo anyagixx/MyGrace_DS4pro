@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { testCommand, trustCommand } from "../src/grace-test";
@@ -28,7 +28,9 @@ function makeProject(options: ProjectOptions = {}): string {
   mkdirSync(join(root, "docs", "verification"), { recursive: true });
   writeFileSync(join(root, "docs", "graph-index.xml"), GRAPH_INDEX);
 
-  const command = options.command ?? "true";
+  // `true` is not an executable on Windows; a bun script is portable everywhere.
+  writeFileSync(join(root, "ok.ts"), "process.exit(0);\n");
+  const command = options.command ?? "bun ok.ts";
   const files = options.files ?? ["x.test.ts"];
   const checks =
     options.checksLocation === "none" ? "" : `<module-checks><check-1>${escapeXml(command)}</check-1></module-checks>`;
@@ -46,11 +48,19 @@ function makeProject(options: ProjectOptions = {}): string {
   return root;
 }
 
-/** An attacker-controlled script: proves whether repository data got executed. */
-function writeEvilScript(root: string, marker: string, scriptName = "evil.sh"): void {
+/**
+ * An attacker-controlled script: proves whether repository data got executed.
+ *
+ * A bun/TypeScript file is used instead of a `#!/bin/sh` script so the same
+ * fixture executes on POSIX and Windows (`bun` is on PATH in CI and tests).
+ */
+function writeEvilScript(root: string, marker: string, scriptName = "evil.ts"): void {
   const path = join(root, scriptName);
-  writeFileSync(path, `#!/bin/sh\necho PWNED > "$(dirname "$0")/${marker}"\n`);
-  chmodSync(path, 0o755);
+  writeFileSync(
+    path,
+    `import { writeFileSync } from "node:fs";\n` +
+      `writeFileSync(new URL("./${marker}", import.meta.url), "pwned", "utf-8");\n`
+  );
 }
 
 function markerExists(root: string, marker: string): boolean {
@@ -108,15 +118,15 @@ async function runVerify(root: string, extra: Record<string, unknown> = {}): Pro
 }
 
 describe("C-5 regression: repo-controlled XML cannot execute commands without trust", () => {
-  test("untrusted project: malicious ./evil.sh is listed but NOT executed", async () => {
-    const root = makeProject({ command: "./evil.sh" });
+  test("untrusted project: a malicious repository script is listed but NOT executed", async () => {
+    const root = makeProject({ command: "bun evil.ts" });
     writeEvilScript(root, "PWNED_MARKER.txt");
     try {
       const { stdout, exit } = await runTest(root, { module: "M-A" });
       expect(markerExists(root, "PWNED_MARKER.txt")).toBe(false);
       expect(exit).toBe(2);
       expect(stdout).toContain("Commands that WOULD run");
-      expect(stdout).toContain("./evil.sh x.test.ts");
+      expect(stdout).toContain("bun evil.ts x.test.ts");
       expect(stdout).toContain("UNTRUSTED_PROJECT");
       expect(stdout).toContain("mygrace trust");
     } finally {
@@ -125,7 +135,7 @@ describe("C-5 regression: repo-controlled XML cannot execute commands without tr
   });
 
   test("trust round-trip: refusal → `mygrace trust` → execution → tamper → refusal again", async () => {
-    const root = makeProject({ command: "./evil.sh" });
+    const root = makeProject({ command: "bun evil.ts" });
     writeEvilScript(root, "PWNED_MARKER.txt");
     try {
       // 1. refusal
@@ -145,10 +155,10 @@ describe("C-5 regression: repo-controlled XML cannot execute commands without tr
 
       // 4. a changed command invalidates the record: back to refusal
       rmSync(join(root, "PWNED_MARKER.txt"));
-      writeEvilScript(root, "PWNED_MARKER_2.txt", "evil2.sh");
+      writeEvilScript(root, "PWNED_MARKER_2.txt", "evil2.ts");
       writeFileSync(
         join(root, "docs", "verification", "V-M-A.xml"),
-        `<V-M-A><test-files><file>x.test.ts</file></test-files><module-checks><check-1>./evil2.sh</check-1></module-checks></V-M-A>`
+        `<V-M-A><test-files><file>x.test.ts</file></test-files><module-checks><check-1>bun evil2.ts</check-1></module-checks></V-M-A>`
       );
       const tampered = await runTest(root, { module: "M-A" });
       expect(tampered.exit).toBe(2);
@@ -160,7 +170,7 @@ describe("C-5 regression: repo-controlled XML cannot execute commands without tr
   });
 
   test("tampering the trust record itself does not bypass the gate", async () => {
-    const root = makeProject({ command: "./evil.sh" });
+    const root = makeProject({ command: "bun evil.ts" });
     writeEvilScript(root, "PWNED_MARKER.txt");
     try {
       await runTrust(root);
@@ -179,7 +189,7 @@ describe("C-5 regression: repo-controlled XML cannot execute commands without tr
   });
 
   test("--allow-commands is the deliberate one-off opt-in", async () => {
-    const root = makeProject({ command: "./evil.sh" });
+    const root = makeProject({ command: "bun evil.ts" });
     writeEvilScript(root, "PWNED_MARKER.txt");
     try {
       const { exit } = await runTest(root, { module: "M-A", allowCommands: true });
@@ -191,7 +201,7 @@ describe("C-5 regression: repo-controlled XML cannot execute commands without tr
   });
 
   test("config.allowCommands:true is the documented project-level opt-in", async () => {
-    const root = makeProject({ command: "./evil.sh", config: { allowCommands: true } });
+    const root = makeProject({ command: "bun evil.ts", config: { allowCommands: true } });
     writeEvilScript(root, "PWNED_MARKER.txt");
     try {
       const { exit } = await runTest(root, { module: "M-A" });
@@ -222,7 +232,7 @@ describe("argv injection and shell semantics", () => {
   });
 
   test("test-file traversal entries are rejected", async () => {
-    const root = makeProject({ command: "true", files: ["../../etc/passwd"] });
+    const root = makeProject({ command: "bun ok.ts", files: ["../../etc/passwd"] });
     try {
       const { exit, stdout } = await runTest(root, { module: "M-A", allowCommands: true });
       expect(exit).toBe(1);
@@ -350,7 +360,7 @@ describe("H-6 regression: malformed project data is a finding, never a stack tra
   });
 
   test("verify writes .mygrace/last-failures.md only on failure, never on trust refusal", async () => {
-    const untrusted = makeProject({ command: "true" });
+    const untrusted = makeProject({ command: "bun ok.ts" });
     const failing = makeProject({ command: "false" });
     try {
       const refused = await runVerify(untrusted);
@@ -370,7 +380,7 @@ describe("H-6 regression: malformed project data is a finding, never a stack tra
 
 describe("ADR-8: JSON envelopes carry the exit-code contract", () => {
   test("trust refusal envelope: ok=false, exitCode=2, error UNTRUSTED_PROJECT, planned commands", async () => {
-    const root = makeProject({ command: "./evil.sh" });
+    const root = makeProject({ command: "bun evil.ts" });
     writeEvilScript(root, "PWNED_MARKER.txt");
     try {
       const { stdout, exit } = await runTest(root, { module: "M-A", format: "json" });
@@ -379,7 +389,7 @@ describe("ADR-8: JSON envelopes carry the exit-code contract", () => {
       expect(envelope.ok).toBe(false);
       expect(envelope.exitCode).toBe(2);
       expect(envelope.error.code).toBe("UNTRUSTED_PROJECT");
-      expect(envelope.data.modules[0].command).toBe("./evil.sh");
+      expect(envelope.data.modules[0].command).toBe("bun evil.ts");
       expect(markerExists(root, "PWNED_MARKER.txt")).toBe(false);
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -387,7 +397,7 @@ describe("ADR-8: JSON envelopes carry the exit-code contract", () => {
   });
 
   test("successful JSON run after trust: ok=true, exitCode=0, authorization via trust", async () => {
-    const root = makeProject({ command: "true" });
+    const root = makeProject({ command: "bun ok.ts" });
     try {
       await runTrust(root);
       const { stdout, exit } = await runTest(root, { module: "M-A", format: "json" });

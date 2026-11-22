@@ -10,6 +10,37 @@ release time (see `ROADMAP.md` §6, gate G10).
 Nothing yet — the v1.1.0 line below is the first release produced by the
 audited, gate-verified pipeline (see `ROADMAP.md`).
 
+## [1.3.1] — 2026-11-23
+
+Windows/CRLF correctness and CI portability; publication is now opt-in in the
+release pipeline. Supersedes v1.3.0 (no CLI/JSON contract changes).
+
+### Fixed
+
+- **CRLF checkouts no longer break contract validation.** On Windows (git
+  `core.autocrlf`) the analysis normalises line endings before parsing, so
+  `MODULE_CONTRACT` fields (`PURPOSE`/`SCOPE`/`DEPENDS`/`LINKS`) and block
+  markers are detected exactly as on LF checkouts — previously they were
+  reported as `CONTRACT_FIELD_MISSING` warnings and `mygrace ci` failed.
+- **Test suite is portable.** Native path separators are used in expectations
+  (no hardcoded `/p` or concatenated `/fixtures` paths), launch/location
+  assertions normalise separators, the C-5 trust fixtures execute a portable
+  bun script instead of a POSIX `#!/bin/sh` script, and the genuinely POSIX-only
+  cases (file-mode bits, `sh`-shim package managers, the real-DSH composition
+  smoke) are skipped on Windows with a documented reason. The `os-matrix` CI job
+  (ubuntu/windows/macos) is green.
+
+### Changed
+
+- **Release publishing is opt-in.** `release.yml` now publishes npm only when the
+  repository variable `NPM_PUBLISH_ENABLED=true` is set (after configuring npm
+  trusted publishing or the `NPM_TOKEN` fallback). Tag pushes before that run
+  every gate, print a "publish skipped" notice and stay green — no red release
+  run just because credentials are not set up yet. `CONTRIBUTING.md` documents
+  the one-time setup.
+- Version bumped to 1.3.1 across `package.json`, README, marketplace/plugin
+  manifests and the issue template.
+
 ## [1.3.0] — 2026-11-22
 
 Agent-advisory commands, incremental/monorepo workflows, the real status panel,

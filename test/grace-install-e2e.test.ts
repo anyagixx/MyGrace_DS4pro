@@ -298,7 +298,8 @@ function makeFakeBin(script: string | null): string {
   return `${binDir}:${dirname(process.execPath)}`;
 }
 
-describe("LIVE status panel (--panel)", () => {
+// The fake package manager is a POSIX shell script; covered on ubuntu/macos.
+describe.skipIf(process.platform === "win32")("LIVE status panel (--panel)", () => {
   test("installs the package + row via the package manager; uninstall removes both and restores the patch", () => {
     const original = "# panel test\n[]\n";
     const { home, dshHome } = makeHome(original, { profileManifest: true });

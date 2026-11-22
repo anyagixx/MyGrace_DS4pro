@@ -367,7 +367,8 @@ describe("computeImpact", () => {
     const root = makeProject();
     try {
       const result = impactOrThrow(root, { files: "src/a/index.ts" });
-      const commands = result.suggestedCommands;
+      // Commands are shell-quoted on Windows (backslash paths); compare their content.
+      const commands = result.suggestedCommands.map((command) => command.replaceAll("'", ""));
       expect(commands[0]).toContain("mygrace trust");
       expect(commands).toContain(`mygrace verify --module M-A --path ${root}`);
       expect(commands).toContain(`mygrace verify --module M-B --path ${root}`);

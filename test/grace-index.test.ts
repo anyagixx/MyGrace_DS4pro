@@ -1,13 +1,15 @@
 import { describe, test, expect } from "bun:test";
 import { existsSync, readFileSync, mkdirSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { findProjectRoot, parseIndexEntries } from "../src/grace-common";
 import { lintIndexSync, lintMarkup, lintVerificationRefs, collectLintIssues } from "../src/grace-lint";
 import { buildToolCommand } from "../src/grace-mcp-commands";
 import { moduleListCmd, moduleFindCmd, moduleShowCmd } from "../src/grace-module";
 
-const FIXTURE_ROOT = import.meta.dirname + "/fixtures/mygrace-project";
+const FIXTURE_ROOT = join(import.meta.dirname, "fixtures", "mygrace-project");
+/** buildToolCommand resolves project roots; use the platform-native spelling. */
+const P = resolve("/p");
 
 // ─── findProjectRoot ────────────────────────────────────────────────────
 
@@ -181,81 +183,81 @@ describe("collectLintIssues", () => {
 describe("buildToolCommand", () => {
   test("mygrace_list_modules maps to module list with filters", () => {
     expect(
-      buildToolCommand("mygrace_list_modules", { path: "/p", status: "wip", type: "CORE_LOGIC", format: "json" })
-    ).toEqual(["module", "list", "--path", "/p", "--status", "wip", "--type", "CORE_LOGIC", "--format", "json"]);
+      buildToolCommand("mygrace_list_modules", { path: P, status: "wip", type: "CORE_LOGIC", format: "json" })
+    ).toEqual(["module", "list", "--path", P, "--status", "wip", "--type", "CORE_LOGIC", "--format", "json"]);
   });
 
   test("mygrace_show_module maps to module show", () => {
-    expect(buildToolCommand("mygrace_show_module", { id: "M-AUTH", path: "/p", withVerification: true }))
-      .toEqual(["module", "show", "M-AUTH", "--path", "/p", "--with-verification"]);
+    expect(buildToolCommand("mygrace_show_module", { id: "M-AUTH", path: P, withVerification: true }))
+      .toEqual(["module", "show", "M-AUTH", "--path", P, "--with-verification"]);
   });
 
   test("mygrace_show_phase maps to phase show (regression: was module show --phase)", () => {
-    expect(buildToolCommand("mygrace_show_phase", { name: "Phase-1", path: "/p" }))
-      .toEqual(["phase", "show", "Phase-1", "--path", "/p"]);
+    expect(buildToolCommand("mygrace_show_phase", { name: "Phase-1", path: P }))
+      .toEqual(["phase", "show", "Phase-1", "--path", P]);
   });
 
   test("mygrace_list_verifications maps to verification index with filters", () => {
-    expect(buildToolCommand("mygrace_list_verifications", { path: "/p", priority: "high", format: "json" }))
-      .toEqual(["verification", "index", "--path", "/p", "--priority", "high", "--format", "json"]);
+    expect(buildToolCommand("mygrace_list_verifications", { path: P, priority: "high", format: "json" }))
+      .toEqual(["verification", "index", "--path", P, "--priority", "high", "--format", "json"]);
   });
 
   test("mygrace_lint maps to lint", () => {
-    expect(buildToolCommand("mygrace_lint", { path: "/p", format: "json", allowMissingDocs: true }))
-      .toEqual(["lint", "--path", "/p", "--format", "json", "--allow-missing-docs"]);
+    expect(buildToolCommand("mygrace_lint", { path: P, format: "json", allowMissingDocs: true }))
+      .toEqual(["lint", "--path", P, "--format", "json", "--allow-missing-docs"]);
   });
 
   test("mygrace_show_file maps to file show with --root (regression: was --path)", () => {
-    expect(buildToolCommand("mygrace_show_file", { path: "src/a.ts", projectRoot: "/p", contracts: true, blocks: true }))
-      .toEqual(["file", "show", "src/a.ts", "--root", "/p", "--contracts", "--blocks"]);
+    expect(buildToolCommand("mygrace_show_file", { path: "src/a.ts", projectRoot: P, contracts: true, blocks: true }))
+      .toEqual(["file", "show", "src/a.ts", "--root", P, "--contracts", "--blocks"]);
   });
 
   test("mygrace_status maps to status --format json", () => {
-    expect(buildToolCommand("mygrace_status", { path: "/p" }))
-      .toEqual(["status", "--path", "/p", "--format", "json"]);
+    expect(buildToolCommand("mygrace_status", { path: P }))
+      .toEqual(["status", "--path", P, "--format", "json"]);
   });
 
   test("mygrace_find_modules maps to module find with filters", () => {
     expect(
-      buildToolCommand("mygrace_find_modules", { path: "/p", query: "auth", status: "wip", type: "CORE_LOGIC", format: "json" })
-    ).toEqual(["module", "find", "auth", "--path", "/p", "--status", "wip", "--type", "CORE_LOGIC", "--format", "json"]);
+      buildToolCommand("mygrace_find_modules", { path: P, query: "auth", status: "wip", type: "CORE_LOGIC", format: "json" })
+    ).toEqual(["module", "find", "auth", "--path", P, "--status", "wip", "--type", "CORE_LOGIC", "--format", "json"]);
   });
 
   test("mygrace_find_modules without query omits the positional", () => {
-    expect(buildToolCommand("mygrace_find_modules", { path: "/p" })).toEqual(["module", "find", "--path", "/p"]);
+    expect(buildToolCommand("mygrace_find_modules", { path: P })).toEqual(["module", "find", "--path", P]);
   });
 
   test("mygrace_phase_index maps to phase index", () => {
-    expect(buildToolCommand("mygrace_phase_index", { path: "/p" })).toEqual(["phase", "index", "--path", "/p"]);
+    expect(buildToolCommand("mygrace_phase_index", { path: P })).toEqual(["phase", "index", "--path", P]);
   });
 
   test("mygrace_doctor maps to doctor", () => {
-    expect(buildToolCommand("mygrace_doctor", { path: "/p" })).toEqual(["doctor", "--path", "/p"]);
+    expect(buildToolCommand("mygrace_doctor", { path: P })).toEqual(["doctor", "--path", P]);
   });
 
   test("mygrace_test maps to test with module + compact", () => {
-    expect(buildToolCommand("mygrace_test", { path: "/p", module: "M-AUTH", compact: true }))
-      .toEqual(["test", "--path", "/p", "--module", "M-AUTH", "--compact"]);
+    expect(buildToolCommand("mygrace_test", { path: P, module: "M-AUTH", compact: true }))
+      .toEqual(["test", "--path", P, "--module", "M-AUTH", "--compact"]);
   });
 
   test("mygrace_packet maps to packet", () => {
-    expect(buildToolCommand("mygrace_packet", { id: "M-AUTH", path: "/p" }))
-      .toEqual(["packet", "M-AUTH", "--path", "/p"]);
+    expect(buildToolCommand("mygrace_packet", { id: "M-AUTH", path: P }))
+      .toEqual(["packet", "M-AUTH", "--path", P]);
   });
 
   test("mygrace_focus maps to focus", () => {
-    expect(buildToolCommand("mygrace_focus", { id: "M-AUTH", path: "/p" }))
-      .toEqual(["focus", "M-AUTH", "--path", "/p"]);
+    expect(buildToolCommand("mygrace_focus", { id: "M-AUTH", path: P }))
+      .toEqual(["focus", "M-AUTH", "--path", P]);
   });
 
   test("mygrace_context_cost maps to context-cost --format json", () => {
-    expect(buildToolCommand("mygrace_context_cost", { path: "/p" }))
-      .toEqual(["context-cost", "--path", "/p", "--format", "json"]);
+    expect(buildToolCommand("mygrace_context_cost", { path: P }))
+      .toEqual(["context-cost", "--path", P, "--format", "json"]);
   });
 
   test("mygrace_verify maps to verify", () => {
-    expect(buildToolCommand("mygrace_verify", { path: "/p", module: "M-AUTH" }))
-      .toEqual(["verify", "--path", "/p", "--module", "M-AUTH"]);
+    expect(buildToolCommand("mygrace_verify", { path: P, module: "M-AUTH" }))
+      .toEqual(["verify", "--path", P, "--module", "M-AUTH"]);
   });
 
   test("unknown tool names throw", () => {

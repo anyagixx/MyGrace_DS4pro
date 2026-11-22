@@ -60,6 +60,8 @@
 //   W3.6 — incremental `lint --changed [--base] [--files]`: git/untracked scope with a 2 s
 //          timeout, index-level checks kept when an index changes, markup limited to changed
 //          sources, Scope line + data.scope {changed, scanned, skipped} envelope.
+//   v1.3.1 — CRLF-safe markup analysis: Windows checkouts (git core.autocrlf) no longer lose
+//          MODULE_CONTRACT fields or block markers (the analysis normalises line endings).
 // END_CHANGE_SUMMARY
 
 import { defineCommand } from "citty";
@@ -365,14 +367,19 @@ function extractFunctionContracts(content: string): string[] {
  * is an error here (v1 reported "✓ Paired").
  */
 export function analyzeMarkup(content: string): MarkupAnalysis {
-  const markers = collectBlockMarkers(content);
+  // Windows checkouts (git core.autocrlf, some editors) deliver CRLF files.
+  // Line-oriented regexes that rely on `.`/`$` would otherwise stop at the `\r`
+  // and silently miss contract fields and block markers, so analyse a
+  // normalised copy (line numbering is preserved because only `\r` is dropped).
+  const source = content.includes("\r") ? content.replace(/\r\n?/g, "\n") : content;
+  const markers = collectBlockMarkers(source);
   const blockIssues: MarkupBlockIssue[] = [];
   const stack: { name: string; line: number }[] = [];
   let blockStarts = 0;
   let blockEnds = 0;
 
   for (const marker of markers) {
-    const line = lineOf(content, marker.index);
+    const line = lineOf(source, marker.index);
     if (marker.kind === "start") {
       blockStarts += 1;
       stack.push({ name: marker.name, line });
@@ -408,10 +415,10 @@ export function analyzeMarkup(content: string): MarkupAnalysis {
     blockStarts,
     blockEnds,
     blockIssues,
-    contract: parseContract(content),
-    moduleMap: extractSection(content, "START_MODULE_MAP", "END_MODULE_MAP"),
-    changeSummary: extractSection(content, "START_CHANGE_SUMMARY", "END_CHANGE_SUMMARY"),
-    functionContracts: extractFunctionContracts(content),
+    contract: parseContract(source),
+    moduleMap: extractSection(source, "START_MODULE_MAP", "END_MODULE_MAP"),
+    changeSummary: extractSection(source, "START_CHANGE_SUMMARY", "END_CHANGE_SUMMARY"),
+    functionContracts: extractFunctionContracts(source),
   };
 }
 

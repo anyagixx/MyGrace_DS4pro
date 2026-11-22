@@ -23,6 +23,12 @@
 #   * Provenance (`--provenance`) requires the OIDC path above and a public repo;
 #     it records which repo/commit/workflow built the tarball.
 #
+# ENABLING PUBLICATION (one-time, owner action):
+#   Configure the trusted publisher (or add the NPM_TOKEN secret) and then set the
+#   repository variable `NPM_PUBLISH_ENABLED=true` (Settings → Secrets and variables
+#   → Actions → Variables). Until then tag pushes run every gate and stay green
+#   without publishing; the workflow prints an explicit "publish skipped" notice.
+#
 # Note: `npm publish` also runs the package's `prepublishOnly` (release:check), so
 # the repository gates execute twice by design (defense in depth). CI is the real
 # publication gate; this workflow never publishes when dry_run=true.
@@ -89,7 +95,7 @@ jobs:
           echo "tag ${TAG} matches package.json version ${VERSION}"
 
       - name: Publish to npm (tag push)
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && vars.NPM_PUBLISH_ENABLED == 'true'
         run: npm publish --provenance --access public
         env:
           # Trusted publishing (OIDC) is preferred; NPM_TOKEN is the documented
@@ -97,10 +103,17 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish to npm (manual, dry_run=false)
-        if: github.event_name == 'workflow_dispatch' && inputs.dry_run == false
+        if: github.event_name == 'workflow_dispatch' && inputs.dry_run == false && vars.NPM_PUBLISH_ENABLED == 'true'
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish skipped notice (publishing not enabled yet)
+        if: vars.NPM_PUBLISH_ENABLED != 'true'
+        run: |
+          echo "All release gates passed. Release workflow: publish skipped."
+          echo "Publishing is disabled until the repository variable NPM_PUBLISH_ENABLED=true"
+          echo "is set (configure npm trusted publishing or the NPM_TOKEN secret first)."
 
       - name: Dry-run notice (nothing published)
         if: github.event_name == 'workflow_dispatch' && inputs.dry_run == true

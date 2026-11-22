@@ -39,7 +39,8 @@ describe("@osovv/mygrace-dsh host plugin (unpublished preview)", () => {
     expect(config?.transport).toBe("stdio");
     expect(config?.serverName).toBe("mygrace");
     expect(config?.command).toBe(resolveBun());
-    expect(config?.args.slice(0, 2)).toEqual(["run", expect.stringContaining("src/grace-mcp.ts")]);
+    const normalizedArgs = (config?.args ?? []).map((arg) => arg.replaceAll("\\", "/"));
+    expect(normalizedArgs.slice(0, 2)).toEqual(["run", expect.stringContaining("src/grace-mcp.ts")]);
   });
 
   test("resolveBun returns a non-empty string", () => {

@@ -1,11 +1,11 @@
 # MyGRACE Roadmap — from audit findings to a professional agent engineering harness
 
-> Status: **v1.3.0 shipped 2026-11-22** — Waves 0–3 complete, Wave 4 ready (publication
-> pending owner credentials). Baseline: v1.0.1 as audited on 2026-11-22
+> Status: **v1.3.1 shipped 2026-11-23** — Waves 0–3 complete, Wave 4 ready (publication
+> pending owner credentials; the pipeline is wired and gated). Baseline: v1.0.1 as audited on 2026-11-22
 > (see `analysis/00-EXECUTIVE-ASSESSMENT.md` and appendices 01–04).
 > Target: a tool that AI coding agents can use with confidence on software of **any complexity** —
 > from a 3-module script to a 500-module monorepo, on repos you do not fully trust.
-> **v1.3.0 shipped evidence:** `bun run release:check` green (typecheck 0, **639 tests / 31 files**,
+> **v1.3.1 shipped evidence:** `bun run release:check` green (typecheck 0, **639 tests / 31 files**,
 > demo lint, doc-truth gates, pack-smoke), `mygrace ci --path . --tests` PASS on this repository
 > (**25 modules / 4 phases / 25 verifications / 32 declared test files / 25-25 module checks**),
 > full-lifecycle `npm publish --dry-run` accepted the artifact (63 files, 208 kB), and
