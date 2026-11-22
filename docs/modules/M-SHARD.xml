@@ -1,0 +1,49 @@
+<!-- Module contract for M-SHARD. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-SHARD NAME="Sharded indexes" TYPE="CORE_LOGIC" STATUS="done">
+  <purpose>Define, read, validate and generate sharded module indexes so the repository map scales past the root index cap (ROADMAP ADR-6, G11).</purpose>
+  <path>src/grace-shard.ts</path>
+  <depends>M-ERRORS,M-XML,M-PATHS</depends>
+  <verification-ref>V-M-SHARD</verification-ref>
+
+  <annotations>
+    <export-SHARD_FINDING_CODES PURPOSE="Stable codes produced by shard validation (XML_INVALID, PATH_UNSAFE, SHARD_FILE_MISSING, SHARD_COUNT_MISMATCH, SHARD_ROOT_INVALID, INDEX_TOO_LARGE, DUPLICATE_INDEX_ENTRY)." />
+    <fn-resolveShardPath PURPOSE="Resolve a <Shard href> against docs/ and prove it stays inside (no .., no absolute, .xml only)." />
+    <fn-loadGraphIndex PURPOSE="Lenient transparent union reader: flat root entries plus shard entries and coded structural findings." />
+    <fn-loadGraphIndexStrict PURPOSE="Throwing reader for CLI resolution paths (XmlError for XML_INVALID, MyGraceError with the shard code otherwise)." />
+    <fn-graphEntriesFrom PURPOSE="Convenience: union module entries only." />
+    <fn-buildShardPlan PURPOSE="Deterministic grouping plan for type/status/prefix; never writes." />
+    <fn-applyShardPlan PURPOSE="Atomic writes with timestamped backup; strict no-op when already sharded." />
+    <type-ShardRef PURPOSE="Validated shard reference: href relative to docs/, declared count, absolute file." />
+    <type-ShardPlan PURPOSE="Groups, rewritten root content, stale-shard removals, actions and plan errors." />
+  </annotations>
+
+  <CrossLink to="M-COMMON" relation="indexes are read by the shared filesystem layer" />
+  <CrossLink to="M-LINT" relation="shard validation feeds lintGraphIndex findings" />
+  <CrossLink to="M-MODULE" relation="module list/find/index and module shard use this reader" />
+
+  <contract>
+    <purpose>The root docs/graph-index.xml may replace flat module lines with &lt;Shard href="modules/shard-&lt;group&gt;.xml" count="N" /&gt; references; readers see the union exactly as if flat.</purpose>
+    <inputs>
+      <param name="root" type="string" description="Project root." />
+      <param name="config" type="MyGraceConfig" description="Optional effective config (shard cap = indexCaps.graph); type-only import." />
+    </inputs>
+    <outputs>
+      <param name="loaded" type="GraphLoadResult" description="entries, flatEntries, shards, findings, root header data." />
+      <param name="applied" type="ShardApplyResult" description="changed, backupDir, actions, written/removed files." />
+    </outputs>
+    <errors>
+      <error code="PATH_UNSAFE" description="Shard href is absolute, escapes docs/, contains NUL or is not .xml." />
+      <error code="SHARD_FILE_MISSING" description="Referenced shard file does not exist." />
+      <error code="SHARD_COUNT_MISMATCH" description="Root reference count or shard-root count differs from actual entries." />
+      <error code="SHARD_ROOT_INVALID" description="Shard file root element is not ModuleShard." />
+      <error code="INDEX_TOO_LARGE" description="A shard exceeds the configured index cap." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>Shards are index shards, not per-entity files: module show still reads docs/modules/M-XXX.xml directly.</note-1>
+    <note-2>Generator: mygrace module shard --group-by type|status|prefix; dry-run is the default, --apply writes atomically and keeps a timestamped backup under .mygrace/backups/.</note-2>
+    <note-3>Re-running --apply on an already sharded project is a byte-identical no-op (idempotent), and stale shard-*.xml files are removed with a backup.</note-3>
+    <note-4>No imports from grace-common on purpose so status/ci/test/packet/context can import this module without cycles.</note-4>
+  </notes>
+</M-SHARD>

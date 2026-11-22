@@ -1,0 +1,23 @@
+<!-- Canonical verification entry. <module-checks> is read by mygrace test/verify; commands are trust-gated (run `mygrace trust` after review). -->
+<V-M-PACKET MODULE="M-PACKET" PRIORITY="medium" STATUS="done">
+  <test-files>
+    <file>test/grace-packet.test.ts</file>
+  </test-files>
+
+  <module-checks>
+    <check-1>bun test</check-1>
+  </module-checks>
+
+  <scenarios>
+    <scenario-1 kind="success">packet prints contract, canonical command and dependencies; focus prints the minimal set.</scenario-1>
+    <scenario-2 kind="failure">Missing or traversal ids are usage errors with a hint.</scenario-2>
+  </scenarios>
+
+  <required-log-markers>
+    <marker-1>CLI text output and JSON envelopes are asserted by the tests; no runtime log markers are emitted by library modules.</marker-1>
+  </required-log-markers>
+
+  <notes>
+    <note-1>Covered by test/grace-packet.test.ts.</note-1>
+  </notes>
+</V-M-PACKET>

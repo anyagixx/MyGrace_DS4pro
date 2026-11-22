@@ -1,0 +1,58 @@
+<!-- Phase-3 plan. Target 50-200 lines (sizeBudgets.phase): one step per workstream plus outcome/acceptance so an agent can execute without re-reading the whole plan. -->
+<Phase-3 name="Scale and agent workflows" status="done">
+  <description>Wave 3: single-gate CI, traceability, impact analysis, agent next-step guidance, incremental lint, sharded indexes for 200+ modules and monorepo project discovery. All steps are implemented, dogfooded on this repository and covered by tests.</description>
+
+  <step-1 module="M-CI" description="mygrace ci: one read-only gate running strict lint + status + verification coverage, with optional trust-gated tests (landed early)." status="done" />
+  <step-2 module="M-TRACE" description="mygrace trace: requirement → module → verification → test → command → phases → dependents traceability with coded gaps." status="done" />
+  <step-3 module="M-IMPACT" description="mygrace impact: git diff/--files → direct modules → transitive dependents → verification blast radius → suggested commands." status="done" />
+  <step-4 module="M-NEXT" description="mygrace next: deterministic nine-code next-step ladder driven by the same gates CI uses." status="done" />
+  <step-5 module="M-SHARD" description="mygrace module shard: sharded indexes beyond the root index cap (ADR-6), transparent union reads, idempotent generator." status="done" />
+  <step-6 module="M-PROJECTS" description="mygrace projects: bounded monorepo discovery with per-project counts, lint and coverage." status="done" />
+  <step-7 module="M-LINT" description="mygrace lint --changed: incremental scope from git diff/--files (index → full checks, entity → that entity, source → markup only)." status="done" />
+  <step-8 module="M-MCP" description="MCP tools for ci/trace/impact/next/projects: catalog grew to 21 tools with one shared schema source." status="done" />
+
+  <outcome>
+    <item-1>One command (`mygrace ci`) is the only gate a release needs; it is implemented and dogfooded here.</item-1>
+    <item-2>An agent can ask what to do next, what changed and what a change impacts without re-reading the repository.</item-2>
+    <item-3>A 200-module synthetic project keeps lint under 2 s with indexes below their caps via sharding.</item-3>
+    <item-4>MCP exposes the same capabilities as the CLI with one catalog and no drift (21 tools).</item-4>
+  </outcome>
+
+  <deliverables>
+    <item-1>mygrace ci (landed): strict lint, status, coverage and optional tests in one envelope.</item-1>
+    <item-2>mygrace trace (landed): requirement → module → verification → test traceability report with stable gap codes.</item-2>
+    <item-3>mygrace impact (landed): changed files → affected modules, dependents, phases and proving commands.</item-3>
+    <item-4>mygrace next (landed): deterministic next actionable step for an agent.</item-4>
+    <item-5>mygrace module shard (landed): transparent sharded indexes with root index references.</item-5>
+    <item-6>mygrace projects (landed): monorepo sub-project discovery with per-project health.</item-6>
+    <item-7>mygrace lint --changed (landed): incremental lint scope for fast local/CI runs.</item-7>
+  </deliverables>
+
+  <acceptance-gates>
+    <item-1>Synthetic 200-module project: mygrace ci runs in under 2 s and indexes stay under caps; the 150-module/3-shard fixture proves the sharded path.</item-1>
+    <item-2>Traceability test: every requirement maps to at least one module and verification entry; trace reports gaps with stable codes and honest exit codes.</item-2>
+    <item-3>Impact test: a changed file maps to the owning module and its transitive dependents; it degrades gracefully without git.</item-3>
+    <item-4>New commands and MCP tools keep the ADR-3 exit-code and ADR-8 envelope contracts; the catalog is the single source for 21 tools.</item-4>
+    <item-5>On this repository `mygrace lint --path . --strict` and `mygrace ci --path .` pass on the 25-module graph added by this phase.</item-5>
+  </acceptance-gates>
+
+  <landed-early>
+    <item-1>M-CI and V-M-CI were implemented ahead of the rest of Wave 3 so every later step can use one gate.</item-1>
+    <item-2>mygrace ci is read-only by default; project commands run only with --tests and a valid trust record or opt-in.</item-2>
+    <item-3>The MCP catalogue exposes the full CLI surface: 21 tools after the Wave-3 additions (mygrace_ci, trace, impact, next, projects included).</item-3>
+  </landed-early>
+
+  <risks>
+    <item-1>Sharding must stay transparent: single-index projects must not change behaviour.</item-1>
+    <item-2>New commands must not fragment the ADR-3/ADR-8 output contract.</item-2>
+    <item-3>Impact analysis must degrade gracefully outside a git checkout (no git metadata).</item-3>
+    <item-4>Advice must stay deterministic: no heuristics or model calls in mygrace next.</item-4>
+  </risks>
+
+  <dependencies>
+    <item-1>Phase-2 gate (dogfooding): this repository passes `mygrace lint --path . --strict` and `mygrace ci --path .`.</item-1>
+    <item-2>ADR-6 sharding design from ROADMAP section 4 before module shard is implemented.</item-2>
+    <item-3>Git metadata is optional: impact and lint --changed must degrade gracefully outside a checkout.</item-3>
+    <item-4>The MCP catalog in grace-mcp-commands.ts is the single source for new tools.</item-4>
+  </dependencies>
+</Phase-3>

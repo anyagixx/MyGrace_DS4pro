@@ -1,46 +1,50 @@
 ---
 name: mygrace-ask
-description: "Answer questions about the current MyGRACE project using lazy index navigation (index first, details on demand). Use when the user asks what a module does, where something lives, or how artifacts relate."
-whenToUse: "User asks a question about project structure, modules, phases, verification, or code location."
+description: "Answer questions about the current MyGRACE project using lazy index navigation (index first, entities on demand, source only when needed). Use when the user asks what a module does, where something lives, or how artifacts relate."
+whenToUse: "The user asks a question about project structure, modules, phases, verification, or code location."
 ---
 
-Answer a question about the current MyGRACE project.
+# Answer a question about this project
 
-## Process — LAZY NAVIGATION (CRITICAL)
+## 1. Load the index only
 
-### Step 1: Load Index Only
-Read **ONLY** `docs/graph-index.xml` (≤100 lines). This tells you every module that exists.
-- **DO NOT** read `docs/knowledge-graph.xml` (monolithic, too large)
-- **DO NOT** read all module files — you don't need them yet
-- Prefer the MCP tool `mygrace_list_modules` when connected; fall back to reading the file directly.
+Read `docs/graph-index.xml` (≤100 lines) — or use the MCP tool
+`mygrace_list_modules` when connected. It tells you every module that exists.
+Do not read all module files; do not look for legacy monolithic
+`knowledge-graph.xml` (it does not exist in MyGRACE projects).
 
-### Step 2: Identify Relevant Modules from Index
-From graph-index.xml, find modules related to the question:
-- Match by NAME, TYPE, PATH, DEPENDS
-- Note the module IDs (e.g., M-AUTH, M-CHATS)
+## 2. Identify candidates
 
-### Step 3: Read Only Relevant Per-Module Files
-For each relevant module:
-- Read `docs/modules/M-XXX.xml` (30-80 lines each)
-- Read `docs/verification/V-M-XXX.xml` if the question is about behavior/testing
-- **DO NOT** read non-relevant modules
-- Prefer MCP tools `mygrace_show_module` / `mygrace_show_phase` when connected.
+From the index, match on `NAME`, `TYPE`, `PATH`, `DEPENDS`. Note module ids
+(e.g. `M-AUTH`). If the question is about planning or verification, read only
+`docs/plan-index.xml` / `docs/verification-index.xml` respectively.
 
-### Step 4: If CLI Available
-Use `mygrace module find <query> --path <root>` to resolve module IDs from names/paths
-Use `mygrace module show M-XXX --path <root>` for structured module output (saves tokens vs raw XML)
-Use `mygrace module show M-XXX --with-verification --path <root>` to include the verification excerpt.
+## 3. Read one entity at a time
 
-### Step 5: Dive Into Code If Needed
-- Use the PATH from graph-index.xml to locate source files
-- Read MODULE_CONTRACT and relevant START_BLOCK/END_BLOCK sections
-- `mygrace file show <path> --root <root> --contracts --blocks` shows file-local markup compactly (MCP: `mygrace_show_file`).
+- `docs/modules/M-XXX.xml` (30–80 lines) for the contract.
+- `docs/verification/V-M-XXX.xml` (20–60 lines) if the question is about
+  behaviour/testing.
+- Never read unrelated modules.
 
-### Step 6: Answer
-Provide answer grounded in actual artifacts. Cite which modules/files you used.
+## 4. Use the CLI/MCP for structured reads
 
-## Important
-- **Always start with graph-index.xml** — never skip it
-- **Never read monolithic XML files** — they don't exist in MyGRACE
-- **Read only modules relevant to the question** — don't preload everything
-- If info isn't in artifacts, say so. Suggest the relevant `mygrace-*` skill (e.g., mygrace-refactor, mygrace-refresh) via the skill tool if changes are needed.
+- `mygrace module find <query> --path <root>` — resolve ids by name/path/type/status/dependency
+- `mygrace module show <id> --path <root>` — structured module view
+- `mygrace module show <id> --with-verification --path <root>` — plus its verification file
+- `mygrace phase show <Phase-N> --path <root>`, `mygrace verification index --path <root>`
+- `mygrace file show <path> --root <root> --contracts --blocks` — file-local markup
+
+Prefer the MCP equivalents (`mygrace_find_modules`, `mygrace_show_module`,
+`mygrace_show_phase`, `mygrace_show_file`) when connected.
+
+## 5. Code only if needed
+
+Use the `PATH` from the index; read the `MODULE_CONTRACT` and the relevant
+`START_BLOCK_*` section. Do not scan the repository.
+
+## 6. Answer with evidence
+
+Cite the files you used. If the artifacts do not answer the question, say so and
+suggest the skill that would create/update them (`mygrace-plan`,
+`mygrace-verification`, `mygrace-refresh`). Never invent module behaviour —
+quote the contract or the code.

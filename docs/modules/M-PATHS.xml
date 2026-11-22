@@ -1,0 +1,38 @@
+<!-- Module contract for M-PATHS. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-PATHS NAME="Ids and path safety" TYPE="FOUNDATION" STATUS="done">
+  <purpose>Validate entity ids and resolve entity/config paths without allowing traversal (ADR-4).</purpose>
+  <path>src/grace-paths.ts</path>
+  <depends>M-ERRORS</depends>
+  <verification-ref>V-M-PATHS</verification-ref>
+
+  <annotations>
+    <type-EntityKind PURPOSE="Entity kinds: module, verification, phase." />
+    <fn-assertEntityId PURPOSE="Validate and return an id, or throw UsageError." />
+    <fn-entityDir PURPOSE="docs/modules, docs/plans or docs/verification under a root." />
+    <fn-entityPath PURPOSE="Validated path of an entity file." />
+    <fn-assertSafeRelativePath PURPOSE="Reject absolute paths, .. segments, NUL and drive prefixes." />
+    <fn-isWithin PURPOSE="Containment test on normalized paths." />
+    <fn-resolveWithin PURPOSE="Resolve a candidate and prove it stays inside a base directory." />
+    <fn-docsRelative PURPOSE="docs/&lt;segments&gt; relative path helper for messages." />
+  </annotations>
+
+  <contract>
+    <purpose>Validate entity ids and resolve entity/config paths without allowing traversal (ADR-4).</purpose>
+    <inputs>
+      <param name="id" type="string" description="Untrusted id from CLI args, XML attributes or MCP calls." />
+      <param name="candidate" type="string" description="Untrusted path candidate." />
+    </inputs>
+    <outputs>
+      <param name="entityPath" type="string" description="Absolute path proven to be inside docs/&lt;entity-dir&gt;." />
+    </outputs>
+    <errors>
+      <error code="USAGE" description="Empty, absolute, leading-dash, malformed or traversal id/path." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>Ids reaching the filesystem or a shell are untrusted input in a cloned repository.</note-1>
+    <note-2>The grammar is intentionally narrow: letters, digits, underscores and dashes only.</note-2>
+    <note-3>Path containment is proven after normalization, not by string prefix comparison.</note-3>
+  </notes>
+</M-PATHS>

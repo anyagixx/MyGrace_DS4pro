@@ -1,54 +1,44 @@
 ---
 name: mygrace-init
-description: "Bootstrap the MyGRACE docs/ structure (index files, per-module/phase/verification directories) and AGENTS.md for a new project. Use once per project, before planning starts."
-whenToUse: "A new project needs MyGRACE scaffolding: docs/ indexes, templates, and an AGENTS.md that DSH will auto-load."
+description: "Bootstrap the MyGRACE project structure (docs/ indexes, per-entity dirs, AGENTS.md, mygrace.config.json) for a new project. Use once per project, before planning starts."
+whenToUse: "A new project needs MyGRACE scaffolding before the plan/verification/execute skills run."
 ---
 
-Initialize the MyGRACE framework structure for this project.
+# Initialize a MyGRACE project
 
-## Fast Path (CLI)
+## Fast path (non-interactive)
 
-When the project details are already known, prefer the non-interactive bootstrap:
-`mygrace init-dsh --path . --name <name> --keywords <k1,k2> --annotation "<one line>"`.
-It creates the full docs/ structure and AGENTS.md from templates in one step, then this skill's remaining job is only to review and enrich the artifacts (modules, flows, risks).
+```
+mygrace init-dsh --path . --name <ProjectName> [--keywords k1,k2]   [--annotation "one line"] [--language typescript] [--runtime bun]   [--framework <name>] [--testRunner "bun test"] [--force]
+```
 
-## Steps
+It creates `docs/{modules,plans,verification,archive}`, the three index files,
+`requirements.xml`, `technology.xml`, `operational-packets.xml`, `AGENTS.md`,
+and **`mygrace.config.json`** with the effective defaults. Existing files are
+skipped unless `--force` is passed.
 
-1. **Gather project info** from the user:
-   - Project name, annotation, keywords
-   - Primary language, runtime, framework (with versions)
-   - Testing stack, observability stack
-   - High-level module list (if known)
-   - 2-5 critical flows or risky surfaces
+## Then
 
-2. **Create `docs/` directory** with index-based structure:
-   ```
-   docs/
-     graph-index.xml              # ← lightweight module index (≤100 lines)
-     plan-index.xml               # ← lightweight phase index (≤50 lines)
-     verification-index.xml       # ← lightweight verification index (≤80 lines)
-     operational-packets.xml      # ← packet templates (stays small)
-     modules/                     # ← per-module files (M-XXX.xml)
-     plans/                       # ← per-phase files (Phase-N.xml)
-     verification/                # ← per-verification files (V-M-XXX.xml)
-     archive/                     # ← completed phases
-   ```
+1. Review `mygrace.config.json` (`sourceDirs`, `markupExts`, `ignoreDirs`,
+   `indexCaps`, `sizeBudgets`, `testRunner`, `allowCommands`, `language`). A list
+   you set replaces the default entirely (polyglot: enumerate all extensions);
+   `testRunner` is only the fallback when no `<module-checks>` is declared.
+2. Fill `docs/requirements.xml` (at least one use case) and
+   `docs/technology.xml`.
+3. Confirm the scaffold: `mygrace lint --strict --path .` (empty indexes should
+   pass) and `mygrace status --path .`.
+4. Continue with the `mygrace-plan` skill, then `mygrace-verification` and
+   `mygrace-execute`.
 
-3. **Populate index files** from templates:
-   - `graph-index.xml` — project name, keywords, annotation, no modules yet
-   - `plan-index.xml` — empty, ready for phases
-   - `verification-index.xml` — empty, ready for entries
-   - `operational-packets.xml` — full template
+## Rules
 
-4. **Create `AGENTS.md`** at project root from the template. DSH auto-loads AGENTS.md at session start, so put the canonical methodology rules there — the `mygrace-*` skills assume it is already in context.
-
-5. **Print summary** of all created files and suggest next step:
-   > "Run the `mygrace-plan` skill (via the skill tool) to design modules. MyGRACE uses index-based navigation — each module gets its own file in docs/modules/, each phase in docs/plans/. No monolithic XML files."
-
-## Important
-- Never create monolithic knowledge-graph.xml, development-plan.xml, or verification-plan.xml
-- All module data goes in `docs/modules/M-XXX.xml`
-- All phase data goes in `docs/plans/Phase-N.xml`
-- All verification data goes in `docs/verification/V-M-XXX.xml`
-- Index files are the ALWAYS-READ entry points
-- Do not create platform-specific context files (QWEN.md, CLAUDE.md, etc.) — this distribution targets DSH only
+- Never create legacy monolithic `knowledge-graph.xml`, `development-plan.xml`
+  or `verification-plan.xml`.
+- Module data lives in `docs/modules/M-XXX.xml`, phases in
+  `docs/plans/Phase-N.xml`, verification in `docs/verification/V-M-XXX.xml`.
+- `AGENTS.md` is auto-loaded by DeepSeek Harness; keep it current (the template
+  ships with `init-dsh`).
+- This distribution is DSH-first; other platform files in the repository
+  (`rules/`, `plugins/`, legacy `extensions/`) are reference material, not part
+  of project scaffolding.
+- Keep `.mygrace/` out of git — the trust record is local state.

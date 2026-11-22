@@ -1,5 +1,0 @@
-<Phase-3 name="Commerce" status="pending">
-  <step-M-CART module="M-CART" description="Shopping cart state and totals" status="pending" />
-  <step-M-ORDERS module="M-ORDERS" description="Order creation and lifecycle" status="pending" />
-  <step-M-PAYMENTS module="M-PAYMENTS" description="Payment provider adapter" status="pending" />
-</Phase-3>

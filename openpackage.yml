@@ -1,6 +1,7 @@
 name: mygrace
-description: "MyGRACE (Graph-RAG Anchored Code Engineering) - scalable GRACE methodology with lazy-loading indexes, per-module files, and phase-based navigation for large projects (20-200+ modules)."
-version: 0.1.0
+description: "MyGRACE — index-first engineering harness for AI coding agents: line-capped indexes, per-entity contracts, trust-gated verification, lint-enforced invariants and MCP/skills integration."
+version: 1.3.0
 author: osovv
 license: MIT
-keywords: [mygrace, grace, semantic-markup, knowledge-graph, contracts, ai-code-generation, lazy-loading, scalable, index-based, verification, llm-friendly, methodology]
+homepage: https://github.com/anyagixx/MyGrace_DS4pro
+keywords: [mygrace, grace, semantic-markup, knowledge-graph, contracts, ai-agents, context-engineering, lazy-loading, index-based, verification, trust, mcp]

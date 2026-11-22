@@ -1,55 +1,59 @@
 ---
 name: mygrace-refresh
-description: "Synchronize MyGRACE indexes with per-entity files: detect orphaned, missing, or drifted entries and fix them with user approval. Use after manual edits or when lint reports drift."
-whenToUse: "Indexes may have drifted from per-entity files — after manual edits, failed lint, or merge conflicts in docs/."
+description: "Synchronize MyGRACE indexes with per-entity files after drift: read coded lint findings, fix orphaned/missing/drifted entries and stale trust. Use after manual edits, failed lint, or merge conflicts in docs/."
+whenToUse: "`mygrace lint` reports findings, docs/ was edited by hand, or a merge changed indexes and entities."
 ---
 
-Synchronize MyGRACE indexes with per-entity files.
+# Refresh indexes
 
-## What MyGRACE Refresh Does
-Classic GRACE refresh compares code against monolithic XML.
-MyGRACE refresh compares **indexes against per-entity files**.
+## 1. Detect drift (automated)
 
-## Detecting Drift First (MCP / CLI)
-Before manual review, run `mygrace lint --path <root>` (MCP: `mygrace_lint`) — it reports orphaned, missing, and drifted entries automatically. Refresh then fixes the reported issues.
+Run `mygrace lint --strict --format json --path <root>` and read the findings —
+`mygrace lint` now checks:
 
-## Sync Checks
+- XML validity (line/column) for every `docs/*.xml`;
+- index ↔ entity drift for all documented fields (`NAME`, `TYPE`, `STATUS`,
+  `PATH`, `DEPENDS`, `VERIFICATION_REF`, phase name/status/steps, verification
+  module/priority/status), plus duplicates and orphaned/missing files;
+- missing module `PATH`, unknown `DEPENDS`, dangling `VERIFICATION_REF`;
+- index caps and entity size budgets from `mygrace.config.json`;
+- markup problems in configured source dirs.
 
-### 1. Graph Index ↔ Module Files
-For each entry in `docs/graph-index.xml`:
-- Does `docs/modules/M-XXX.xml` exist? → If no, flag as orphaned
-- Does STATUS match between index and file? → If no, update index
-- Does PATH in index match file's actual location? → If no, update index
+Do not grep the XML by hand if the linter already has a coded finding.
 
-For each file in `docs/modules/`:
-- Is there a graph-index entry? → If no, add to index
+## 2. Fix by class
 
-### 2. Plan Index ↔ Phase Files
-For each entry in `docs/plan-index.xml`:
-- Does `docs/plans/Phase-N.xml` exist? → If no, flag as orphaned
-- Does step count match? → If no, update index
-- Does STATUS match? → If no, update index
+- `ORPHANED_INDEX_ENTRY` — entity file is gone. Either delete the index entry or
+  restore the file.
+- `MISSING_INDEX_ENTRY` — entity file exists without an index line. Add it.
+- `*_DRIFT` — index line vs entity file disagree. Decide the truth (usually the
+  file), then update the index; adjust the file only with approval if the
+  contract changed.
+- `PATH_MISSING` / `DEPENDS_UNKNOWN` / `VERIFICATION_REF_MISSING` — fix the
+  reference, not the linter.
+- `ENTITY_TOO_SMALL` / `ENTITY_TOO_LARGE` / index cap findings — split or enrich
+  the entity, or change `sizeBudgets`/`indexCaps` deliberately in config.
+- Shard findings — `SHARD_FILE_MISSING` / `SHARD_ROOT_INVALID` (restore or
+  regenerate the shard), `SHARD_COUNT_MISMATCH` (declared count vs actual
+  entries in the root ref or shard root), `PATH_UNSAFE` (an `href` that escapes
+  `docs/` or is not `.xml`), `DUPLICATE_INDEX_ENTRY` across shards. Fix by
+  re-running `mygrace module shard --apply --path <root>` after the data is
+  correct; the generator is deterministic.
 
-### 3. Verification Index ↔ Verification Files
-For each entry in `docs/verification-index.xml`:
-- Does `docs/verification/V-M-XXX.xml` exist? → If no, flag as orphaned
-- Does STATUS/PRIORITY match? → If no, update index
+## 3. Archive policy (important)
 
-For each file in `docs/verification/`:
-- Is there a verification-index entry? → If no, add to index
+Archiving a completed phase means move `docs/plans/Phase-N.xml` to
+`docs/archive/` **and remove its `plan-index.xml` entry** — keeping the entry
+creates an orphaned-index finding. Same rule for any entity removed from active
+directories.
 
-### 4. Archive Check
-- If a phase is "done" and project has >10 modules, suggest archiving to `docs/archive/`
+## 4. Trust re-record
 
-## Process
-1. **Choose Scope**: `targeted` (specific modules) or `full` (all indexes)
-2. **Scan indexes and per-entity directories** (prefer MCP tools `mygrace_list_modules` / `mygrace_list_verifications` when connected; fall back to direct reads)
-3. **Compare** — find orphaned, missing, drifted entries
-4. **Report** — structured drift report
-5. **Fix with user approval** — update indexes or create missing files
+If `docs/modules/`, `docs/verification/` or `mygrace.config.json` changed, the
+verification trust record is stale. After reviewing the commands, re-run
+`mygrace trust --path <root>` (or use `--allow-commands` for a one-off run).
 
-## Rules
-- Indexes are the source of truth for navigation — they MUST be current
-- Prefer targeted refresh after clean waves
-- Archive old phases to keep active directories small
-- Per-entity files can have implementation details that indexes don't need — that's by design
+## 5. Confirm
+
+`mygrace lint --strict --path <root>` must pass before handing back; report the
+finding codes you fixed and any judgement calls (which side was truth).

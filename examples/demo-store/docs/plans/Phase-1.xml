@@ -1,6 +1,58 @@
 <Phase-1 name="Foundation" status="done">
-  <step-M-CONFIG module="M-CONFIG" description="Load and validate application configuration from env" status="done" />
-  <step-M-LOGGER module="M-LOGGER" description="Structured logging with [Module][fn][BLOCK] markers" status="done" />
-  <step-M-DB module="M-DB" description="Connection pool and query helper" status="done" />
-  <step-M-AUTH module="M-AUTH" description="Authenticate users and manage sessions" status="done" />
+  <goal>Provide validated money primitives and the product catalog that the cart builds on.</goal>
+  <scope>
+    <in-scope>The modules listed in this phase and their verification files.</in-scope>
+    <out-of-scope>Modules owned by other phases; this phase must not edit them.</out-of-scope>
+  </scope>
+  <assumptions>
+    <assumption-1>The docs/graph-index.xml module list is the single source of truth for ids.</assumption-1>
+    <assumption-2>Every module in this phase has a verification file before implementation starts.</assumption-2>
+    <assumption-3>The previous phase is complete and its exit criteria are recorded as evidence.</assumption-3>
+  </assumptions>
+  <dependencies>
+    <dependency-1>docs/verification-index.xml entries for the phase modules.</dependency-1>
+    <dependency-2>Repository-level mygrace.config.json size budgets and index caps.</dependency-2>
+  </dependencies>
+  <step-1 module="M-MONEY" status="done">
+    <description>Implement parseAmount/formatAmount with strict validation of empty, negative and over-precise amounts.</description>
+    <acceptance>Valid decimal amounts round-trip; every malformed input throws a MoneyError with an actionable message.</acceptance>
+    <verification-ref>V-M-MONEY</verification-ref>
+  </step-1>
+  <step-2 module="M-CATALOG" status="done">
+    <description>Implement createCatalog/findProduct with duplicate-id, price and stock validation.</description>
+    <acceptance>Invalid catalogs are rejected; unknown product ids throw CatalogError instead of returning undefined.</acceptance>
+    <verification-ref>V-M-CATALOG</verification-ref>
+  </step-2>
+  <verification-plan>
+    <verification-1>V-M-MONEY — run the module checks and record the digest.</verification-1>
+    <verification-2>V-M-CATALOG — run the module checks and record the digest.</verification-2>
+    <verification-final>Phase exit: mygrace lint --path . reports 0 errors and 0 warnings.</verification-final>
+  </verification-plan>
+  <risks>
+    <risk-1>Decimal handling is the classic source of money bugs; review rejects any float arithmetic.</risk-1>
+    <risk-2>Catalog validation must reject duplicates before a cart can reference them.</risk-2>
+  </risks>
+  <observability>
+    <marker-rule>Every module logs [Module][function][BLOCK_NAME] on validation failures.</marker-rule>
+    <digest-rule>Verification failures are compacted into .mygrace/last-failures.md for the agent loop.</digest-rule>
+  </observability>
+  <evidence>
+    <evidence-1>bun test src/money/index.test.ts — happy path, malformed amount, negative amount.</evidence-1>
+    <evidence-2>bun test src/catalog/index.test.ts — duplicate id, invalid price, unknown product.</evidence-2>
+  </evidence>
+  <exit-criteria>
+    <criterion-1>All listed module tests pass with failure paths covered.</criterion-1>
+    <criterion-2>mygrace lint reports 0 errors and 0 warnings for the touched artifacts.</criterion-2>
+    <criterion-3>Index and per-entity files agree on every field after the phase.</criterion-3>
+    <criterion-4>No generated file outside this phase's scope changed.</criterion-4>
+  </exit-criteria>
+  <rollback>
+    <rollback-1>Revert the phase commits; the indexes are the only cross-file coupling.</rollback-1>
+    <rollback-2>Re-run lint to confirm index/entity consistency after a rollback.</rollback-2>
+  </rollback>
+  <notes>
+    This phase is generated deterministically; edit scripts/gen-example.ts, not the output.
+    The demo exists to exercise lint, verify, measure-context and the MCP tools end to end.
+    Size budgets from mygrace.config.json defaults are respected deliberately.
+  </notes>
 </Phase-1>

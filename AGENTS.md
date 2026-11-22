@@ -1,94 +1,120 @@
-# MyGRACE — Scalable Graph-RAG Anchored Code Engineering (DeepSeek Harness)
+# MyGRACE — Index-First Engineering Harness (DeepSeek Harness)
 
-This project is governed by **MyGRACE**: AI-driven development with lazy-loading indexes and per-entity files. All tasks follow this methodology.
+This project is governed by **MyGRACE**: a small, enforced repository map plus a
+contract-first workflow. Navigate with **indexes first**; read only what you need.
 
 ## Navigation Rule #1 (CRITICAL)
 
-**ALWAYS start with index files. NEVER scan all per-entity files.**
+**ALWAYS start with the index files. NEVER scan all per-entity files.**
 
-| Action | 1. Read first | 2. Then | Context |
-|---|---|---|---|
-| Learn modules | `docs/graph-index.xml` (≤100 lines) | `docs/modules/M-XXX.xml` | ~130 lines |
-| Development plan | `docs/plan-index.xml` (≤50 lines) | `docs/plans/Phase-N.xml` | ~250 lines |
-| Verification | `docs/verification-index.xml` (≤80 lines) | `docs/verification/V-M-XXX.xml` | ~140 lines |
-| Project status | Only the 3 index files | — | ~230 lines |
+| Action | 1. Read first | 2. Then |
+|---|---|---|
+| Learn modules | `docs/graph-index.xml` (cap 100) | the one `docs/modules/M-XXX.xml` you need |
+| Development plan | `docs/plan-index.xml` (cap 50) | only the current `docs/plans/Phase-N.xml` |
+| Verification | `docs/verification-index.xml` (cap 80) | the relevant `docs/verification/V-M-XXX.xml` |
 
-Monolithic files `knowledge-graph.xml`, `development-plan.xml`, `verification-plan.xml` do **NOT** exist here.
+Caps/budgets are configurable in `mygrace.config.json` (`indexCaps`, `sizeBudgets`;
+default entity budgets: module 30–80 / phase 50–200 / verification 20–60 lines);
+legacy monolithic XML is not used — do not create or read it.
 
-## Skills
+## Trust model (CRITICAL)
+
+Project-declared commands (`<module-checks>` in the canonical
+`docs/verification/V-M-XXX.xml`) are **untrusted input**. `mygrace test` /
+`mygrace verify` execute them only when one of these holds:
+
+- `.mygrace/trust.json` is current — created by `mygrace trust` after review;
+- `"allowCommands": true` is set in `mygrace.config.json`;
+- the invocation passes `--allow-commands`.
+
+`.mygrace/` is local state: **never commit it** (add it to `.gitignore`). Editing
+`docs/modules/`, `docs/verification/` or the config invalidates the record — run
+`mygrace trust` again. If a command is refused, report the refusal; do not
+bypass it.
+
+## Skills (15)
 
 Prefer the matching skill (via the `skill` tool) over re-deriving the process:
 
 | Skill | Purpose |
 |---|---|
-| `mygrace-init` | Bootstrap docs/ structure + this AGENTS.md (fast path: `mygrace init-dsh`) |
-| `mygrace-plan` | Design modules/phases/verification, write per-entity files + indexes |
-| `mygrace-verification` | Design test scenarios, log markers, evidence per module |
-| `mygrace-execute` | Implement a phase step by step (current phase + module only) |
+| `mygrace-init` | Bootstrap docs/ + AGENTS.md + config (`mygrace init-dsh`) |
+| `mygrace-plan` | Design modules/phases/verification; write entities + indexes |
+| `mygrace-verification` | Design scenarios, log markers and evidence |
+| `mygrace-execute` | Implement the plan step by step (current phase + module) |
 | `mygrace-multiagent-execute` | Parallel waves via DSH subagents |
 | `mygrace-refactor` | Safe restructuring with atomic index updates |
 | `mygrace-refresh` | Sync indexes with per-entity files after drift |
 | `mygrace-reviewer` | Integrity audit (scoped / wave / full) |
 | `mygrace-fix` | Debug: index → module → block |
-| `mygrace-status` | Health report from 3 indexes only |
+| `mygrace-status` | Health report from indexes + lint summary |
 | `mygrace-ask` | Q&A via lazy navigation |
 | `mygrace-cli` | CLI/MCP reference |
+| `mygrace-explainer` | Methodology reference and honest metrics |
+| `mygrace-setup-subagents` | DSH subagent role prompts |
+| `mygrace-token-budget` | Output-side token policy |
 
-## MCP Tools (when the mygrace MCP server is connected)
+## MCP tools (21, when the mygrace MCP server is connected)
 
-`mygrace_list_modules` · `mygrace_show_module` · `mygrace_show_phase` · `mygrace_list_verifications` · `mygrace_lint` · `mygrace_show_file` · `mygrace_status`
-
-Prefer MCP tools for index-based reads; fall back to direct file reads when MCP is unavailable.
+`mygrace_list_modules` · `mygrace_show_module` · `mygrace_show_phase` ·
+`mygrace_find_modules` · `mygrace_phase_index` · `mygrace_doctor` ·
+`mygrace_test` · `mygrace_trust` · `mygrace_ci` · `mygrace_packet` ·
+`mygrace_focus` · `mygrace_context_cost` · `mygrace_verify` ·
+`mygrace_list_verifications` · `mygrace_lint` · `mygrace_show_file` · `mygrace_status` · `mygrace_trace` · `mygrace_impact` · `mygrace_next` · `mygrace_projects`
+DSH exposes them as `mcp__mygrace__<tool>` (e.g. `mcp__mygrace__lint`). `install-dsh --panel` also wires the optional LIVE sidebar card that reads `mygrace status`.
 
 ## Six Principles
 
-1. **Never write code without a contract** — every governed file has MODULE_CONTRACT (PURPOSE, SCOPE, DEPENDS, LINKS) before code.
-2. **Semantic markup is load-bearing** — `START_BLOCK_*` / `END_BLOCK_*` are navigation anchors, not comments.
-3. **The knowledge graph is always current** — indexes never drift from reality; update after every change.
+1. **Never write code without a contract** — `MODULE_CONTRACT` before code.
+2. **Semantic markup is load-bearing** — blocks are anchors, not comments.
+3. **The indexes are always current** — `mygrace lint --strict` proves it.
 4. **Top-down synthesis** — Requirements → Technology → Plan → Verification → Contracts → Code.
-5. **Verification is architecture** — tests, traces and log markers are part of the blueprint.
-6. **Governed autonomy** — freedom in HOW, not in WHAT; the contract defines WHAT.
+5. **Verification is architecture** — tests, traces and `<module-checks>` count.
+6. **Governed autonomy** — freedom in HOW, not in WHAT.
 
 ## Semantic Markup
 
 ```ts
-// START_MODULE_CONTRACT
-//   PURPOSE: ...
-//   SCOPE: ...
-//   DEPENDS: M-XXX
-//   LINKS: docs/modules/M-XXX.xml
-// END_MODULE_CONTRACT
-// START_MODULE_MAP / END_MODULE_MAP
-// START_CHANGE_SUMMARY / END_CHANGE_SUMMARY
-// START_CONTRACT: fnName / END_CONTRACT: fnName
-// START_BLOCK_VALIDATE ... code ... END_BLOCK_VALIDATE
+// START_MODULE_CONTRACT (PURPOSE, SCOPE, DEPENDS, LINKS) ... END_MODULE_CONTRACT
+// START_MODULE_MAP ... END_MODULE_MAP · START_CHANGE_SUMMARY ... END_CHANGE_SUMMARY
+// START_CONTRACT: fnName ... END_CONTRACT: fnName
+// START_BLOCK_VALIDATE ... END_BLOCK_VALIDATE
+// Log: [ModuleName][functionName][BLOCK_NAME] message
 ```
-
-Log format: `[ModuleName][functionName][BLOCK_NAME] message`
 
 ## Project Structure
 
 ```
 docs/
-  graph-index.xml          # module index — read first (≤100 lines)
-  plan-index.xml           # phase index (≤50 lines)
-  verification-index.xml   # verification index (≤80 lines)
-  operational-packets.xml  # execution packet templates
-  requirements.xml         # requirements
-  technology.xml           # technology stack
-  modules/                 # M-XXX.xml per module (30-80 lines)
-  plans/                   # Phase-N.xml per phase (50-200 lines)
-  verification/            # V-M-XXX.xml per verification entry (20-60 lines)
-  archive/                 # completed phases (moved when project grows)
+  graph-index.xml          # module index — read first
+  plan-index.xml           # phase index
+  verification-index.xml   # verification index
+  modules/, plans/         # one M-XXX.xml / Phase-N.xml per entity
+  verification/            # V-M-XXX.xml (canonical <module-checks>)
+  archive/                 # completed phases (remove their plan-index entry)
+  requirements.xml, technology.xml, operational-packets.xml
+mygrace.config.json        # layout/budgets/runner/allowCommands (optional)
 AGENTS.md                  # this file
 ```
 
+## Scaling and languages
+
+When `docs/graph-index.xml` approaches `indexCaps.graph`, shard it: `mygrace module shard` is a dry run, `--apply` writes `docs/modules/shard-<slug>.xml` + `<Shard href=.../>` refs and a backup; reads are shard-transparent except `module show`. `sourceDirs`/`markupExts` replace defaults, `testRunner` is only the no-`<module-checks>` fallback; `mygrace projects` covers monorepos.
+
+## Commands (20 CLI)
+
+- `mygrace status --path .` / `mygrace ci --path .` / `mygrace next --path .` — snapshot / one-command gate / deterministic next action
+- `mygrace lint --strict --path .` — integrity gate; add `--changed --base <ref>` (or `--files`) for incremental scope
+- `mygrace trace <M-XXX>` / `mygrace impact [--files a,b,c]` — proof chain / change blast radius (both read-only)
+- `mygrace trust --path .` — review + record project commands (before test/verify)
+- `mygrace test --module M-XXX` / `mygrace verify --module M-XXX` — scoped tests
+- `mygrace projects --path .` — monorepo health; `mygrace module index|find|show|list`, `mygrace phase index|show`, `mygrace verification index`
+- `mygrace packet M-XXX` / `mygrace focus M-XXX` / `mygrace context-cost --path .` — worker prompt / set / budget; `mygrace doctor --path .` — environment
+
 ## Editing Rules
 
-1. Preserve MODULE_CONTRACT, MODULE_MAP, CHANGE_SUMMARY on any edit.
-2. Preserve START_BLOCK/END_BLOCK boundaries unless restructuring.
-3. Update CHANGE_SUMMARY after changes.
-4. Update `docs/graph-index.xml` when public interfaces change.
-5. Update verification files when tests change.
-6. If a contract seems wrong — propose a change, do not deviate silently.
-7. Commit + verify after changes; run `mygrace lint` (or the `mygrace_lint` MCP tool) to confirm index consistency.
+1. Preserve MODULE_CONTRACT, MODULE_MAP, CHANGE_SUMMARY and block boundaries; update CHANGE_SUMMARY after changes.
+2. Update `docs/graph-index.xml` when public interfaces change.
+3. Update verification files (`<module-checks>`) when tests change; re-run `mygrace trust`.
+4. If a contract seems wrong — propose a change, do not deviate silently.
+5. Run `mygrace lint --strict` before committing; keep `.mygrace/` out of git.

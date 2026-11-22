@@ -1,0 +1,26 @@
+<!-- Canonical verification entry. <module-checks> is read by mygrace test/verify; commands are trust-gated (run `mygrace trust` after review). -->
+<V-M-IMPACT MODULE="M-IMPACT" PRIORITY="high" STATUS="done">
+  <test-files>
+    <file>test/grace-impact.test.ts</file>
+  </test-files>
+
+  <module-checks>
+    <check-1>bun test test/grace-impact.test.ts</check-1>
+  </module-checks>
+
+  <scenarios>
+    <scenario-1 kind="success">--files maps changed files to direct modules (exact PATH, directory prefix, docs entity), their transitive dependents, the verification/test blast radius and affected phases; suggested commands include scoped verify and ci.</scenario-1>
+    <scenario-2 kind="success">--files works with no git metadata; --staged/--since use git argv-only and degrade to a usage error (exit 2) when no changed-file source exists.</scenario-2>
+    <scenario-3 kind="failure">Files that map to no module produce a NO_MODULES_AFFECTED info finding and still exit 0; JSON mode exposes files, modules, dependents, phases and commands.</scenario-3>
+  </scenarios>
+
+  <required-log-markers>
+    <marker-1>CLI text/JSON output is asserted by the tests; git and library paths emit no runtime log markers.</marker-1>
+  </required-log-markers>
+
+  <notes>
+    <note-1>Covered by test/grace-impact.test.ts (explicit files, staged/since scopes, mapping reasons, dependent closure, trust note, exit codes, JSON envelope).</note-1>
+    <note-2>Scope precedence: --files → --staged → --since &lt;ref&gt; → git diff HEAD; no source is a usage error (exit 2).</note-2>
+    <note-3>CLI surface: mygrace impact [--files a,b,c] [--since &lt;ref&gt;] [--staged] [--path .] [--format text|json].</note-3>
+  </notes>
+</V-M-IMPACT>

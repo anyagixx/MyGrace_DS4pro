@@ -1,0 +1,46 @@
+<!-- Module contract for M-INSTALL. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-INSTALL NAME="DeepSeek Harness installer" TYPE="INTEGRATION" STATUS="done">
+  <purpose>Install/uninstall MyGRACE into DeepSeek Harness with validated, atomic config edits and honest exit codes (ADR-7); since v1.3 the `--panel` component is a LIVE status card, not a placeholder (W4.1).</purpose>
+  <path>src/grace-install.ts</path>
+  <depends>M-ERRORS</depends>
+  <verification-ref>V-M-INSTALL</verification-ref>
+
+  <annotations>
+    <export-MCP_ENTRY_ID PURPOSE="Loader row id for the MCP client (mcp-mygrace)." />
+    <export-PANEL_ENTRY_ID PURPOSE="Loader row id for the status panel." />
+    <fn-dshHome PURPOSE="Resolve $DSH_HOME or ~/.dsh." />
+    <fn-skillSourceDirs PURPOSE="Canonical grace-* skill directories shipped with this package." />
+    <fn-mcpPatchRow PURPOSE="MCP loader row in the exact shape DSH expects." />
+    <fn-panelPatchRow PURPOSE="LIVE status-panel loader row (host route GET /api/mygrace.status + browser card); opt-in via --panel." />
+    <fn-parsePatchContent PURPOSE="YAML parse plus top-level array validation." />
+    <fn-patchHasRow PURPOSE="Structural idempotency check against parsed rows." />
+    <fn-insertRowInPatch PURPOSE="Insert a row with YAML validation before and after." />
+    <fn-removeRowFromPatch PURPOSE="Remove a managed block, byte-identical undo." />
+    <fn-atomicWriteFile PURPOSE="Temp file plus rename in the same directory." />
+    <fn-createTimestampedBackup PURPOSE="Never-overwritten backups with cleanup." />
+  </annotations>
+
+  <CrossLink to="M-ERRORS" relation="typed failures and exit codes" />
+
+  <contract>
+    <purpose>Install/uninstall MyGRACE into DeepSeek Harness with validated, atomic config edits and honest exit codes (ADR-7, W1.4).</purpose>
+    <inputs>
+      <param name="profile" type="string" description="DSH profile to patch (default web)." />
+      <param name="dshHome" type="string" description="DSH home override." />
+    </inputs>
+    <outputs>
+      <param name="actions" type="InstallAction[]" description="Human-readable install/uninstall actions." />
+    </outputs>
+    <errors>
+      <error code="CONFIG_INVALID" description="Unparseable cordis.patch.yml, refused before any edit." />
+      <error code="INSTALL_FAILED" description="A requested component failed." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>Writes only under $DSH_HOME; no network access.</note-1>
+    <note-2>Backups are timestamped and never overwritten; uninstall restores the managed block byte-for-byte.</note-2>
+    <note-3>The MCP row is PATH-free: it records the absolute bun path and the absolute MCP server entry.</note-3>
+    <note-4>The panel reads real data: its host route spawns `mygrace status --format json` (MYGRACE_BIN → $DSH_HOME launcher, 5 s timeout, never throws → {ok:false,error}).</note-4>
+  </notes>
+</M-INSTALL>

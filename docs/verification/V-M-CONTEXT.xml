@@ -1,0 +1,23 @@
+<!-- Canonical verification entry. <module-checks> is read by mygrace test/verify; commands are trust-gated (run `mygrace trust` after review). -->
+<V-M-CONTEXT MODULE="M-CONTEXT" PRIORITY="low" STATUS="done">
+  <test-files>
+    <file>test/grace-context.test.ts</file>
+  </test-files>
+
+  <module-checks>
+    <check-1>bun test</check-1>
+  </module-checks>
+
+  <scenarios>
+    <scenario-1 kind="success">Per-operation line counts and configured index caps are reported.</scenario-1>
+    <scenario-2 kind="failure">Missing entity directories degrade to 0 lines; malformed indexes become INDEX_UNREADABLE findings.</scenario-2>
+  </scenarios>
+
+  <required-log-markers>
+    <marker-1>CLI text output and JSON envelopes are asserted by the tests; no runtime log markers are emitted by library modules.</marker-1>
+  </required-log-markers>
+
+  <notes>
+    <note-1>Covered by test/grace-context.test.ts.</note-1>
+  </notes>
+</V-M-CONTEXT>

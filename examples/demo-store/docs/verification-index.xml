@@ -1,14 +1,5 @@
 <VerificationIndex project="DemoStore" version="1.0.0">
-  <V-M-CONFIG MODULE="M-CONFIG" PRIORITY="medium" STATUS="done" />
-  <V-M-LOGGER MODULE="M-LOGGER" PRIORITY="medium" STATUS="done" />
-  <V-M-DB MODULE="M-DB" PRIORITY="medium" STATUS="done" />
-  <V-M-AUTH MODULE="M-AUTH" PRIORITY="high" STATUS="done" />
-  <V-M-USERS MODULE="M-USERS" PRIORITY="high" STATUS="wip" />
-  <V-M-PRODUCTS MODULE="M-PRODUCTS" PRIORITY="high" STATUS="wip" />
-  <V-M-CART MODULE="M-CART" PRIORITY="high" STATUS="pending" />
-  <V-M-ORDERS MODULE="M-ORDERS" PRIORITY="high" STATUS="pending" />
-  <V-M-PAYMENTS MODULE="M-PAYMENTS" PRIORITY="medium" STATUS="pending" />
-  <V-M-NOTIFY MODULE="M-NOTIFY" PRIORITY="medium" STATUS="pending" />
-  <V-M-API MODULE="M-API" PRIORITY="medium" STATUS="pending" />
-  <V-M-CLI MODULE="M-CLI" PRIORITY="medium" STATUS="pending" />
+  <V-M-MONEY MODULE="M-MONEY" PRIORITY="high" STATUS="done" />
+  <V-M-CATALOG MODULE="M-CATALOG" PRIORITY="high" STATUS="done" />
+  <V-M-CART MODULE="M-CART" PRIORITY="high" STATUS="done" />
 </VerificationIndex>

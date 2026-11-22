@@ -1,82 +1,103 @@
 ---
 name: mygrace-explainer
-description: "Complete MyGRACE methodology reference: lazy-loading indexes, per-module files, phase-based navigation. Use to refresh understanding of how the methodology works before applying other skills."
-whenToUse: "You are unsure about MyGRACE concepts, file layout, or navigation rules and need the reference."
+description: "Complete MyGRACE methodology reference: indexes, per-entity files, trust model, configuration, enforcement and the honest measurement model. Use to refresh understanding before applying another skill."
+whenToUse: "You are unsure how MyGRACE works — file layout, navigation rules, trust record, config keys or metric semantics."
 ---
 
-# MyGRACE — Scalable Graph-RAG Anchored Code Engineering
+# MyGRACE methodology reference
 
-MyGRACE is a scalable variant of GRACE designed for **large projects** (20-200+ modules). It solves the context-overflow problem of classic GRACE by replacing monolithic XML files with lazy-loading indexes and per-entity files.
+MyGRACE is an index-first engineering harness for AI coding agents: a small,
+enforced map of the repository plus a contract-first workflow.
 
-## Platform Support
+## Layout and navigation
 
-**DeepSeek Harness (DSH) is the primary platform.** The `mygrace-*` skills are installed for the DSH `skill` tool, and AGENTS.md at the project root is auto-loaded by DSH — this skill only adds what AGENTS.md does not cover. Other platforms (Claude Code, Qwen Code, Cursor, etc.) are optional and not part of this distribution.
+| Classic artifact | MyGRACE replacement | Default budget |
+|---|---|---|
+| `knowledge-graph.xml` | `docs/graph-index.xml` + `docs/modules/M-XXX.xml` | index 100 lines, module 30–80 |
+| `development-plan.xml` | `docs/plan-index.xml` + `docs/plans/Phase-N.xml` | index 50, phase 50–200 |
+| `verification-plan.xml` | `docs/verification-index.xml` + `docs/verification/V-M-XXX.xml` | index 80, verification 20–60 |
 
-## The Problem MyGRACE Solves
+Rules: read the index first; read one entity at a time; never scan all entity
+files; caps and budgets are configurable in `mygrace.config.json` and enforced by
+`mygrace lint`. Legacy monolithic XML is not used.
 
-Classic GRACE stores all modules in monolithic files:
-- `knowledge-graph.xml` — 2000+ lines at 50 modules
-- `development-plan.xml` — 3000+ lines at 50 modules
-- `verification-plan.xml` — 1500+ lines at 50 modules
+## Scaling and language support
 
-LLMs that read these files burn 80-95% of context tokens on irrelevant data. Quality degrades at ~15 modules.
+- **Sharded indexes (ADR-6, implemented in Wave 3.1):** past the root index cap
+  the root holds `<Shard href="modules/shard-<slug>.xml" count="N" />` references
+  and each shard file starts with `<ModuleShard project=… group=… count=…>` plus
+  normal `<M-…/>` lines. `mygrace module shard` plans deterministically (dry run
+  by default; `--apply` writes atomically with a timestamped backup and is
+  idempotent). `list`/`find`/`status`/`ci`/`test`/`verify` read the union
+  transparently; `module show` reads the entity file directly.
+- **Multi-language (G12):** `sourceDirs`, `markupExts` and `ignoreDirs` are
+  honoured from config for any language; a user list *replaces* the default
+  (polyglot repos enumerate every extension), and comment dialects `//`, `#`,
+  `--`, `/*`, `<!--` are understood. `testRunner` is only the fallback when no
+  canonical `<module-checks>` exists. Python/Go fixtures: `test/grace-language.test.ts`.
 
-## The MyGRACE Solution
+## Trust model (ADR-1)
 
-| Classic GRACE | MyGRACE | Size |
-|---------------|---------|------|
-| `knowledge-graph.xml` (monolithic) | `graph-index.xml` + `docs/modules/M-XXX.xml` | Index ≤100 lines, module 30-80 lines |
-| `development-plan.xml` (monolithic) | `plan-index.xml` + `docs/plans/Phase-N.xml` | Index ≤50 lines, phase 50-200 lines |
-| `verification-plan.xml` (monolithic) | `verification-index.xml` + `docs/verification/V-M-XXX.xml` | Index ≤80 lines, entry 20-60 lines |
+`<module-checks>` in `docs/verification/V-M-XXX.xml` is the canonical command
+source (module files are a deprecated fallback; `testRunner` from config is the
+last fallback). `mygrace test` / `mygrace verify` refuse to execute those
+commands unless `.mygrace/trust.json` is current (`mygrace trust` after review),
+`config.allowCommands` is true, or `--allow-commands` is passed. `.mygrace/` is
+gitignored local state; editing docs/modules, docs/verification or the config
+invalidates the record. Commands run argv-only, never through a shell.
 
-## Navigation Rules (CRITICAL — always follow these)
+## Enforcement
 
-1. **ALWAYS** read `docs/graph-index.xml` first — it's the single source of module existence (≤100 lines)
-2. **NEVER** read `docs/knowledge-graph.xml` — use `docs/modules/M-XXX.xml` per module
-3. **NEVER** read `docs/development-plan.xml` — use `plan-index.xml` + `docs/plans/Phase-N.xml`
-4. **NEVER** read `docs/verification-plan.xml` — use `verification-index.xml` + `docs/verification/V-M-XXX.xml`
-5. Prefer MCP tools (`mygrace_list_modules`, `mygrace_show_module`, `mygrace_show_phase`, `mygrace_list_verifications`, `mygrace_lint`, `mygrace_show_file`) when connected; fall back to direct file reads or the `mygrace` CLI
-6. Archive completed phases to `docs/archive/` — they stay in the index but details move out
+`mygrace lint` checks: XML validity (line/column), all index↔entity field drift,
+duplicates, missing PATH/DEPENDS/VERIFICATION_REF targets, phase status/steps
+drift, index caps, entity size budgets, block pairing by name, contract fields.
+`--strict` makes warnings fail; `--format json` gives machine findings with
+stable codes and honest exit codes (ADR-3).
 
-## Six Core Principles
-1. **Never Write Code Without a Contract** — MODULE_CONTRACT before code
-2. **Semantic Markup Is Not Comments** — navigation anchors for LLMs
-3. **Knowledge Graph Is Always Current** — graph-index.xml never drifts
-4. **Top-Down Synthesis** — Requirements → Technology → Plan → Verification → Contracts → Code
-5. **Verification Is Architecture** — testing, traces, log markers are part of the blueprint
-6. **Governed Autonomy (PCAM)** — Purpose, Constraints, Autonomy, Metrics
+## Configuration (`mygrace.config.json`)
 
-## Development Workflow (DSH)
+`sourceDirs`, `markupExts`, `ignoreDirs`, `indexCaps`, `sizeBudgets`,
+`testRunner`, `allowCommands`, `language`. `mygrace init-dsh` writes it; defaults
+reproduce the classic layout; unknown keys are rejected.
 
-Run each stage via the `skill` tool:
-1. `mygrace-init` — create index-based docs/ structure
-2. Fill `docs/requirements.xml` and `docs/technology.xml`
-3. `mygrace-plan` — architect modules, updates index + per-module files
-4. `mygrace-verification` — design tests, updates verification-index + per-entry files
-5. `mygrace-execute` — sequential module generation
-6. `mygrace-multiagent-execute` — parallel-safe waves via subagents
-7. `mygrace-refactor` — safe restructuring, updates indexes
-8. `mygrace-refresh` — sync indexes with per-entity files
-9. `mygrace-fix` — debug via lazy navigation
-10. `mygrace-status` — health report (reads only indexes)
-11. `mygrace-ask` — Q&A over artifacts
+## Honest metrics
 
-## Token Savings
-| Task | Classic GRACE | MyGRACE | Savings |
-|------|--------------|---------|---------|
-| Status check | ~6500 lines | ~230 lines (3 indexes) | 96% |
-| Single module work | ~6500 lines | ~180 lines (index + module + verification) | 97% |
-| Phase execution | ~6500 lines | ~280 lines (indexes + phase + modules) | 96% |
+`scripts/measure-context.ts` measures lines, bytes and a documented token
+**estimate** (`ceil(bytes/4)`) — not a tokenizer. The classic baseline is
+synthesized by concatenating indexes + entity files, so it is a model, not a real
+classic repository. On the checked-in demo (3 modules): status 316 → 19 lines
+(94%), single module 110 → 43 (61%), phase execution 116 → 64 (45%), full
+verification audit 90 → 90 (0%). The 12/50/200-module sweep shows the win grows
+with size but saturates; a 200-module point is synthetic. Reproduce with
+`bun run scripts/measure-context.ts --json`; runtime view:
+`mygrace context-cost --path <root>`.
 
-## CLI
-```bash
-mygrace lint --path .                        # integrity check including index sync
-mygrace module index --path .                # show graph-index.xml
-mygrace module find <query> --path .         # resolve module IDs
-mygrace module show M-XXX --path .           # per-module file (docs/modules/M-XXX.xml)
-mygrace module list --status=wip --path .    # filter by status
-mygrace phase index --path .                 # show plan-index.xml
-mygrace phase show Phase-1 --path .          # show specific phase
-mygrace verification index --path .          # show verification-index.xml
-mygrace file show <path> --root . --contracts --blocks  # file-local markup
-```
+## Query surface and operations
+
+- `mygrace trace <ID>` — read-only proof chain (module/verification → test files →
+  command provenance → requirements → phases → dependents) with stable gap codes.
+- `mygrace impact` — changed files → direct modules → transitive dependents →
+  verification blast radius → phases → suggested commands.
+- `mygrace next` — deterministic nine-code advice ladder; exit 0 for any advice.
+- `mygrace projects` — bounded monorepo discovery by `docs/graph-index.xml`.
+- `mygrace lint --changed` — incremental lint scope (git diff or `--files`).
+
+## Platform
+
+DeepSeek Harness is primary (skills + MCP + AGENTS.md). The `install-dsh --panel`
+component is now a **LIVE** sidebar card (GET `/api/mygrace.status`, payload built
+from `mygrace status --format json`; opt-in/private; route+loader verified
+against the real DSH 0.2.1-rc.2 loader, live GUI session not exercised in CI).
+Other platform files in this repository (`rules/`, `plugins/`, `extensions/`) are
+legacy or metadata stubs; the CLI itself needs no DSH packages. Publishing is
+tag-driven via `.github/workflows/release.yml` (`bun run publish:dry` gate); the
+package is publish-ready but not published yet.
+
+## Workflow
+
+`mygrace-init` → fill requirements/technology → `mygrace-plan` →
+`mygrace-verification` → `mygrace-execute` (or `mygrace-multiagent-execute`) →
+`mygrace-reviewer` / `mygrace-refresh` as needed; `mygrace-status` and
+`mygrace-ask` for orientation, `mygrace ci` as the final gate, `mygrace next` for
+what to do after it. Archiving a phase = move its file to
+`docs/archive/` **and** remove its `plan-index.xml` entry.

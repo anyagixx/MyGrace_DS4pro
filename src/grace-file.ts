@@ -1,89 +1,95 @@
 #!/usr/bin/env bun
 /**
  * MyGRACE File Command
- * Show file-local MODULE_CONTRACT, MODULE_MAP, CHANGE_SUMMARY, contracts, and blocks.
+ *
+ * Shows file-local semantic markup: MODULE_CONTRACT, MODULE_MAP,
+ * CHANGE_SUMMARY, function contracts and semantic blocks.
+ *
+ * Text markup is analyzed by the same `analyzeMarkup` implementation lint
+ * uses (`src/grace-lint.ts`), so `file show --blocks` and `mygrace lint`
+ * cannot disagree about pairing or contracts.
  */
 
+// START_MODULE_CONTRACT
+//   PURPOSE: Show file-local semantic markup (contract, map, change summary, contracts, block integrity) for one source file.
+//   SCOPE: Reads one source file; text output only; no writes.
+//   DEPENDS: grace-lint (markup analysis), grace-common, grace-errors
+//   LINKS: ROADMAP.md (G3); src/grace-lint.ts
+// END_MODULE_CONTRACT
+
+// START_MODULE_MAP
+//   fileCommand     — citty command group
+//   fileShowCmd     — `file show <path> [--root] [--contracts] [--blocks]`
+// END_MODULE_MAP
+
 import { defineCommand } from "citty";
-import { readFileSync, existsSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { resolve } from "node:path";
+import { readTextFileOrThrow } from "./grace-common";
+import { UsageError } from "./grace-errors";
+import { analyzeMarkup } from "./grace-lint";
+
+export const fileShowCmd = defineCommand({
+  meta: { name: "show", description: "Show file-local markup" },
+  args: {
+    path: { type: "positional", description: "File path to inspect" },
+    root: { type: "string", default: ".", description: "Base directory for the path (absolute paths win)" },
+    contracts: { type: "boolean", default: false, description: "Include function/type contracts" },
+    blocks: { type: "boolean", default: false, description: "Include semantic block info" },
+  },
+  run: async ({ args }) => {
+    if (typeof args.path !== "string" || args.path.trim() === "") {
+      throw new UsageError("Missing file path to inspect.", {
+        hint: "Usage: mygrace file show <path> [--root <project-root>]",
+      });
+    }
+    const root = typeof args.root === "string" && args.root !== "" ? args.root : ".";
+    const filePath = resolve(root, args.path);
+    if (!existsSync(filePath)) {
+      console.error(`File not found: ${filePath}`);
+      process.exit(1);
+    }
+    const content = readTextFileOrThrow(filePath, "source file");
+    const analysis = analyzeMarkup(content);
+
+    if (analysis.contract !== undefined) {
+      console.log("=== MODULE_CONTRACT ===\n");
+      console.log(analysis.contract.raw);
+      console.log();
+    }
+
+    if (analysis.moduleMap !== undefined) {
+      console.log("=== MODULE_MAP ===\n");
+      console.log(analysis.moduleMap);
+      console.log();
+    }
+
+    if (analysis.changeSummary !== undefined) {
+      console.log("=== CHANGE_SUMMARY ===\n");
+      console.log(analysis.changeSummary);
+      console.log();
+    }
+
+    if (args.contracts === true && analysis.functionContracts.length > 0) {
+      console.log(`=== CONTRACTS (${analysis.functionContracts.length}) ===\n`);
+      for (const contract of analysis.functionContracts) console.log(`${contract}\n`);
+    }
+
+    if (args.blocks === true) {
+      console.log("=== SEMANTIC BLOCKS ===\n");
+      console.log(`START blocks: ${analysis.blockStarts}`);
+      console.log(`END blocks:   ${analysis.blockEnds}`);
+      console.log(`Status: ${analysis.blockIssues.length === 0 ? "✓ Paired" : "✗ UNPAIRED — integrity violation"}`);
+      for (const issue of analysis.blockIssues) {
+        console.log(`${issue.message} (${issue.code})`);
+      }
+    }
+  },
+});
 
 export const fileCommand = defineCommand({
   meta: { name: "file", description: "File-local markup operations" },
   subCommands: {
-    show: defineCommand({
-      meta: { name: "show", description: "Show file-local markup" },
-      args: {
-        path: { type: "positional", description: "File path to inspect" },
-        root: { type: "string", default: ".", description: "Base directory for the path (absolute paths win)" },
-        contracts: { type: "boolean", default: false, description: "Include function/type contracts" },
-        blocks: { type: "boolean", default: false, description: "Include semantic block info" },
-      },
-      run: async ({ args }) => {
-        const filePath = resolve(args.root, args.path);
-        if (!existsSync(filePath)) {
-          console.error(`File not found: ${filePath}`);
-          process.exit(1);
-        }
-        const content = readFileSync(filePath, "utf-8");
-
-        // Canonical: START_MODULE_CONTRACT / END_MODULE_CONTRACT
-        // Legacy (accepted for backwards compatibility): === MODULE_CONTRACT === / === END_MODULE_CONTRACT ===
-        const c = `(?:START_MODULE_CONTRACT|===\\s*MODULE_CONTRACT\\s*===)`;
-        const ce = `(?:END_MODULE_CONTRACT|===\\s*END_MODULE_CONTRACT\\s*===)`;
-
-        // Extract MODULE_CONTRACT
-        const contractMatch = content.match(new RegExp(`(\\/\\/|#|--)\\s*${c}[\\s\\S]*?(\\/\\/|#|--)\\s*${ce}`));
-        if (contractMatch) {
-          console.log("=== MODULE_CONTRACT ===\n");
-          console.log(contractMatch[0]);
-          console.log();
-        }
-
-        // Extract MODULE_MAP
-        const mapMatch = content.match(/(\/\/|#|--)\s*START_MODULE_MAP[\s\S]*?(\/\/|#|--)\s*END_MODULE_MAP/);
-        if (mapMatch) {
-          console.log("=== MODULE_MAP ===\n");
-          console.log(mapMatch[0]);
-          console.log();
-        }
-
-        // Extract CHANGE_SUMMARY
-        const changeMatch = content.match(/(\/\/|#|--)\s*START_CHANGE_SUMMARY[\s\S]*?(\/\/|#|--)\s*END_CHANGE_SUMMARY/);
-        if (changeMatch) {
-          console.log("=== CHANGE_SUMMARY ===\n");
-          console.log(changeMatch[0]);
-          console.log();
-        }
-
-        if (args.contracts) {
-          const contracts = content.match(/(\/\/|#|--)\s*START_CONTRACT:\s*(\w+)[\s\S]*?(\/\/|#|--)\s*END_CONTRACT:\s*\2/g);
-          if (contracts?.length) {
-            console.log(`=== CONTRACTS (${contracts.length}) ===\n`);
-            contracts.forEach((c) => console.log(c + "\n"));
-          }
-        }
-
-        if (args.blocks) {
-          const starts = (content.match(/START_BLOCK_\w+/g) || []).length;
-          const ends = (content.match(/END_BLOCK_\w+/g) || []).length;
-          console.log(`=== SEMANTIC BLOCKS ===\n`);
-          console.log(`START blocks: ${starts}`);
-          console.log(`END blocks:   ${ends}`);
-          console.log(`Status: ${starts === ends ? "✓ Paired" : "✗ UNPAIRDED — integrity violation"}`);
-
-          if (starts !== ends) {
-            const startNames = content.match(/START_BLOCK_(\w+)/g) || [];
-            const endNames = content.match(/END_BLOCK_(\w+)/g) || [];
-            const startSet = new Set(startNames.map((s) => s.replace("START_BLOCK_", "")));
-            const endSet = new Set(endNames.map((s) => s.replace("END_BLOCK_", "")));
-            const missing = [...startSet].filter((n) => !endSet.has(n));
-            const extra = [...endSet].filter((n) => !startSet.has(n));
-            if (missing.length) console.log(`Missing END blocks: ${missing.join(", ")}`);
-            if (extra.length) console.log(`Missing START blocks: ${extra.join(", ")}`);
-          }
-        }
-      },
-    }),
+    show: fileShowCmd,
   },
 });

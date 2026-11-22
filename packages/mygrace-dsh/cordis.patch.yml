@@ -1,8 +1,9 @@
-# MyGRACE DSH bundle — loader rows for the bundle's plugin packages.
+# Bundle layer for the (UNPUBLISHED, OPTIONAL) MyGRACE DSH bundle preview.
 #
-# The MCP mount is done by the host plugin (@osovv/mygrace-dsh): absolute
-# paths are resolved from the installed packages at runtime, so the bundle
-# patch itself stays path-free.
+# `mygrace install-dsh --bundle` was removed in v1.1: the file: dependencies of
+# this package are not published and the panel package is `private: true`, so
+# `dsh plugin add` from a registry install cannot resolve these rows. Kept for
+# a future release decision (ROADMAP Wave 4); see README.md.
 - insert:
     - id: mygrace-host
       name: '@osovv/mygrace-dsh'

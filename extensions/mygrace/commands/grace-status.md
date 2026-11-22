@@ -1,14 +1,14 @@
 ---
 name: grace:status
-description: "Show the current health status of the GRACE project"
+description: "Show MyGRACE project health"
 ---
 
-Run a GRACE project health check:
+Run `mygrace status --path <project-root> --format json` for counts of modules,
+phases and verifications plus the lint summary, then summarize:
 
-1. Check existence and version of all GRACE artifacts
-2. Scan codebase metrics (contracts, blocks, tests, log markers)
-3. Check knowledge graph and verification health
-4. List recent CHANGE_SUMMARY entries
-5. Suggest next action based on project state
+1. Counts and status/priority distribution from the three indexes.
+2. Integrity: `mygrace ci --path <project-root>` result and finding codes.
+3. Blockers: missing requirements/technology, empty indexes, stale trust record.
+4. Suggested next action (plan / verification / execute / refresh / done).
 
-Use the `/grace:status` skill for the full process.
+Use the `mygrace-status` skill for the full reporting process.

@@ -1,0 +1,28 @@
+<VerificationIndex project="MyGRACE">
+  <!-- One line per module verification entry. CAP 80 lines (indexCaps.verification). Sorted high > medium > low. -->
+  <V-M-CLI MODULE="M-CLI" PRIORITY="high" STATUS="done" />
+  <V-M-COMMON MODULE="M-COMMON" PRIORITY="high" STATUS="done" />
+  <V-M-CONFIG MODULE="M-CONFIG" PRIORITY="high" STATUS="done" />
+  <V-M-ERRORS MODULE="M-ERRORS" PRIORITY="high" STATUS="done" />
+  <V-M-LINT MODULE="M-LINT" PRIORITY="high" STATUS="done" />
+  <V-M-MCP MODULE="M-MCP" PRIORITY="high" STATUS="done" />
+  <V-M-MCP-COMMANDS MODULE="M-MCP-COMMANDS" PRIORITY="high" STATUS="done" />
+  <V-M-PATHS MODULE="M-PATHS" PRIORITY="high" STATUS="done" />
+  <V-M-TEST MODULE="M-TEST" PRIORITY="high" STATUS="done" />
+  <V-M-VERIFY MODULE="M-VERIFY" PRIORITY="high" STATUS="done" />
+  <V-M-XML MODULE="M-XML" PRIORITY="high" STATUS="done" />
+  <V-M-DOCTOR MODULE="M-DOCTOR" PRIORITY="medium" STATUS="done" />
+  <V-M-FILE MODULE="M-FILE" PRIORITY="medium" STATUS="done" />
+  <V-M-INSTALL MODULE="M-INSTALL" PRIORITY="medium" STATUS="done" />
+  <V-M-MODULE MODULE="M-MODULE" PRIORITY="medium" STATUS="done" />
+  <V-M-PACKET MODULE="M-PACKET" PRIORITY="medium" STATUS="done" />
+  <V-M-STATUS MODULE="M-STATUS" PRIORITY="medium" STATUS="done" />
+  <V-M-CONTEXT MODULE="M-CONTEXT" PRIORITY="low" STATUS="done" />
+  <V-M-INIT MODULE="M-INIT" PRIORITY="low" STATUS="done" />
+  <V-M-CI MODULE="M-CI" PRIORITY="high" STATUS="done" />
+  <V-M-SHARD MODULE="M-SHARD" PRIORITY="high" STATUS="done" />
+  <V-M-TRACE MODULE="M-TRACE" PRIORITY="high" STATUS="done" />
+  <V-M-IMPACT MODULE="M-IMPACT" PRIORITY="high" STATUS="done" />
+  <V-M-NEXT MODULE="M-NEXT" PRIORITY="high" STATUS="done" />
+  <V-M-PROJECTS MODULE="M-PROJECTS" PRIORITY="medium" STATUS="done" />
+</VerificationIndex>

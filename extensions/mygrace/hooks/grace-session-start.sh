@@ -1,23 +1,17 @@
 #!/usr/bin/env bash
-# GRACE Session Start Hook — injects GRACE context into the session
-# Output: JSON with injected context message
-
+# MyGRACE session-start hook (Qwen Code, legacy packaging).
+# Injects a short context message when the working directory is a MyGRACE project.
 set -euo pipefail
 
-# Check if this is a GRACE project (has docs/ with GRACE XML files)
 PROJECT_ROOT="${PWD}"
-HAS_GRACE=false
+HAS_MYGRACE=false
 
-if [ -d "$PROJECT_ROOT/docs" ]; then
-  if [ -f "$PROJECT_ROOT/docs/knowledge-graph.xml" ] || \
-     [ -f "$PROJECT_ROOT/docs/development-plan.xml" ] || \
-     [ -f "$PROJECT_ROOT/docs/verification-plan.xml" ]; then
-    HAS_GRACE=true
-  fi
+if [ -f "$PROJECT_ROOT/docs/graph-index.xml" ]; then
+  HAS_MYGRACE=true
 fi
 
-if [ "$HAS_GRACE" = true ]; then
-  echo "{\"type\": \"inform\", \"message\": \"GRACE project detected. Available skills: /grace:init, /grace:plan, /grace:execute, /grace:multiagent, /grace:refactor, /grace:refresh, /grace:reviewer, /grace:fix, /grace:status, /grace:ask, /grace:cli, /grace:explainer, /grace:verification, /grace:setup-subagents. Subagents: grace-planner, grace-implementer, grace-reviewer, grace-verifier, grace-fixer.\"}"
+if [ "$HAS_MYGRACE" = true ]; then
+  echo "{\"type\": \"inform\", \"message\": \"MyGRACE project detected. Start with docs/graph-index.xml, then read only the entity you need. Skills: mygrace-init, mygrace-plan, mygrace-verification, mygrace-execute, mygrace-multiagent-execute, mygrace-refactor, mygrace-refresh, mygrace-reviewer, mygrace-fix, mygrace-status, mygrace-ask, mygrace-cli, mygrace-explainer, mygrace-setup-subagents, mygrace-token-budget. Gate: mygrace ci --path . (project commands are trust-gated).\"}"
 else
   echo "{\"type\": \"allow\"}"
 fi

@@ -1,4 +1,51 @@
-<Phase-2 name="Core Domain" status="wip">
-  <step-M-USERS module="M-USERS" description="User profiles and role checks" status="wip" />
-  <step-M-PRODUCTS module="M-PRODUCTS" description="Product catalog queries and stock" status="wip" />
+<Phase-2 name="Cart" status="done">
+  <goal>Compose money and catalog into a validated shopping cart with deterministic totals.</goal>
+  <scope>
+    <in-scope>The modules listed in this phase and their verification files.</in-scope>
+    <out-of-scope>Modules owned by other phases; this phase must not edit them.</out-of-scope>
+  </scope>
+  <assumptions>
+    <assumption-1>The docs/graph-index.xml module list is the single source of truth for ids.</assumption-1>
+    <assumption-2>Every module in this phase has a verification file before implementation starts.</assumption-2>
+    <assumption-3>The previous phase is complete and its exit criteria are recorded as evidence.</assumption-3>
+  </assumptions>
+  <dependencies>
+    <dependency-1>docs/verification-index.xml entries for the phase modules.</dependency-1>
+    <dependency-2>Repository-level mygrace.config.json size budgets and index caps.</dependency-2>
+  </dependencies>
+  <step-1 module="M-CART" status="done">
+    <description>Implement addItem/subtotalCents/renderSubtotal with quantity and stock validation.</description>
+    <acceptance>Cart totals are exact integer cents; invalid quantity, unknown product and insufficient stock all throw.</acceptance>
+    <verification-ref>V-M-CART</verification-ref>
+  </step-1>
+  <verification-plan>
+    <verification-1>V-M-CART — run the module checks and record the digest.</verification-1>
+    <verification-final>Phase exit: mygrace lint --path . reports 0 errors and 0 warnings.</verification-final>
+  </verification-plan>
+  <risks>
+    <risk-1>Quantity accumulation can silently overflow stock if validation happens after storage.</risk-1>
+    <risk-2>Totals must reuse the money module so formatting and arithmetic cannot drift.</risk-2>
+  </risks>
+  <observability>
+    <marker-rule>Every module logs [Module][function][BLOCK_NAME] on validation failures.</marker-rule>
+    <digest-rule>Verification failures are compacted into .mygrace/last-failures.md for the agent loop.</digest-rule>
+  </observability>
+  <evidence>
+    <evidence-1>bun test src/cart/index.test.ts — accumulation, three failure modes, end-to-end total.</evidence-1>
+  </evidence>
+  <exit-criteria>
+    <criterion-1>All listed module tests pass with failure paths covered.</criterion-1>
+    <criterion-2>mygrace lint reports 0 errors and 0 warnings for the touched artifacts.</criterion-2>
+    <criterion-3>Index and per-entity files agree on every field after the phase.</criterion-3>
+    <criterion-4>No generated file outside this phase's scope changed.</criterion-4>
+  </exit-criteria>
+  <rollback>
+    <rollback-1>Revert the phase commits; the indexes are the only cross-file coupling.</rollback-1>
+    <rollback-2>Re-run lint to confirm index/entity consistency after a rollback.</rollback-2>
+  </rollback>
+  <notes>
+    This phase is generated deterministically; edit scripts/gen-example.ts, not the output.
+    The demo exists to exercise lint, verify, measure-context and the MCP tools end to end.
+    Size budgets from mygrace.config.json defaults are respected deliberately.
+  </notes>
 </Phase-2>

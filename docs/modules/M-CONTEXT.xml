@@ -1,0 +1,36 @@
+<!-- Module contract for M-CONTEXT. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-CONTEXT NAME="Context cost model" TYPE="UTILITY" STATUS="done">
+  <purpose>Honest per-workflow context cost (line model) with safe reads, config caps and a JSON envelope (ADR-3, ADR-5, ADR-8).</purpose>
+  <path>src/grace-context.ts</path>
+  <depends>M-COMMON,M-CONFIG,M-ERRORS</depends>
+  <verification-ref>V-M-CONTEXT</verification-ref>
+
+  <annotations>
+    <fn-buildContextTable PURPOSE="Safe aggregation; missing entity dirs degrade to 0 lines, never a crash." />
+    <fn-contextFindings PURPOSE="Map index read errors and over-cap indexes to coded findings." />
+    <export-contextCostCommand PURPOSE="mygrace context-cost [--format json]." />
+    <type-ContextTable PURPOSE="Per-operation line counts plus index caps and read errors." />
+  </annotations>
+
+  <CrossLink to="M-CONFIG" relation="index caps shown next to measured sizes" />
+  <CrossLink to="M-COMMON" relation="safe index reads and line counting" />
+
+  <contract>
+    <purpose>Honest per-workflow context cost (line model) with safe reads, config caps and a JSON envelope (ADR-3, ADR-5, ADR-8).</purpose>
+    <inputs>
+      <param name="root" type="string" description="Project root." />
+    </inputs>
+    <outputs>
+      <param name="table" type="ContextTable" description="Status check, single module, phase execution and verification audit costs." />
+    </outputs>
+    <errors>
+      <error code="INDEX_UNREADABLE" description="An index is malformed; reported as a coded finding." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>This is a line model, not a tokenizer model, and the docs say so honestly.</note-1>
+    <note-2>Missing docs/modules or docs/plans never crashes the command; it degrades to a partial report.</note-2>
+    <note-3>Index caps are reported next to measured sizes so drift is visible before lint fails.</note-3>
+  </notes>
+</M-CONTEXT>

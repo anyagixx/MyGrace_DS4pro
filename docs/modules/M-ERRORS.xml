@@ -1,0 +1,46 @@
+<!-- Module contract for M-ERRORS. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-ERRORS NAME="Error and output contract" TYPE="FOUNDATION" STATUS="done">
+  <purpose>Single source of truth for exit codes, typed errors, findings and JSON envelopes (ADR-3, ADR-8).</purpose>
+  <path>src/grace-errors.ts</path>
+  <depends></depends>
+  <verification-ref>V-M-ERRORS</verification-ref>
+
+  <annotations>
+    <export-EXIT PURPOSE="Exit-code constants: 0 ok, 1 findings, 2 usage/config, 3 internal." />
+    <type-ExitCode PURPOSE="Union of the four documented exit codes." />
+    <type-Finding PURPOSE="One machine-readable finding: severity, code, message, file/line, hint." />
+    <type-ResultEnvelope PURPOSE="Stable JSON envelope: ok, exitCode, data, findings, error, meta." />
+    <type-MyGraceError PURPOSE="Base typed error carrying code, exitCode, hint and location." />
+    <type-UsageError PURPOSE="Bad arguments or impossible request (exit 2)." />
+    <type-ConfigError PURPOSE="Invalid project configuration (exit 2)." />
+    <type-ProjectNotFoundError PURPOSE="No docs/graph-index.xml above the working directory (exit 2)." />
+    <type-XmlError PURPOSE="Malformed project XML, reported as a finding (exit 1)." />
+    <type-TrustError PURPOSE="Project command refused without a valid trust record (exit 2)." />
+    <fn-finding PURPOSE="Build a Finding with a stable code and optional location/hint." />
+    <fn-exitCodeForFindings PURPOSE="Map findings plus --strict to the documented exit code." />
+  </annotations>
+
+  <contract>
+    <purpose>Single source of truth for exit codes, typed errors, findings and JSON envelopes (ADR-3, ADR-8).</purpose>
+    <inputs>
+      <param name="error" type="unknown" description="Any thrown value; typed errors are detected with isMyGraceError." />
+    </inputs>
+    <outputs>
+      <param name="exitCode" type="ExitCode" description="Process exit code the caller should use." />
+      <param name="envelope" type="ResultEnvelope" description="The machine-readable result contract." />
+    </outputs>
+    <errors>
+      <error code="USAGE" description="Invalid input." />
+      <error code="CONFIG_INVALID" description="Invalid mygrace.config.json." />
+      <error code="PROJECT_NOT_FOUND" description="Missing project marker." />
+      <error code="XML_INVALID" description="Malformed docs XML." />
+      <error code="UNTRUSTED_PROJECT" description="Command refused by the trust gate." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>No filesystem access: purely formatting/printing helpers, so it is safe to import from every layer.</note-1>
+    <note-2>Finding codes are stable identifiers and are never translated; agents and CI grep for them.</note-2>
+    <note-3>Text and JSON modes share the same exit-code decision, which is what makes ADR-3 verifiable.</note-3>
+  </notes>
+</M-ERRORS>

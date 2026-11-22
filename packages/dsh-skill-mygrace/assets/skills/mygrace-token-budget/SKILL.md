@@ -1,37 +1,54 @@
 ---
 name: mygrace-token-budget
-description: "Use when minimizing LLM token consumption: route noisy commands to rtk, use compact MyGRACE reads, compress memory files, read web pages compressed. MyGRACE reduces structural context; this skill covers the output side."
-whenToUse: "Tests, logs, git status, or build output are noisy; AGENTS.md or docs are large; need to read a web page; want cheaper agent output. Before any verbose read or noisy command."
+description: "Keep agent context affordable on the output side: prefer compact MyGRACE commands and MCP reads, route noisy commands through optional rtk, compress memory files only when needed. Use when tests/logs are noisy, docs are large, or the agent reads too much."
+whenToUse: "Verbose command output, large memory files, or repeated large reads are burning context."
 ---
 
-# Token Budget — output-side policy
+# Token budget (output side)
 
-MyGRACE already minimizes structural context (indexes first, lazy navigation). This skill covers the output side: keep reading and writing cheap — without losing truth.
+MyGRACE reduces structural context (indexes first, bounded entity reads). This
+skill covers what agents read and print.
 
-## 1. Noisy commands — `rtk` (installed by the `mygrace-dsh` bundle via `@osovv/dsh-mygrace-rtk`)
-If `rtk` is on PATH (the bundle plugin rewrites `git status`, `bun test`, `npm run build`, `eslint`, … automatically — check with `rtk gain`), prefer the DSH `bash` tool for: test runs, builds, lint, logs, git status/diff/log, ls/grep/find.
-If the plugin is not active, use `rtk <cmd>` explicitly for the same effect.
-- `rtk bypass <cmd>` — run a command unfiltered.
-- Never let `rtk` break the prompt cache — it filters once, before the conversation.
+## 1. Prefer the compact MyGRACE paths (built in)
 
-## 2. Compact MyGRACE reads — built in
-- `mygrace test --module M-XXX --compact` — run only this module's tests, compact output
-- `mygrace verify [--module M-XXX]` — scoped tests, compact digest; `.mygrace/last-failures.md` on failure
-- `mygrace packet M-XXX` — self-contained worker prompt (contract + verification + deps)
-- `mygrace focus M-XXX` — minimal working set
-- `mygrace context-cost` — context budget per operation in lines
-- `mygrace doctor` — health checks
+- `mygrace status --format json` / `mygrace context-cost --path <root>` — small, bounded summaries.
+- `mygrace module show <id> --path <root>` instead of reading raw entity XML.
+- `mygrace test --module <M-XXX> --compact --path <root>` — failures + summary only (trust-gated).
+- `mygrace verify --module <M-XXX> --path <root>` — digest; details go to `.mygrace/last-failures.md`.
+- `mygrace packet <M-XXX>` — one self-contained worker prompt instead of several reads.
+- Use the MCP tools when connected (`mygrace_status`, `mygrace_lint`,
+  `mygrace_test`, …): same output, no shell noise, schema-validated arguments.
 
-## 3. Big memory files (AGENTS.md, CLAUDE.md) — Caveman
-If Caveman is installed (`/caveman-compress` skill available; `caveman` CLI with `npx @caveman-ai/cli` or `caveman`/`cave` on PATH):
-- Compress with the agent command `/caveman-compress <file>` — e.g. AGENTS.md — human-readable backup is saved (`<file>.original.md`).
-- **Caveat:** `/caveman-compress` sends the file's text to the configured model provider.
-- Never compress MyGRACE indexes or module contracts — the indexes are the truth.
-- (Voice: install the voice skills — `/caveman`, `/ultracave`, `/megacave` — e.g. `npx skills add JuliusBrussee/caveman -g` into `~/.dsh/skills`.)
+## 2. Noisy shell commands (optional rtk)
 
-## 4. Web reads
-If the `caveman` CLI is installed: `caveman browse <url>` — compressed page (121 tokens vs 15,704 for a 200-row table).
+If `rtk` (https://github.com/rtk-ai/rtk) is installed and wired, use it for
+noisy dev commands (`git status`, `bun test`, builds, linters):
+`rtk <cmd>` filters output before it reaches the context; `rtk bypass <cmd>` runs
+unfiltered. rtk is a third-party tool — if it is not installed, skip this
+section; never depend on it.
+
+The `@osovv/dsh-mygrace-rtk` DSH middleware that rewrites commands automatically
+ships only inside the unpublished preview bundle; do not assume it is active.
+
+## 3. Large memory files (Caveman, optional)
+
+If the Caveman skills are installed (`/caveman-compress`), compress large memory
+files such as `AGENTS.md`. Caveats: the file's text is sent to the configured
+model provider, and a human-readable `*.original.md` backup is kept. **Never
+compress MyGRACE indexes or entity contracts** — they are the source of truth.
+
+## 4. Large web pages
+
+If the `caveman` CLI is installed, `caveman browse <url>` returns a compressed
+page. Treat the compression as lossy; fetch the full page when exact text matters.
 
 ## 5. Never
-- Compress MyGRACE index files (`docs/*.xml`) — they are the source of truth.
-- Replace a `mygrace_*` MCP call with raw file reads when the MCP server is connected — the MCP tools are the token-efficient path.
+
+- Never compress `docs/graph-index.xml`, `docs/plan-index.xml`,
+  `docs/verification-index.xml`, module or verification files.
+- Never replace an available MCP call with raw file scans — use the tool.
+- Never paste whole test logs or entity trees into the conversation; use
+  `--compact`, `mygrace packet` or a scoped read.
+- Do not present estimates or line counts as "tokens"; this project does not use
+  a tokenizer (see `scripts/measure-context.ts` for the documented line/byte
+  model).

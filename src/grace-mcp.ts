@@ -1,247 +1,440 @@
 #!/usr/bin/env bun
 /**
- * MyGRACE MCP Server — exposes index-based grace-cli tools via Model Context Protocol.
+ * MyGRACE MCP Server — exposes the MyGRACE CLI to AI coding agents over the
+ * Model Context Protocol (stdio).
  *
- * Tools:
- *   - mygrace_list_modules: List modules from graph-index.xml with optional status filter
- *   - mygrace_show_module: Show per-module file from docs/modules/
- *   - mygrace_show_phase: Show per-phase file from docs/plans/
- *   - mygrace_list_verifications: List verification entries from verification-index.xml
- *   - mygrace_lint: Integrity check including index synchronization
- *   - mygrace_show_file: File-local markup
+ * Runtime contract (ROADMAP ADR-7/ADR-8, gate G6):
+ *   - No PATH dependency. A plain checkout works with an empty PATH: the CLI is
+ *     launched as `process.execPath run <pkg>/src/grace.ts`, resolved from this
+ *     file's own directory. `MYGRACE_BIN` overrides the executable; a `mygrace`
+ *     binary on PATH is only the last-resort fallback.
+ *   - No guessed arguments. Every call is validated against the catalog schema
+ *     first; bad calls return a structured error naming the offending field and
+ *     the CLI is never invoked (no more `docs/modules/undefined.xml`).
+ *   - No lost diagnostics. CLI stdout AND stderr are returned for success and
+ *     failure alike, with `isError: true` on a non-zero exit, timeout or launch
+ *     failure — agents need the details to recover.
+ *
+ * stdout is reserved for the MCP protocol; all diagnostics go to stderr.
  */
+
+// START_MODULE_CONTRACT
+//   PURPOSE: Expose the MyGRACE tool catalog to MCP clients over stdio with a PATH-free CLI launcher, strict argument validation and full CLI output passthrough.
+//   SCOPE: MCP protocol wiring, launcher resolution, CLI process supervision and result formatting; no project logic.
+//   DEPENDS: @modelcontextprotocol/sdk, grace-mcp-commands, package.json (version), node:child_process, node:fs, node:path
+//   LINKS: ROADMAP.md (ADR-7, ADR-8, G6)
+// END_MODULE_CONTRACT
+
+// START_MODULE_MAP
+//   DEFAULT_TIMEOUT_MS   — default CLI budget (120 s); MYGRACE_MCP_TIMEOUT_MS overrides
+//   CLI_MAX_BUFFER       — 10 MB stdout/stderr capture budget
+//   CliLauncher          — {command, args, source, describe()}
+//   resolveLauncher()    — MYGRACE_BIN → absolute src/grace.ts via process.execPath → mygrace on PATH
+//   resolveTimeoutMs()   — parse MYGRACE_MCP_TIMEOUT_MS with a safe default
+//   runCli()             — execFile the launcher; capture stdout/stderr, timeout, maxBuffer, spawn errors
+//   createMcpServer()    — Server with ListTools/CallTool handlers driven by the catalog
+//   isEntryPoint()       — start the stdio server only when executed, never when imported by tests
+//   main()               — connect the stdio transport
+// END_MODULE_MAP
 
 import { Server } from "@modelcontextprotocol/sdk/server";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import {
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+  type CallToolResult,
+} from "@modelcontextprotocol/sdk/types.js";
 import { execFile } from "node:child_process";
-import { promisify } from "node:util";
-import { buildToolCommand, type ToolArgs } from "./grace-mcp-commands";
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
+import pkg from "../package.json" with { type: "json" };
+import {
+  TOOLS,
+  TOOL_NAMES,
+  buildToolCommand,
+  formatToolArgError,
+  formatUnknownToolError,
+  getToolDefinition,
+  resolveProjectRoot,
+  validateToolArgs,
+  type ToolArgs,
+  type ToolDefinition,
+} from "./grace-mcp-commands";
 
-const exec = promisify(execFile);
-const MYGRACE_BIN = process.env.MYGRACE_BIN || "mygrace";
+// START_BLOCK_CONSTANTS
+/** Default budget for one CLI call; raise with MYGRACE_MCP_TIMEOUT_MS. */
+export const DEFAULT_TIMEOUT_MS = 120_000;
+/** 10 MB is far beyond any legitimate index/lint/test digest (audit M-12). */
+export const CLI_MAX_BUFFER = 10 * 1024 * 1024;
+// END_BLOCK_CONSTANTS
 
-const server = new Server({ name: "mygrace-mcp", version: "0.1.0" }, { capabilities: { tools: {} } });
+// START_BLOCK_LAUNCHER
+export type LauncherSource = "env" | "checkout" | "path";
 
-server.setRequestHandler(ListToolsRequestSchema, async () => ({
-  tools: [
-    {
-      name: "mygrace_list_modules",
-      description: "List modules from graph-index.xml (≤100 lines). Filter by status or type. This is the lazy-loading entry point — always start here.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          path: { type: "string", description: "Project root path" },
-          status: { type: "string", enum: ["pending", "wip", "done"], description: "Filter by status" },
-          type: { type: "string", description: "Filter by module type" },
-          format: { type: "string", enum: ["text", "json"], default: "text" },
-        },
-        required: ["path"],
-      },
-    },
-    {
-      name: "mygrace_show_module",
-      description: "Show per-module file from docs/modules/M-XXX.xml (30-80 lines). Use after mygrace_list_modules to find the module ID.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          id: { type: "string", description: "Module ID (e.g. M-AUTH)" },
-          path: { type: "string", description: "Project root path" },
-          withVerification: { type: "boolean", default: false, description: "Include verification file" },
-        },
-        required: ["id", "path"],
-      },
-    },
-    {
-      name: "mygrace_show_phase",
-      description: "Show per-phase file from docs/plans/Phase-N.xml (50-200 lines). Read the plan index first (mygrace_phase_index).",
-      inputSchema: {
-        type: "object",
-        properties: {
-          name: { type: "string", description: "Phase name (e.g. Phase-1)" },
-          path: { type: "string", description: "Project root path" },
-        },
-        required: ["name", "path"],
-      },
-    },
-    {
-      name: "mygrace_find_modules",
-      description:
-        "Search modules from graph-index.xml by query and filters (≤100 lines). Returns matching entries as text or JSON. Start with mygrace_list_modules to list everything, or use this to search by name/path/depends.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          query: { type: "string", description: "Search query (matches ID, NAME, TYPE, STATUS, DEPENDS, PATH; empty = list all)" },
-          path: { type: "string", description: "Project root path" },
-          status: { type: "string", enum: ["pending", "wip", "done"], description: "Filter by status" },
-          type: { type: "string", description: "Filter by module type" },
-          format: { type: "string", enum: ["text", "json"], default: "text" },
-        },
-        required: ["path"],
-      },
-    },
-    {
-      name: "mygrace_phase_index",
-      description: "Show plan-index.xml (≤50 lines) — the phase index. Always read before phase files.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          path: { type: "string", description: "Project root path" },
-        },
-        required: ["path"],
-      },
-    },
-    {
-      name: "mygrace_doctor",
-      description:
-        "Run MyGRACE health checks (project lint, DSH, rtk/caveman, mygrace-* skills, MCP row, dev tools). Use at session start or when something is slow/broken.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          path: { type: "string", description: "Project root path" },
-        },
-        required: ["path"],
-      },
-    },
-    {
-      name: "mygrace_test",
-      description:
-        "Run module tests scoped from verification files (test-files + module-checks, default `bun test`). compact: true → failures + summary only. Exit 1 on failure.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          module: { type: "string", description: "Module ID (e.g. M-AUTH); omit to run all modules in graph-index.xml" },
-          compact: { type: "boolean", default: true, description: "Print only failures and the summary" },
-          path: { type: "string", description: "Project root path" },
-        },
-        required: ["path"],
-      },
-    },
-    {
-      name: "mygrace_packet",
-      description:
-        "Generate a self-contained worker prompt for one module (contract + verification excerpt + dependency list). For DSH subagents — smaller context than reading several files.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          id: { type: "string", description: "Module ID (e.g. M-AUTH)" },
-          path: { type: "string", description: "Project root path" },
-        },
-        required: ["id", "path"],
-      },
-    },
-    {
-      name: "mygrace_focus",
-      description:
-        "Print the minimal working set for one module (contract + deps + tests command). Smaller than mygrace_show_module.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          id: { type: "string", description: "Module ID (e.g. M-AUTH)" },
-          path: { type: "string", description: "Project root path" },
-        },
-        required: ["id", "path"],
-      },
-    },
-    {
-      name: "mygrace_context_cost",
-      description:
-        "Context budget per operation in lines (status, single module work, phase execution, verification audit). For budgeting how much an agent may read.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          path: { type: "string", description: "Project root path" },
-        },
-        required: ["path"],
-      },
-    },
-    {
-      name: "mygrace_verify",
-      description:
-        "Scoped module tests with a compact digest; on failure writes `.mygrace/last-failures.md` (read it with mygrace_show_file or `cat`). Exit 1 on failure — for agent loops.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          module: { type: "string", description: "Module ID; omit = all modules in graph-index.xml" },
-          path: { type: "string", description: "Project root path" },
-        },
-        required: ["path"],
-      },
-    },
-    {
-      name: "mygrace_list_verifications",
-      description: "List verification entries from verification-index.xml (≤80 lines). Filter by priority.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          path: { type: "string", description: "Project root path" },
-          priority: { type: "string", enum: ["high", "medium", "low"], description: "Filter by priority" },
-          format: { type: "string", enum: ["text", "json"], default: "text" },
-        },
-        required: ["path"],
-      },
-    },
-    {
-      name: "mygrace_lint",
-      description: "Run MyGRACE integrity lint. Checks index synchronization, semantic markup, XML tag conventions.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          path: { type: "string", description: "Project root path" },
-          format: { type: "string", enum: ["text", "json"], default: "text" },
-          allowMissingDocs: { type: "boolean", default: false },
-        },
-        required: ["path"],
-      },
-    },
-    {
-      name: "mygrace_show_file",
-      description: "Show file-local MODULE_CONTRACT, MODULE_MAP, CHANGE_SUMMARY, contracts, and semantic blocks.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          path: { type: "string", description: "File path to inspect" },
-          projectRoot: { type: "string", description: "Project root" },
-          contracts: { type: "boolean", default: false },
-          blocks: { type: "boolean", default: false },
-        },
-        required: ["path", "projectRoot"],
-      },
-    },
-    {
-      name: "mygrace_status",
-      description: "Aggregated project health from the 3 indexes + lint summary, as JSON. Use for status reports and dashboards.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          path: { type: "string", description: "Project root path" },
-        },
-        required: ["path"],
-      },
-    },
-  ],
-}));
-
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  const { name, arguments: args } = request.params;
-  try {
-    const cmd = buildToolCommand(name, (args ?? {}) as ToolArgs);
-    const { stdout, stderr } = await exec(MYGRACE_BIN, cmd, { env: { ...process.env }, timeout: 30_000 });
-    if (stderr && !stdout) return { content: [{ type: "text", text: stderr }], isError: true };
-    return { content: [{ type: "text", text: stdout.trim() }] };
-  } catch (err: any) {
-    // Doctor is a health report — a non-zero exit still carries the report.
-    if (name === "mygrace_doctor" && err?.stdout) {
-      return { content: [{ type: "text", text: err.stdout.trim() }] };
-    }
-    return { content: [{ type: "text", text: `MyGRACE MCP error: ${err?.message || String(err)}` }], isError: true };
-  }
-});
-
-async function main() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error("MyGRACE MCP server running on stdio");
+export interface CliLauncher {
+  /** Executable to spawn (absolute runtime path or a PATH-resolved binary name). */
+  command: string;
+  /** Fixed arguments inserted before the CLI argv — `["run", "<pkg>/src/grace.ts"]` for bun. */
+  args: string[];
+  source: LauncherSource;
+  /** One-line description used in diagnostics and error messages. */
+  describe(): string;
 }
 
-main().catch((err) => { console.error("MyGRACE MCP failed:", err); process.exit(1); });
+export interface ResolveLauncherOptions {
+  env?: NodeJS.ProcessEnv;
+  execPath?: string;
+  /** Directory of this module (`import.meta.dirname`), overridable for tests. */
+  moduleDir?: string;
+  exists?: (path: string) => boolean;
+  isBun?: boolean;
+}
+
+const SCRIPT_FILE = /\.(?:[cm]?[jt]s)$/i;
+/** Candidate CLI entries next to this module; source-only package today, JS build later. */
+const CLI_ENTRY_CANDIDATES = ["grace.ts", "grace.js", "grace.mjs"];
+
+function runtimeIsBun(): boolean {
+  return typeof (process.versions as { bun?: string }).bun === "string";
+}
+
+/**
+ * Decide how to launch the MyGRACE CLI (audit C-3 — the old server relied on a
+ * `mygrace` binary on PATH and every call failed from a plain checkout).
+ *
+ * 1. `MYGRACE_BIN` — explicit override. A TypeScript/JS script is run through
+ *    the current runtime (`process.execPath`); anything else is spawned as-is.
+ * 2. Checkout / installed package — `<this dir>/grace.ts` executed by
+ *    `process.execPath` (bun: `run <file>`, node ≥22.6: `<file>`). This branch
+ *    makes an empty PATH sufficient.
+ * 3. Globally installed `mygrace` on PATH — last resort only.
+ */
+export function resolveLauncher(options: ResolveLauncherOptions = {}): CliLauncher {
+  const env = options.env ?? process.env;
+  const execPath = options.execPath ?? process.execPath;
+  const moduleDir = options.moduleDir ?? import.meta.dirname;
+  const exists = options.exists ?? existsSync;
+  const isBun = options.isBun ?? runtimeIsBun();
+  const scriptArgs = (script: string): string[] => (isBun ? ["run", script] : [script]);
+
+  const override = env.MYGRACE_BIN?.trim();
+  if (override !== undefined && override !== "") {
+    if (SCRIPT_FILE.test(override) && exists(override)) {
+      const script = resolve(override);
+      return {
+        command: execPath,
+        args: scriptArgs(script),
+        source: "env",
+        describe: () => `MYGRACE_BIN script ${script} via ${execPath}`,
+      };
+    }
+    return {
+      command: override,
+      args: [],
+      source: "env",
+      describe: () => `MYGRACE_BIN ${override}`,
+    };
+  }
+
+  for (const candidate of CLI_ENTRY_CANDIDATES) {
+    const cliEntry = resolve(moduleDir, candidate);
+    if (exists(cliEntry)) {
+      return {
+        command: execPath,
+        args: scriptArgs(cliEntry),
+        source: "checkout",
+        describe: () => `${execPath} ${[...scriptArgs(cliEntry)].join(" ")}`,
+      };
+    }
+  }
+
+  return {
+    command: "mygrace",
+    args: [],
+    source: "path",
+    describe: () => "mygrace (resolved through PATH)",
+  };
+}
+// END_BLOCK_LAUNCHER
+
+// START_BLOCK_PROCESS
+/** Parse `MYGRACE_MCP_TIMEOUT_MS`; ignore unset/invalid/non-positive values. */
+export function resolveTimeoutMs(env: NodeJS.ProcessEnv = process.env): number {
+  const raw = env.MYGRACE_MCP_TIMEOUT_MS;
+  if (raw === undefined || raw.trim() === "") return DEFAULT_TIMEOUT_MS;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed <= 0) return DEFAULT_TIMEOUT_MS;
+  return Math.floor(parsed);
+}
+
+export interface CliRunResult {
+  exitCode: number;
+  stdout: string;
+  stderr: string;
+  /** The child was killed because it exceeded the CLI budget. */
+  timedOut: boolean;
+  /** The child could not be started at all (ENOENT/EACCES). */
+  launchError?: Error;
+  /** Output exceeded CLI_MAX_BUFFER and was cut off. */
+  outputTruncated?: boolean;
+}
+
+interface CliRunOptions {
+  /** Working directory for the CLI child. Omitted when the project root is unreadable. */
+  cwd?: string;
+  timeoutMs?: number;
+}
+
+/**
+ * Run the MyGRACE CLI once, capturing both streams.
+ *
+ * Follows `execFile` semantics: argv is an array (no shell, no interpolation),
+ * which also keeps ids from being interpreted by a shell.
+ */
+export function runCli(
+  launcher: CliLauncher,
+  argv: readonly string[],
+  options: CliRunOptions = {}
+): Promise<CliRunResult> {
+  const timeoutMs = options.timeoutMs ?? resolveTimeoutMs();
+  return new Promise((settle) => {
+    execFile(
+      launcher.command,
+      [...launcher.args, ...argv],
+      {
+        timeout: timeoutMs,
+        maxBuffer: CLI_MAX_BUFFER,
+        encoding: "utf8",
+        env: { ...process.env },
+        windowsHide: true,
+        ...(options.cwd === undefined ? {} : { cwd: options.cwd }),
+      },
+      (error, stdout, stderr) => {
+        const out = typeof stdout === "string" ? stdout : "";
+        const err = typeof stderr === "string" ? stderr : "";
+        if (error === null || error === undefined) {
+          settle({ exitCode: 0, stdout: out, stderr: err, timedOut: false });
+          return;
+        }
+        const failure = error as NodeJS.ErrnoException & {
+          code?: number | string;
+          killed?: boolean;
+        };
+        if (failure.code === "ENOENT" || failure.code === "EACCES") {
+          settle({ exitCode: 127, stdout: out, stderr: err, timedOut: false, launchError: failure });
+          return;
+        }
+        if (failure.code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER") {
+          settle({ exitCode: 1, stdout: out, stderr: err, timedOut: false, outputTruncated: true });
+          return;
+        }
+        settle({
+          exitCode: typeof failure.code === "number" ? failure.code : 1,
+          stdout: out,
+          stderr: err,
+          timedOut: failure.killed === true,
+        });
+      }
+    );
+  });
+}
+// END_BLOCK_PROCESS
+
+// START_BLOCK_RESULTS
+/** Join captured streams; keep them distinguishable when both are present. */
+function outputSections(stdout: string, stderr: string): string {
+  const out = stdout.trim();
+  const err = stderr.trim();
+  if (out !== "" && err !== "") return `${out}\n\n[stderr]\n${err}`;
+  if (out !== "") return out;
+  if (err !== "") return err;
+  return "(no output)";
+}
+
+function textResult(text: string): CallToolResult {
+  return { content: [{ type: "text", text }] };
+}
+
+function errorResult(text: string, error: Record<string, unknown>): CallToolResult {
+  return {
+    content: [{ type: "text", text }],
+    isError: true,
+    structuredContent: { ok: false, error },
+  };
+}
+
+/** Success path: CLI stdout (+ stderr when present), plus the optional compact digest. */
+function successResult(tool: ToolDefinition, args: ToolArgs, run: CliRunResult): CallToolResult {
+  const useDigest =
+    tool.digestOutput !== undefined && args.compact === true && args.format !== "json";
+  if (!useDigest) return textResult(outputSections(run.stdout, run.stderr));
+
+  const stdout = run.stdout.trim();
+  if (stdout === "") return textResult(outputSections(run.stdout, run.stderr));
+  const stderr = run.stderr.trim();
+  const digest = (tool.digestOutput as (value: string) => string)(stdout);
+  return textResult(stderr === "" ? digest : `${digest}\n\n[stderr]\n${stderr}`);
+}
+
+/** Failure path: classifier line + the full stdout/stderr so agents can recover (audit H-8). */
+function failureResult(
+  tool: ToolDefinition,
+  argv: readonly string[],
+  run: CliRunResult,
+  launcher: CliLauncher
+): CallToolResult {
+  if (run.launchError !== undefined) {
+    return errorResult(
+      [
+        `MYGRACE_LAUNCH_FAILED: cannot start the MyGRACE CLI via ${launcher.describe()}: ${run.launchError.message}`,
+        "The MCP server found no usable MyGRACE executable.",
+        "Fix: set MYGRACE_BIN to the mygrace executable, or run the server from a checkout/install that contains src/grace.ts.",
+        `Command: mygrace ${argv.join(" ")}`,
+      ].join("\n"),
+      {
+        code: "MYGRACE_LAUNCH_FAILED",
+        tool: tool.name,
+        command: launcher.command,
+        message: run.launchError.message,
+      }
+    );
+  }
+
+  const header = run.timedOut
+    ? `MYGRACE_TIMEOUT: the MyGRACE CLI did not finish within ${resolveTimeoutMs()} ms (raise MYGRACE_MCP_TIMEOUT_MS for long test runs).`
+    : run.outputTruncated === true
+      ? `MYGRACE_OUTPUT_TOO_LARGE: CLI output exceeded ${CLI_MAX_BUFFER} bytes and was truncated; run the CLI directly for the full log.`
+      : `MYGRACE_EXIT_${run.exitCode}: ${tool.name} exited with code ${run.exitCode}.`;
+
+  const text = [
+    header,
+    `Command: mygrace ${argv.join(" ")}`,
+    "",
+    outputSections(run.stdout, run.stderr),
+  ].join("\n");
+
+  const code = run.timedOut ? "MYGRACE_TIMEOUT" : run.outputTruncated === true ? "MYGRACE_OUTPUT_TOO_LARGE" : "MYGRACE_EXIT_NONZERO";
+  return errorResult(text, {
+    code,
+    tool: tool.name,
+    exitCode: run.exitCode,
+    ...(run.timedOut ? { timeoutMs: resolveTimeoutMs() } : {}),
+  });
+}
+// END_BLOCK_RESULTS
+
+// START_BLOCK_SERVER
+/**
+ * Build the MCP server. The catalog in grace-mcp-commands.ts is the only source
+ * of tool names, descriptions and schemas, so `tools/list`, validation and the
+ * argv mapping cannot drift apart (audit M-14).
+ */
+export function createMcpServer(launcher: CliLauncher = resolveLauncher()): Server {
+  const server = new Server(
+    { name: "mygrace-mcp", version: pkg.version },
+    {
+      capabilities: { tools: {} },
+      instructions:
+        "MyGRACE exposes an index-first view of a MyGRACE project. Every tool accepts an optional " +
+        "`path` project root (explicit argument → MYGRACE_PROJECT_ROOT → the server's working directory); " +
+        "tool errors return the full CLI stdout/stderr with isError=true.",
+    }
+  );
+
+  server.setRequestHandler(ListToolsRequestSchema, async () => ({
+    tools: TOOLS.map((tool) => ({
+      name: tool.name,
+      description: tool.description,
+      inputSchema: tool.inputSchema,
+    })),
+  }));
+
+  server.setRequestHandler(CallToolRequestSchema, async (request): Promise<CallToolResult> => {
+    try {
+      return await handleCallTool(launcher, request);
+    } catch (error) {
+      // ADR-8: an internal failure is one readable line, never a raw stack trace.
+      return errorResult(
+        `MYGRACE_MCP_INTERNAL: ${error instanceof Error ? error.message : String(error)}`,
+        { code: "MYGRACE_MCP_INTERNAL" }
+      );
+    }
+  });
+
+  return server;
+}
+
+/** One `tools/call` request: validate → map → launch → format. */
+async function handleCallTool(
+  launcher: CliLauncher,
+  request: { params: { name: string; arguments?: Record<string, unknown> } }
+): Promise<CallToolResult> {
+  const requestedName = request.params.name;
+  const tool = getToolDefinition(requestedName);
+  if (tool === undefined) {
+    return errorResult(formatUnknownToolError(requestedName), {
+      code: "UNKNOWN_TOOL",
+      tool: requestedName,
+      knownTools: TOOL_NAMES,
+    });
+  }
+
+  // Validate before mapping: required arguments, types, enums, patterns,
+  // unknown fields and schema defaults. This is what keeps `undefined` out of
+  // the argv (audit M2/M3; `docs/modules/undefined.xml` regression).
+  const validation = validateToolArgs(requestedName, request.params.arguments);
+  if (!validation.ok) {
+    return errorResult(formatToolArgError(tool, validation.issues), {
+      code: "INVALID_TOOL_ARGUMENTS",
+      tool: tool.name,
+      issues: validation.issues,
+    });
+  }
+
+  const args = validation.args;
+  let argv: string[];
+  try {
+    argv = buildToolCommand(requestedName, args);
+  } catch (error) {
+    // Defensive only: validated arguments should always map. Never a stack trace.
+    return errorResult(
+      `MYGRACE_MAPPING_FAILED: ${tool.name}: ${error instanceof Error ? error.message : String(error)}`,
+      { code: "MYGRACE_MAPPING_FAILED", tool: tool.name }
+    );
+  }
+
+  const projectRoot = resolveProjectRoot(tool, args);
+  const cwd = existsSync(projectRoot) ? projectRoot : undefined;
+  const run = await runCli(launcher, argv, { cwd });
+
+  if (run.launchError !== undefined || run.timedOut || run.outputTruncated === true || run.exitCode !== 0) {
+    return failureResult(tool, argv, run, launcher);
+  }
+  return successResult(tool, args, run);
+}
+// END_BLOCK_SERVER
+
+// START_BLOCK_ENTRY
+function isEntryPoint(): boolean {
+  const meta = import.meta as ImportMeta & { main?: boolean };
+  if (typeof meta.main === "boolean") return meta.main;
+  const entry = process.argv[1];
+  return entry !== undefined && resolve(entry) === resolve(import.meta.dirname, "grace-mcp.ts");
+}
+
+async function main(): Promise<void> {
+  const launcher = resolveLauncher();
+  const server = createMcpServer(launcher);
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+  // stderr only: stdout carries the MCP protocol.
+  console.error(`MyGRACE MCP server v${pkg.version} on stdio (CLI launcher: ${launcher.describe()})`);
+}
+
+if (isEntryPoint()) {
+  main().catch((error: unknown) => {
+    console.error(`MyGRACE MCP failed: ${error instanceof Error ? error.message : String(error)}`);
+    process.exit(1);
+  });
+}
+// END_BLOCK_ENTRY

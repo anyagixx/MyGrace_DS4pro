@@ -1,0 +1,100 @@
+name: Bug report
+description: Something does not work as documented. Please include a minimal reproduction.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Before opening an issue:
+
+        - search existing issues (including closed ones);
+        - read `SECURITY.md` first for anything security-related —
+          **do not file vulnerabilities publicly**;
+        - keep the report small and factual. MyGRACE aims to be deterministic, so a
+          minimal project reproduces most bugs.
+
+  - type: input
+    id: version
+    attributes:
+      label: MyGRACE version
+      description: Output of `mygrace --version`, or the commit hash when running from a checkout.
+      placeholder: "1.3.0 (or commit 1a2b3c4)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: command
+    attributes:
+      label: Exact command(s) run
+      description: Include flags and the working directory, one command per line.
+      render: shell
+      placeholder: |
+        cd path/to/project
+        mygrace lint --path .
+    validations:
+      required: true
+
+  - type: input
+    id: exit-code
+    attributes:
+      label: Exit code
+      description: "`echo $?` after the failing command. Contract: 0 = ok, 1 = findings, 2 = usage/config error, 3 = internal error."
+      placeholder: "1"
+    validations:
+      required: true
+
+  - type: textarea
+    id: behaviour
+    attributes:
+      label: Expected vs actual behaviour
+      description: What did you expect, and what happened instead? Paste the relevant output and trim noise.
+      placeholder: |
+        Expected: ...
+        Actual: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of `mygrace doctor`
+      description: Run `mygrace doctor` in the affected project and paste the full output (versions, integration state). Remove secrets and private paths first.
+      render: text
+    validations:
+      required: false
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: The smallest project/docs layout that triggers the bug — directory tree, relevant `docs/*.xml` snippet, `mygrace.config.json` if any, or a link to a repro repo. "It fails on my real project" is not actionable.
+      render: text
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - lint / index validation
+        - module / phase / verification commands
+        - test / verify / trust
+        - MCP server
+        - install-dsh / DSH integration
+        - CLI / output / exit codes
+        - docs, templates, skills
+        - other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and did not find a duplicate.
+          required: true
+        - label: I removed credentials, secrets and private data from this report.
+          required: true

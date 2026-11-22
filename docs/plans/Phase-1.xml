@@ -1,0 +1,54 @@
+<!-- Phase-1 plan. Target 50-200 lines (sizeBudgets.phase): one step per module plus outcome/risks so an agent can execute without re-reading the whole plan. -->
+<Phase-1 name="Foundation and safety" status="done">
+  <description>Wave 0/1: foundation modules, enforced lint, trust-gated execution, MCP runtime, installer hardening, validators/CI. All steps are implemented and covered by the test suite.</description>
+
+  <step-1 module="M-ERRORS" description="Implement and verify Error and output contract (src/grace-errors.ts)." status="done" />
+  <step-2 module="M-XML" description="Implement and verify Strict XML layer (src/grace-xml.ts)." status="done" />
+  <step-3 module="M-PATHS" description="Implement and verify Ids and path safety (src/grace-paths.ts)." status="done" />
+  <step-4 module="M-CONFIG" description="Implement and verify Project configuration (src/grace-config.ts)." status="done" />
+  <step-5 module="M-COMMON" description="Implement and verify Filesystem and index helpers (src/grace-common.ts)." status="done" />
+  <step-6 module="M-CLI" description="Implement and verify CLI entry point (src/grace.ts)." status="done" />
+  <step-7 module="M-LINT" description="Implement and verify Enforced invariants (lint) (src/grace-lint.ts)." status="done" />
+  <step-8 module="M-MODULE" description="Implement and verify Index navigation commands (src/grace-module.ts)." status="done" />
+  <step-9 module="M-FILE" description="Implement and verify File-local markup view (src/grace-file.ts)." status="done" />
+  <step-10 module="M-INIT" description="Implement and verify Project bootstrap (src/grace-init.ts)." status="done" />
+  <step-11 module="M-INSTALL" description="Implement and verify DeepSeek Harness installer (src/grace-install.ts)." status="done" />
+  <step-12 module="M-STATUS" description="Implement and verify Project health status (src/grace-status.ts)." status="done" />
+  <step-13 module="M-DOCTOR" description="Implement and verify Environment doctor (src/grace-doctor.ts)." status="done" />
+  <step-14 module="M-TEST" description="Implement and verify Trusted command execution (src/grace-test.ts)." status="done" />
+  <step-15 module="M-VERIFY" description="Implement and verify Verification digest loop (src/grace-verify.ts)." status="done" />
+  <step-16 module="M-PACKET" description="Implement and verify Worker packet and focus (src/grace-packet.ts)." status="done" />
+  <step-17 module="M-CONTEXT" description="Implement and verify Context cost model (src/grace-context.ts)." status="done" />
+  <step-18 module="M-MCP" description="Implement and verify MCP stdio server (src/grace-mcp.ts)." status="done" />
+  <step-19 module="M-MCP-COMMANDS" description="Implement and verify MCP tool catalog (src/grace-mcp-commands.ts)." status="done" />
+
+  <outcome>
+    <item-1>ADR-2 strict XML layer and ADR-3 exit-code contract are in place and enforced.</item-1>
+    <item-2>ADR-1 trust model: project commands never execute without .mygrace/trust.json or an explicit opt-in.</item-2>
+    <item-3>ADR-4 ids and paths validated everywhere; ADR-5 configuration replaces hardcoded layout.</item-3>
+    <item-4>mygrace lint --strict detects every drift class listed in ROADMAP section 4.2.</item-4>
+    <item-5>MCP server exposes 16 tools and works from a plain checkout (no PATH dependency).</item-5>
+    <item-6>Packaging is gated by pack-smoke: the tarball CLI starts, init-dsh and lint succeed.</item-6>
+  </outcome>
+
+  <evidence>
+    <item-1>bun test: full suite green; 448+ tests across unit, integration, MCP stdio, trust and installer e2e.</item-1>
+    <item-2>bunx tsc --noEmit: 0 errors (strict TypeScript).</item-2>
+    <item-3>bun run lint:demo: examples/demo-store is 0 errors / 0 warnings under --strict.</item-3>
+    <item-4>bun run pack:smoke: packaged CLI starts on a fresh temp dir.</item-4>
+    <item-5>bun run validate:docs / validate:marketplace: documented surface matches the code.</item-5>
+  </evidence>
+
+  <risks>
+    <item-1>Agent-declared commands remain the main trust boundary; keep the trust record local and never commit it.</item-1>
+    <item-2>Windows availability is limited by POSIX-style launchers; a CI matrix is scheduled for Wave 4.</item-2>
+    <item-3>Sharded indexes for 200+ modules are not implemented yet (ADR-6, Wave 3).</item-3>
+  </risks>
+
+  <verification-notes>
+    <item-1>Run `mygrace lint --path . --strict` after each step: the indexes and entity files must stay in sync.</item-1>
+    <item-2>Run the scoped verification entry for the touched module (`mygrace verify --module M-XXX`) before marking it done.</item-2>
+    <item-3>Run `mygrace trust` again whenever docs/modules, docs/verification or mygrace.config.json change.</item-3>
+  </verification-notes>
+
+</Phase-1>

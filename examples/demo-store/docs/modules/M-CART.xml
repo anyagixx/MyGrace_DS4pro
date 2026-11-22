@@ -1,12 +1,34 @@
-<M-CART NAME="Cart" TYPE="CORE_LOGIC" STATUS="pending">
+<M-CART NAME="Cart" TYPE="CORE_LOGIC" STATUS="done">
+  <purpose>Maintain a shopping cart with validated quantities and exact totals.</purpose>
+  <path>src/cart/index.ts</path>
+  <depends>M-CATALOG,M-MONEY</depends>
+  <verification-ref>V-M-CART</verification-ref>
+
+  <annotations>
+    <fn-createCart PURPOSE="Cart exports createCart with validated inputs and explicit errors." />
+    <fn-addItem PURPOSE="Cart exports addItem with validated inputs and explicit errors." />
+    <fn-subtotalCents PURPOSE="Cart exports subtotalCents with validated inputs and explicit errors." />
+    <fn-renderSubtotal PURPOSE="Cart exports renderSubtotal with validated inputs and explicit errors." />
+    <type-CART_INVALID PURPOSE="Cart validation error raised on invalid input." />
+  </annotations>
+
+  <CrossLink to="M-CART" relation="self" />
+
   <contract>
-    <purpose>Shopping cart state and totals</purpose>
-    <path>src/cart/index.ts</path>
-    <depends>M-PRODUCTS,M-USERS</depends>
-    <verification-ref>V-M-CART</verification-ref>
+    <purpose>Maintain a shopping cart with validated quantities and exact totals.</purpose>
+    <inputs>
+      <param name="input" type="unknown" description="Cart validates every input before use and reports errors explicitly." />
+    </inputs>
+    <outputs>
+      <param name="result" type="unknown" description="Cart returns deterministic results; failures throw instead of returning sentinel values." />
+    </outputs>
+    <errors>
+      <error code="CART_INVALID" description="Raised when Cart receives invalid input." />
+    </errors>
   </contract>
-  <exports>
-    <export-1 name="addItem">Primary public function of Cart</export-1>
-  </exports>
-  <CrossLink to="M-PRODUCTS" kind="depends" />
+
+  <notes>
+    Cart mutations validate quantity and stock before storing an item.
+    Totals are computed in cents through the money module, never with floats.
+  </notes>
 </M-CART>

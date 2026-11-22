@@ -1,0 +1,44 @@
+<!-- Module contract for M-TRACE. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-TRACE NAME="Traceability report" TYPE="CORE_LOGIC" STATUS="done">
+  <purpose>Answer "why does this module exist, what proves it and what breaks if I change it?" in one bounded read, with stable gap codes (Wave 3.2).</purpose>
+  <path>src/grace-trace.ts</path>
+  <depends>M-COMMON,M-CONFIG,M-ERRORS,M-PATHS,M-SHARD,M-TEST,M-XML</depends>
+  <verification-ref>V-M-TRACE</verification-ref>
+
+  <annotations>
+    <export-TRACE_FINDING_CODES PURPOSE="Stable traceability gaps: errors MISSING_VERIFICATION_REF, VERIFICATION_FILE_MISSING, TEST_FILE_MISSING, MODULE_PATH_MISSING, MODULE_FILE_MISSING, XML_INVALID; info NO_DECLARED_COMMAND, NO_REQUIREMENT_LINK, NO_PHASE_LINK." />
+    <fn-resolveTraceModuleId PURPOSE="Accept M-XXX or V-M-XXX (positional id or --module) and validate it through grace-paths (ADR-4)." />
+    <fn-traceModule PURPOSE="Read-only chain: graph entry → entity file → verification file → declared test files → command provenance → requirement links → phases → direct/transitive dependents." />
+    <fn-formatTraceText PURPOSE="Compact human tree: module line, verification, command, requirements, phases, dependents, coded notes, final ✓/✗." />
+    <export-traceCommand PURPOSE="mygrace trace <ID> [--module M-XXX] [--path] [--format text|json]; exit 1 on chain errors." />
+    <type-TraceResult PURPOSE="JSON data: module, verification, test files (existence/lines), command (source + requiresShellOptIn), requirements, phases, dependents, findings." />
+  </annotations>
+
+  <CrossLink to="M-SHARD" relation="module and verification lookups read the shard-transparent union" />
+  <CrossLink to="M-TEST" relation="command provenance and the trust-gating verdict mirror test/verify" />
+  <CrossLink to="M-CLI" relation="registered as a top-level command" />
+
+  <contract>
+    <purpose>Trace one module's full traceability chain and expose gaps as stable findings without executing anything.</purpose>
+    <inputs>
+      <param name="id" type="string" description="Module id (M-XXX) or verification id (V-M-XXX)." />
+      <param name="root" type="string" description="Project root resolved from --path." />
+    </inputs>
+    <outputs>
+      <param name="result" type="TraceResult" description="module, verification, testFiles, command, requirements, phases, dependents, findings, exitCode." />
+    </outputs>
+    <errors>
+      <error code="MISSING_VERIFICATION_REF" description="Indexed module has no VERIFICATION_REF or no V-M-* entry in the verification index (exit 1)." />
+      <error code="VERIFICATION_FILE_MISSING" description="V-M-* is indexed but docs/verification file is absent (exit 1)." />
+      <error code="TEST_FILE_MISSING" description="A declared test file does not exist on disk (exit 1)." />
+      <error code="MODULE_PATH_MISSING" description="The module PATH does not exist (exit 1)." />
+      <error code="NO_DECLARED_COMMAND" description="No <module-checks>, no module fallback and only the config/default runner (info)." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>Read-only: no file writes, no project-command execution; the trust verdict is reported, never acted on.</note-1>
+    <note-2>Partial projects stay usable: optional links (requirements, phases) are info findings and do not change the exit code.</note-2>
+    <note-3>Command provenance is explicit: verification | module-deprecated | config | default, plus requiresShellOptIn for shell-style commands.</note-3>
+  </notes>
+</M-TRACE>

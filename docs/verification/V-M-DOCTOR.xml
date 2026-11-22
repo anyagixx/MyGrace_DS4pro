@@ -1,0 +1,23 @@
+<!-- Canonical verification entry. <module-checks> is read by mygrace test/verify; commands are trust-gated (run `mygrace trust` after review). -->
+<V-M-DOCTOR MODULE="M-DOCTOR" PRIORITY="medium" STATUS="done">
+  <test-files>
+    <file>test/grace-doctor.test.ts</file>
+  </test-files>
+
+  <module-checks>
+    <check-1>bun test</check-1>
+  </module-checks>
+
+  <scenarios>
+    <scenario-1 kind="success">Project, environment and integration rows are reported; exit code matches findings.</scenario-1>
+    <scenario-2 kind="failure">Unreadable files and missing tools are reported as check rows instead of crashing.</scenario-2>
+  </scenarios>
+
+  <required-log-markers>
+    <marker-1>CLI text output and JSON envelopes are asserted by the tests; no runtime log markers are emitted by library modules.</marker-1>
+  </required-log-markers>
+
+  <notes>
+    <note-1>Covered by test/grace-doctor.test.ts.</note-1>
+  </notes>
+</V-M-DOCTOR>

@@ -1,0 +1,24 @@
+<!-- Canonical verification entry. <module-checks> is read by mygrace test/verify; commands are trust-gated (run `mygrace trust` after review). -->
+<V-M-CI MODULE="M-CI" PRIORITY="high" STATUS="done">
+  <test-files>
+    <file>test/grace-ci.test.ts</file>
+  </test-files>
+
+  <module-checks>
+    <check-1>bun test test/grace-ci.test.ts</check-1>
+  </module-checks>
+
+  <scenarios>
+    <scenario-1 kind="success">A conforming project passes the gate with exit 0 and a clean digest.</scenario-1>
+    <scenario-2 kind="failure">Coverage gaps, lint findings, unreadable indexes and untrusted test requests produce coded findings and the documented exit code.</scenario-2>
+  </scenarios>
+
+  <required-log-markers>
+    <marker-1>CLI text output and JSON envelopes are asserted by the tests; no runtime log markers are emitted by library modules.</marker-1>
+  </required-log-markers>
+
+  <notes>
+    <note-1>Covered by test/grace-ci.test.ts (13 tests: coverage checks, gate exit codes, trust refusal exit 2, CLI e2e on the demo project).</note-1>
+    <note-2>CI is the single gate referenced by ROADMAP release checklist G3/G4/G5 and by AGENTS.md commands.</note-2>
+  </notes>
+</V-M-CI>

@@ -1,0 +1,27 @@
+<V-M-CATALOG MODULE="M-CATALOG" PRIORITY="high" STATUS="done">
+  <test-files>
+    <file>src/catalog/index.test.ts</file>
+  </test-files>
+
+  <module-checks>
+    <check-1>bun test src/catalog/index.test.ts</check-1>
+  </module-checks>
+
+  <scenarios>
+    <scenario-1 kind="success">createCatalog returns a catalog for valid products.</scenario-1>
+    <scenario-2 kind="success">duplicate product ids throw CatalogError.</scenario-2>
+    <scenario-3 kind="failure">non-positive price throws CatalogError.</scenario-3>
+    <scenario-4 kind="failure">findProduct('missing') throws CatalogError.</scenario-4>
+    <scenario-5 kind="success">describeProduct formats the price through the money module.</scenario-5>
+  </scenarios>
+
+  <required-log-markers>
+    <marker-1>[Catalog][createCatalog][BLOCK_VALIDATE_PRODUCTS]</marker-1>
+    <marker-2>[Catalog][findProduct][BLOCK_RESOLVE_PRODUCT]</marker-2>
+  </required-log-markers>
+
+  <notes>
+    Failure scenarios assert the exact error class so silent regressions cannot pass.
+    The module-checks block lives here (canonical location), never in docs/modules/.
+  </notes>
+</V-M-CATALOG>

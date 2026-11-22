@@ -1,0 +1,41 @@
+<!-- Module contract for M-CONFIG. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-CONFIG NAME="Project configuration" TYPE="FOUNDATION" STATUS="done">
+  <purpose>Load, validate and expose mygrace.config.json with safe v1-compatible defaults (ADR-5).</purpose>
+  <path>src/grace-config.ts</path>
+  <depends>M-ERRORS</depends>
+  <verification-ref>V-M-CONFIG</verification-ref>
+
+  <annotations>
+    <export-CONFIG_FILENAME PURPOSE="mygrace.config.json." />
+    <export-DEFAULT_CONFIG PURPOSE="Defaults reproducing the v1 layout, budgets and runtimes." />
+    <type-MyGraceConfig PURPOSE="Fully resolved configuration (all fields present after load)." />
+    <type-IndexCaps PURPOSE="Line caps for graph, plan and verification indexes." />
+    <type-SizeBudgets PURPOSE="Expected [min, max] line ranges for module/phase/verification files." />
+    <fn-configPath PURPOSE="Absolute config path for a project root." />
+    <fn-loadConfig PURPOSE="Read and validate; throws ConfigError listing every problem." />
+    <fn-tryLoadConfig PURPOSE="Non-throwing variant for reporting callers." />
+    <fn-serializeConfig PURPOSE="Stable JSON used by init-dsh." />
+    <fn-cloneDefault PURPOSE="Deep copy of the default configuration." />
+  </annotations>
+
+  <CrossLink to="M-ERRORS" relation="reports validation failures as ConfigError" />
+
+  <contract>
+    <purpose>Load, validate and expose mygrace.config.json with safe v1-compatible defaults (ADR-5).</purpose>
+    <inputs>
+      <param name="projectRoot" type="string" description="Project root directory." />
+    </inputs>
+    <outputs>
+      <param name="config" type="MyGraceConfig" description="Validated effective configuration." />
+    </outputs>
+    <errors>
+      <error code="CONFIG_INVALID" description="Malformed JSON, wrong types, unknown keys or invalid budget pairs." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>All problems are listed at once so agents can fix a config in one pass.</note-1>
+    <note-2>Defaults keep existing projects working; nothing hardcodes src/ in new code.</note-2>
+    <note-3>The config is covered by the trust record, so changing testRunner or allowCommands invalidates trust.</note-3>
+  </notes>
+</M-CONFIG>

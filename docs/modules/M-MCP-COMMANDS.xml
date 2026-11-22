@@ -1,0 +1,45 @@
+<!-- Module contract for M-MCP-COMMANDS. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-MCP-COMMANDS NAME="MCP tool catalog" TYPE="INTEGRATION" STATUS="done">
+  <purpose>Single source of truth for the 21 MCP tools: names, descriptions, JSON schemas, argv mapping and argument validation.</purpose>
+  <path>src/grace-mcp-commands.ts</path>
+  <depends>M-ERRORS</depends>
+  <verification-ref>V-M-MCP-COMMANDS</verification-ref>
+
+  <annotations>
+    <export-TOOLS PURPOSE="The catalog of tool definitions." />
+    <export-TOOL_NAMES PURPOSE="Names derived from TOOLS (exported for tests and docs)." />
+    <type-ToolName PURPOSE="Union of the 21 MCP tool names." />
+    <type-ToolDefinition PURPOSE="name, description, inputSchema, rootArg, buildArgs, digestOutput." />
+    <fn-getToolDefinition PURPOSE="Catalog lookup by name." />
+    <fn-resolveProjectRoot PURPOSE="Explicit arg, then MYGRACE_PROJECT_ROOT, then process.cwd()." />
+    <fn-validateToolArgs PURPOSE="Type/required/enum/pattern validation plus schema defaults." />
+    <fn-formatToolArgError PURPOSE="Structured multi-field error text for agents." />
+    <fn-formatUnknownToolError PURPOSE="Structured error for a name outside the catalog." />
+    <fn-buildToolCommand PURPOSE="Tool name and args to mygrace argv (no binary, no PATH)." />
+    <fn-compactLintOutput PURPOSE="Compact lint digest for noisy MCP responses." />
+    <export-TOOLS PURPOSE="Includes the ci gate tool (mygrace_ci) added in Wave 3." />
+  </annotations>
+
+  <CrossLink to="M-ERRORS" relation="UsageError for invalid arguments" />
+
+  <contract>
+    <purpose>Single source of truth for the 21 MCP tools: names, descriptions, JSON schemas, argv mapping and argument validation.</purpose>
+    <inputs>
+      <param name="name" type="string" description="Tool name." />
+      <param name="rawArgs" type="unknown" description="Untrusted MCP arguments." />
+    </inputs>
+    <outputs>
+      <param name="argv" type="string[]" description="CLI arguments for the mapped command." />
+      <param name="validation" type="ToolArgValidation" description="issues plus normalized args." />
+    </outputs>
+    <errors>
+      <error code="USAGE" description="Unknown tool or invalid/missing argument." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>Pure data and formatting: no MCP SDK import, no filesystem access, no process spawning, fully unit-testable.</note-1>
+    <note-2>ListTools and CallTool share this one catalog, so schemas and mappings cannot drift.</note-2>
+    <note-3>21 tools including mygrace_trace, mygrace_impact, mygrace_next, mygrace_projects; DSH exposes them as mcp__mygrace__&lt;tool&gt;.</note-3>
+  </notes>
+</M-MCP-COMMANDS>

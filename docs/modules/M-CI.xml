@@ -1,0 +1,43 @@
+<!-- Module contract for M-CI. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-CI NAME="CI quality gate" TYPE="ORCHESTRATOR" STATUS="done">
+  <purpose>Run the whole MyGRACE quality gate in one invocation: strict lint, project status, verification coverage and optional trust-gated tests (ROADMAP G3/G4/G5, Wave 3).</purpose>
+  <path>src/grace-ci.ts</path>
+  <depends>M-LINT,M-STATUS,M-TEST,M-VERIFY,M-CONFIG,M-ERRORS,M-COMMON</depends>
+  <verification-ref>V-M-CI</verification-ref>
+
+  <annotations>
+    <type-CoverageReport PURPOSE="Verification coverage counters and gaps (modules without verification, missing test files)." />
+    <type-TestsReport PURPOSE="Scoped test-run counters and trust-refusal information." />
+    <type-CiResult PURPOSE="Gate findings, status snapshot, coverage, optional tests and the ADR-3 exit code." />
+    <fn-collectCoverage PURPOSE="Check module, verification, declared command and test-file coverage." />
+    <fn-runCiGate PURPOSE="The gate itself: lint with strict semantics + status + coverage (+ tests); exported for tests and MCP." />
+    <export-ciCommand PURPOSE="mygrace ci [--tests] [--module M-XXX] [--allow-commands] [--format json]." />
+  </annotations>
+
+  <CrossLink to="M-LINT" relation="runs the enforced lint gate" />
+  <CrossLink to="M-STATUS" relation="reports index counts and breakdowns" />
+  <CrossLink to="M-VERIFY" relation="reuses the failure report writer for the optional tests stage" />
+
+  <contract>
+    <purpose>Single merge/CI gate that answers whether a MyGRACE project is fit to ship.</purpose>
+    <inputs>
+      <param name="root" type="string" description="Project root." />
+      <param name="options" type="CiOptions" description="Optional module scope, tests flag and allow-commands opt-in." />
+    </inputs>
+    <outputs>
+      <param name="result" type="CiResult" description="Findings, status, coverage, optional tests and exit code." />
+      <param name="envelope" type="ResultEnvelope" description="ADR-8 JSON output for machines." />
+    </outputs>
+    <errors>
+      <error code="USAGE" description="No project root found from --path (exit 2)." />
+      <error code="UNTRUSTED_PROJECT" description="Tests were requested but the project is not trusted (exit 2)." />
+      <error code="CI_FINDINGS" description="Lint, status or coverage findings; exit 1." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>Default mode is read-only: lint strict + status + verification coverage. Project commands run only with --tests and a valid trust record or opt-in.</note-1>
+    <note-2>Coverage closes the question lint cannot answer: does each module's verification declare existing test files?</note-2>
+    <note-3>Exit codes follow ADR-3 and are identical in text and JSON modes.</note-3>
+  </notes>
+</M-CI>

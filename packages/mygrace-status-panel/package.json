@@ -1,11 +1,18 @@
 {
   "name": "mygrace-status-panel",
   "version": "0.1.0",
-  "description": "MyGRACE status card for the DeepSeek Harness web sidebar",
+  "description": "LIVE MyGRACE status card for the DeepSeek Harness web sidebar (host route /api/mygrace.status reads `mygrace status`; opt-in via `mygrace install-dsh --panel`)",
   "license": "MIT",
   "private": true,
   "type": "module",
   "main": "lib/index.js",
+  "files": [
+    "cordis.patch.yml",
+    "lib/client.js",
+    "lib/index.js",
+    "lib/status-payload.js",
+    "README.md"
+  ],
   "exports": {
     ".": "./lib/index.js",
     "./client": "./lib/client.js",
@@ -18,7 +25,6 @@
     "client": {
       "platform": "web",
       "inject": [
-        "@deepseek-ai/dsh-client-runtime",
         "@deepseek-ai/dsh-client-ui-sidebar"
       ]
     }

@@ -1,0 +1,36 @@
+<!-- Module contract for M-STATUS. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-STATUS NAME="Project health status" TYPE="UTILITY" STATUS="done">
+  <purpose>Honest project health snapshot: index counts, status breakdown, lint totals, coded findings and matching exit codes (ADR-3, ADR-8).</purpose>
+  <path>src/grace-status.ts</path>
+  <depends>M-COMMON,M-LINT,M-ERRORS</depends>
+  <verification-ref>V-M-STATUS</verification-ref>
+
+  <annotations>
+    <fn-buildStatusSnapshot PURPOSE="Safe aggregation of the three indexes plus lint totals." />
+    <fn-statusFindings PURPOSE="Map index read errors and lint totals to coded findings." />
+    <export-statusCommand PURPOSE="mygrace status [--format json]." />
+    <type-StatusSnapshot PURPOSE="Counts, breakdowns, lint totals and index read errors." />
+  </annotations>
+
+  <CrossLink to="M-LINT" relation="reuses the enforced lint scan" />
+  <CrossLink to="M-COMMON" relation="safe index reads" />
+
+  <contract>
+    <purpose>Honest project health snapshot: index counts, status breakdown, lint totals, coded findings and matching exit codes (ADR-3, ADR-8).</purpose>
+    <inputs>
+      <param name="root" type="string" description="Project root." />
+    </inputs>
+    <outputs>
+      <param name="snapshot" type="StatusSnapshot" description="Totals and breakdowns for modules, phases, verifications and lint." />
+    </outputs>
+    <errors>
+      <error code="XML_INVALID" description="Malformed index contents are reported as findings, not crashes." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>Malformed indexes become findings with a non-zero exit code instead of an empty-looking report.</note-1>
+    <note-2>Text and JSON modes share the same exit-code decision.</note-2>
+    <note-3>Only the three indexes are needed for a status check, which is what keeps navigation cheap.</note-3>
+  </notes>
+</M-STATUS>

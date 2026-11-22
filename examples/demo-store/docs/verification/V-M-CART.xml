@@ -1,11 +1,27 @@
-<V-M-CART MODULE="M-CART" PRIORITY="medium" STATUS="pending">
-  <test-files><file>src/cart/index.test.ts</file></test-files>
-  <module-checks><check-1>bun test</check-1></module-checks>
+<V-M-CART MODULE="M-CART" PRIORITY="high" STATUS="done">
+  <test-files>
+    <file>src/cart/index.test.ts</file>
+  </test-files>
+
+  <module-checks>
+    <check-1>bun test src/cart/index.test.ts</check-1>
+  </module-checks>
+
   <scenarios>
-    <scenario-1 kind="success">addItem succeeds on valid input</scenario-1>
-    <scenario-2 kind="failure">addItem fails fast on invalid input</scenario-2>
+    <scenario-1 kind="success">addItem accumulates quantity for an existing product.</scenario-1>
+    <scenario-2 kind="failure">quantity 0 throws CartError.</scenario-2>
+    <scenario-3 kind="failure">an unknown product id throws CatalogError.</scenario-3>
+    <scenario-4 kind="failure">quantity above stock throws CartError.</scenario-4>
+    <scenario-5 kind="success">subtotalCents/renderSubtotal return exact integer-cent totals.</scenario-5>
   </scenarios>
+
   <required-log-markers>
-    <marker-1>[Cart][addItem][BLOCK_VALIDATE]</marker-1>
+    <marker-1>[Cart][addItem][BLOCK_VALIDATE_QUANTITY]</marker-1>
+    <marker-2>[Cart][addItem][BLOCK_RESOLVE_AND_STORE]</marker-2>
   </required-log-markers>
+
+  <notes>
+    Failure scenarios assert the exact error class so silent regressions cannot pass.
+    The module-checks block lives here (canonical location), never in docs/modules/.
+  </notes>
 </V-M-CART>

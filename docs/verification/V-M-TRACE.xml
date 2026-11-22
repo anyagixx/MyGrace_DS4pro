@@ -1,0 +1,26 @@
+<!-- Canonical verification entry. <module-checks> is read by mygrace test/verify; commands are trust-gated (run `mygrace trust` after review). -->
+<V-M-TRACE MODULE="M-TRACE" PRIORITY="high" STATUS="done">
+  <test-files>
+    <file>test/grace-trace.test.ts</file>
+  </test-files>
+
+  <module-checks>
+    <check-1>bun test test/grace-trace.test.ts</check-1>
+  </module-checks>
+
+  <scenarios>
+    <scenario-1 kind="success">A module with verification, test files and a declared command traces end to end: module line, verification (priority/status), test files with existence and line counts, command provenance [verification], phases and dependents; exit 0.</scenario-1>
+    <scenario-2 kind="failure">Missing verification ref, missing verification file, missing test file and missing module PATH are errors (exit 1) with stable codes; a browsable partial chain still renders.</scenario-2>
+    <scenario-3 kind="success">A verification id (V-M-XXX) resolves to its module; JSON mode returns the ADR-8 envelope with the documented data shape.</scenario-3>
+  </scenarios>
+
+  <required-log-markers>
+    <marker-1>CLI text/JSON output is asserted by the tests; library paths emit no runtime log markers.</marker-1>
+  </required-log-markers>
+
+  <notes>
+    <note-1>Covered by test/grace-trace.test.ts (command/gap matrix, provenance sources, dependents closure, exit codes, JSON envelope).</note-1>
+    <note-2>Finding codes: MISSING_VERIFICATION_REF, VERIFICATION_FILE_MISSING, TEST_FILE_MISSING, MODULE_PATH_MISSING, MODULE_FILE_MISSING, XML_INVALID (errors); NO_DECLARED_COMMAND, NO_REQUIREMENT_LINK, NO_PHASE_LINK (info).</note-2>
+    <note-3>CLI surface: mygrace trace &lt;ID&gt; [--module M-XXX] [--path .] [--format text|json].</note-3>
+  </notes>
+</V-M-TRACE>

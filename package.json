@@ -1,15 +1,15 @@
 {
   "name": "@osovv/mygrace-cli",
-  "version": "1.0.1",
-  "description": "MyGRACE CLI \u2014 scalable GRACE methodology with lazy-loading indexes, per-module files, and phase-based navigation for large projects.",
+  "version": "1.3.0",
+  "description": "MyGRACE — index-first engineering harness for AI coding agents: enforced contracts, lazy-loading knowledge graph, verification traceability, MCP/skills integration.",
   "license": "MIT",
-  "homepage": "https://github.com/anyagixx/MyGrace#readme",
+  "homepage": "https://github.com/anyagixx/MyGrace_DS4pro#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/anyagixx/MyGrace.git"
+    "url": "git+https://github.com/anyagixx/MyGrace_DS4pro.git"
   },
   "bugs": {
-    "url": "https://github.com/anyagixx/MyGrace/issues"
+    "url": "https://github.com/anyagixx/MyGrace_DS4pro/issues"
   },
   "keywords": [
     "mygrace",
@@ -17,33 +17,33 @@
     "cli",
     "lint",
     "bun",
+    "node",
     "python",
     "typescript",
+    "ai-agents",
+    "context-engineering",
     "semantic-markup",
     "knowledge-graph",
     "lazy-loading",
     "scalable",
-    "index"
+    "index",
+    "code-agents",
+    "spec-driven"
   ],
   "publishConfig": {
     "access": "public"
   },
   "files": [
-    "src/grace.ts",
-    "src/grace-lint.ts",
-    "src/grace-module.ts",
-    "src/grace-file.ts",
-    "src/grace-mcp.ts",
-    "src/grace-mcp-commands.ts",
-    "src/grace-common.ts",
-    "src/grace-install.ts",
-    "src/grace-status.ts",
-    "src/grace-init.ts",
-    "skills/mygrace",
+    "src",
     "templates",
+    "skills/mygrace",
+    "packages/mygrace-status-panel",
+    "ROADMAP.md",
     "README.md",
-    "LICENSE",
-    "packages/mygrace-status-panel"
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "CHANGELOG.md",
+    "LICENSE"
   ],
   "type": "module",
   "packageManager": "bun@1.3.8",
@@ -54,18 +54,35 @@
     "grace": "bun run ./src/grace.ts",
     "grace:lint": "bun run ./src/grace.ts lint",
     "lint": "bun run ./src/grace.ts lint",
+    "lint:demo": "bun run ./src/grace.ts lint --path examples/demo-store --strict",
+    "typecheck": "tsc --noEmit",
     "test": "bun test",
+    "test:scoped": "bun test test/",
+    "pack:smoke": "bun run ./scripts/pack-smoke.ts",
     "validate:marketplace": "bun run ./scripts/validate-marketplace.ts",
-    "prepublishOnly": "bun test && bun run ./src/grace.ts lint --path . --allow-missing-docs && bun run ./scripts/validate-marketplace.ts"
+    "ci": "bun run typecheck && bun run test:all && bun run lint:demo && bun run check && bun run validate:marketplace && bun run validate:docs && bun run pack:smoke",
+    "release:check": "bun run ci",
+    "prepublishOnly": "bun run release:check",
+    "validate:docs": "bun run ./scripts/validate-docs.ts",
+    "test:demo": "cd examples/demo-store && bun test",
+    "test:all": "bun test && bun run test:demo",
+    "lint:self": "bun run ./src/grace.ts lint --path . --strict",
+    "check": "bun run ./src/grace.ts ci --path .",
+    "publish:dry": "bun run ./scripts/publish-dry-run.ts",
+    "release:full": "bun run release:check && bun run publish:dry"
   },
   "bin": {
-    "mygrace": "./src/grace.ts"
+    "mygrace": "src/grace.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
-    "citty": "^0.2.2"
+    "citty": "^0.2.2",
+    "fast-xml-parser": "^5.12.1",
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
+    "@types/bun": "^1.4.5",
+    "@types/node": "^26.6.6",
     "typescript": "^6.0.2"
   }
 }

@@ -1,0 +1,8 @@
+# Bun test discovery is scoped to test/ so `bun test` can never pick up
+# generated demo projects, analysis scratch copies or fixture trees by
+# accident (v1's unscoped discovery once counted 130 files / 215 tests).
+#
+# The demo-store integration tests are run explicitly in CI and locally with:
+#   bun test examples/demo-store
+[test]
+root = "./test"

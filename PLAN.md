@@ -1,117 +1,35 @@
-# План v2: MyGRACE как DSH-first продукт (DeepSeek Harness)
+# Historical plan — superseded by ROADMAP.md
 
-> **Статус: ВСЕ ФАЗЫ ВЫПОЛНЕНЫ (v0.1.0).**
-> Отклонение от плана: вместо `mygrace init --ds` реализован `mygrace init-dsh` (яснее и не конфликтует с будущим интерактивным `init`).
-> Факты, подтверждённые живьём на работающем DSH: скиллы из `~/.dsh/skills/` появляются/исчезают в каталоге активной сессии без перезапуска; AGENTS.md из корня проекта подхватывается сразу; `- id:`-строки в cordis.patch.yml — мёртвые no-op, вставка только через `- insert:` (исправлено, композиция чистая); панель статуса отдаётся живым сервером без рестарта (F5 активирует).
-> Действия пользователя после v0.1.0: F5 в браузере (карточка в сайдбаре); если MCP-тулы не появились в сессии — перезапустить `dsh web` или открыть новую сессию. Публикация на npm — за владельцем (нужны креды).
+> **Status: historical / superseded.** This was the DSH-first v1 plan that
+> produced the `v0.1.0` line. The audit of `v1.0.1` and the current work are
+> tracked in [`ROADMAP.md`](ROADMAP.md); do not use this file for current
+> decisions. It is kept so the original intent stays traceable.
 
-Цель: MyGrace устанавливается одной командой в DeepSeek Harness, агент «сам знает» методологию в каждом проекте, а пользователь управляет ей через интуитивные скиллы в Web GUI и MCP-инструменты. Остальные 9 платформ переходят в разряд второстепенных.
+## What the v1 plan set out to do
 
-## 0. Целевой пользовательский опыт (критерии «легко, просто, интуитивно»)
+- Make DeepSeek Harness the primary platform: skills installed into the DSH
+  skills root, MCP wired into the profile, `AGENTS.md` auto-loaded.
+- One-command install and bootstrap (`mygrace install-dsh`, `mygrace init-dsh`).
+- Adapt the skill set to the DSH `skill` tool (frontmatter with `description` and
+  `whenToUse`) and remove platform-specific slash-command syntax.
+- Keep the index-first methodology (indexes + per-entity files) as the core idea.
 
-1. **Установка** — одна команда: `mygrace install-dsh` (ставит скиллы в `~/.dsh/skills/`, прописывает MCP в профиль, идемпотентно).
-2. **Новый проект** — `mygrace init --ds`: создаёт `docs/` + `AGENTS.md` под DSH. Агент DSH видит `AGENTS.md` автоматически и начинает следовать правилу «сначала индекс».
-3. **Работа агента** — скиллы `mygrace-*` видны в UI-пикере Web GUI; агент сам выбирает нужный (`whenToUse` в каждом). Навигация по проекту — через MCP-тулы `mygrace_*` (структурированные ответы, экономия контекста).
-4. **Контроль** — `/mygrace:status`-аналог: скилл `mygrace-status` читает только 3 индекса (~230 строк), MCP `mygrace_lint` — проверка целостности.
+## Deviations and follow-ups
 
----
+- The planned `mygrace init --ds` became `mygrace init-dsh`.
+- The "all phases done" v0.1.0 claim was too optimistic: an independent audit of
+  `v1.0.1` found stalled CLI semantics, an unsafe execution model for
+  project-declared commands, stale docs and unenforced invariants.
+- Those findings became the Wave 0/1 work in `ROADMAP.md`: strict XML layer,
+  typed errors and exit codes, safe ids/paths, project config, lint with teeth,
+  trust-gated command execution, MCP runtime hardening, installer hardening and
+  a documentation truth pass.
 
-## Фаза 1. Критические фиксы ядра (P0, блокер для MCP в DSH)
+## Where to look now
 
-| # | Задача | Файлы | Критерий |
-|---|---|---|---|
-| 1.1 | Починить `findProjectRoot` (бесконечный цикл) → быстрый отказ с сообщением | `src/grace-lint.ts`, `src/grace-module.ts` | `lint --path /tmp` падает за <1 с |
-| 1.2 | Общий слой `src/grace-common.ts` (root-поиск, XML-парсеры) | `src/*` | Нет дублей |
-| 1.3 | Тесты реального кода: экспорт функций из `grace-lint.ts`, импорт в тестах + регресс-тест 1.1 | `test/` | `bun test` зелёный, импорты из `src/` |
-| 1.4 | Починить 2 сломанных MCP-тула: `mygrace_show_phase` → `phase show`; `verification index` получает рабочие `--priority`/`--format`; `file show` — корректный `--root` | `src/grace-mcp.ts`, `src/grace-module.ts` | Все 6 тулов работают на фикстуре |
-| 1.5 | `buildToolCommand(name, args)` — чистая функция + юнит-тесты всех 6 маппингов | `src/grace-mcp.ts` | Покрыто тестами |
-| 1.6 | `@modelcontextprotocol/sdk` объявлен в dependencies | `package.json` | `bun install --production` достаточен для MCP |
+- [`ROADMAP.md`](ROADMAP.md) — vision, ADRs, waves, release gates (current plan).
+- [`CHANGELOG.md`](CHANGELOG.md) — what actually shipped.
+- [`README.md`](README.md) — the current user-facing surface.
 
----
-
-## Фаза 2. DSH-нативный скилл-пак (P0 — ядро UX)
-
-14 скиллов адаптируются под DSH-формат: папка `skills/mygrace/<name>/SKILL.md` уже совпадает с форматом DSH — нужны правки контента.
-
-| # | Задача | Критерий |
-|---|---|---|
-| 2.1 | Фронтматтер DSH: `name: mygrace-<kebab>`, `description` (когда и зачем — на английском, как в DSH-скиллах), добавить `whenToUse` во все 14 | Каждый SKILL.md проходит валидацию формата DSH |
-| 2.2 | Убрать все ссылки на `/mygrace:...` slash-синтаксис и Qwen/Claude-специфику; заменить на «вызови скилл `mygrace-*` через tool `skill`» | `grep -r "/mygrace:" skills/` → пусто |
-| 2.3 | Переписать `multiagent` под нативные DSH-инструменты: `subagent` / `workflow` (вместо Qwen-агентов), `execute` — на DSH-коммиты и таски | Скиллы не упоминают чужие платформы |
-| 2.4 | `status`/`ask`/`fix` — инструкции использовать MCP-тулы `mygrace_*`, когда MCP подключён (fallback: чтение индексов) | Проверено на живом DSH |
-| 2.5 | Новый скилл `mygrace-install-dsh` (или секция в `grace-cli`): что делает `install-dsh`, как проверить установку | README-инструкция воспроизводима |
-
----
-
-## Фаза 3. MCP-интеграция в DSH (P0)
-
-| # | Задача | Файлы | Критерий |
-|---|---|---|---|
-| 3.1 | Инсталлятор `mygrace install-dsh`: 1) копирует `skills/mygrace/*` → `~/.dsh/skills/mygrace-*`; 2) идемпотентно добавляет MCP-строку в `~/.dsh/profiles/web/cordis.patch.yml` (`@deepseek-ai/dsh-mcp-client`, stdio, `bun run <path>/src/grace-mcp.ts`, `serverName: mygrace`); 3) `--dry-run` и `--uninstall` | Повторный запуск не дублирует строки |
-| 3.2 | Проверка в живом DSH: MCP-тулы `mygrace_*` появляются в каталоге инструментов; вызовы работают на фикстуре | Скриншот/лог вызова в сессии |
-| 3.3 | Резолв пути `grace-mcp.ts` при глобальной установке (`bun add -g`) — абсолютный путь из bin | MCP стартует после глобальной установки |
-| 3.4 | Документация в README: раздел «DeepSeek Harness» — установка, проверка, использование | Новый пользователь проходит за 5 минут |
-
----
-
-## Фаза 4. AGENTS.md и шаблоны под DSH (P1)
-
-| # | Задача | Критерий |
-|---|---|---|
-| 4.1 | Новый шаблон `templates/AGENTS.dsh.md.template`: ≤100 строк, правило «сначала индекс», имена скиллов `mygrace-*`, MCP-тулы, без Qwen-специфики | Шаблон читается агентом без обрезки (maxBytes 64 КБ — с запасом) |
-| 4.2 | `grace-init` скилл: опция инициализации под DSH (создаёт `AGENTS.md` из DSH-шаблона) | `mygrace init --ds` → готовый к DSH проект |
-| 4.3 | Эмпирическая проверка: в тестовом проекте с `.git` DSH подхватывает `AGENTS.md` (сравнение поведения агента до/после) | Подтверждено в живой сессии |
-
----
-
-## Фаза 5. Консистентность методологии и тулинга (P1, из плана v1)
-
-| # | Задача |
-|---|---|
-| 5.1 | Унификация разметки: канон `START_MODULE_CONTRACT`; линтер принимает legacy `=== MODULE_CONTRACT ===`; шаблоны/rules переведены |
-| 5.2 | Скиллы ↔ реальный CLI: убрать несуществующие команды (`phase list`, `--with verification`, `--path`→`--root`) |
-| 5.3 | `validate-marketplace.ts`: команды из скиллов сопоставляются с деревом citty; пути манифестов существуют |
-| 5.4 | Починить битую ссылку `@/home/truffle/.codex/RTK.md` в Codex-инструкции |
-
----
-
-## Фаза 6. Гигиена и маркетинг (P2)
-
-| # | Задача |
-|---|---|
-| 6.1 | `typescript` → devDependencies; лефhook на `bun run`; переписать hook без python3 и мёртвых проверок |
-| 6.2 | Dogfood-пример 12–15 модулей в `examples/`, прогнанный через DSH-скиллы |
-| 6.3 | `scripts/measure-context.ts` — измеренные цифры вместо голословных 96–97% |
-| 6.4 | README: DSH как основная платформа, честная матрица остальных; quick start без зависаний |
-| 6.5 | Релиз v0.1.0: CHANGELOG, синхронизация версий, публикация |
-
----
-
-## Фаза 7. ОПЦИОНАЛЬНО: визуальная панель в Web GUI (P2+, отдельное решение)
-
-Клиентский cordis-плагин для DSH Web GUI: карточка статуса MyGrace (кол-во модулей, фазы, дрифт индексов) в сайдбаре. Требует разработки cordis client-plugin и держит зависимость от DSH API. Рекомендация: **не делать в MVP** — скиллы + MCP + AGENTS.md уже закрывают «интуитивно понятно»; вернуться после валидации продукта.
-
----
-
-## Порядок и зависимости
-
-```
-Фаза 1 (1.1–1.6, ~1 день) → { Фаза 2 ∥ Фаза 3 } → Фаза 4 → Фаза 5 → Фаза 6 → (Фаза 7)
-```
-
-- Фаза 3 зависит от 1.4–1.6 (MCP должен работать до подключения к DSH).
-- Фаза 2 независима от Фазы 1 — может идти параллельно.
-- Верификация в живом DSH (3.2, 4.3) — в текущей сессии: скиллы в `~/.dsh/skills/` подхватываются watcher'ом без перезапуска сервера (проверено по коду: chokidar + invalidation).
-
-## Глобальные критерии готовности (DSH-специфичные)
-
-1. `mygrace install-dsh` на чистой машине → скиллы видны в Web GUI, MCP-тулы в каталоге, повторный запуск идемпотентен.
-2. Новый проект: `mygrace init --ds` → агент DSH видит AGENTS.md и начинает с индексов без подсказок.
-3. Полный цикл `init → plan → verification → execute → status` проходится в DSH только скиллами + MCP.
-4. Все критерии v1 (тесты реального кода, lint без зависаний, валидатор 0/0) сохраняются.
-
-## Риски
-
-- **Watcher/hot-reload скиллов**: если живой DSH не подхватит новые скиллы без перезапуска — документируем «перезапустите dsh web» в инсталляторе.
-- **`cordis.patch.yml` правки**: профиль пользователя — чужой файл; инсталлятор обязан сохранять бэкап и не трогать чужие строки.
-- **Модель может не вызывать скиллы сама**: компенсируется AGENTS.md (правила всегда в контексте) — скиллы лишь оптимизация навигации, не обязательное звено.
+The original plan was written in Russian; this English summary replaces it so the
+repository keeps a single documentation language.

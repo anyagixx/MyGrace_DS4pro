@@ -1,16 +1,7 @@
 <GraphIndex project="DemoStore" version="1.0.0">
-  <keywords>demo, ecommerce, mygrace, dogfood</keywords>
-  <annotation>A 12-module demo store used to dogfood MyGRACE on DeepSeek Harness</annotation>
-  <M-USERS NAME="Users" TYPE="CORE_LOGIC" STATUS="wip" PATH="src/users/index.ts" DEPENDS="M-AUTH,M-DB" VERIFICATION_REF="V-M-USERS" />
-  <M-PRODUCTS NAME="Products" TYPE="CORE_LOGIC" STATUS="wip" PATH="src/products/index.ts" DEPENDS="M-DB" VERIFICATION_REF="V-M-PRODUCTS" />
-  <M-CART NAME="Cart" TYPE="CORE_LOGIC" STATUS="pending" PATH="src/cart/index.ts" DEPENDS="M-PRODUCTS,M-USERS" VERIFICATION_REF="V-M-CART" />
-  <M-ORDERS NAME="Orders" TYPE="CORE_LOGIC" STATUS="pending" PATH="src/orders/index.ts" DEPENDS="M-CART,M-USERS,M-DB" VERIFICATION_REF="V-M-ORDERS" />
-  <M-PAYMENTS NAME="Payments" TYPE="INTEGRATION" STATUS="pending" PATH="src/payments/index.ts" DEPENDS="M-ORDERS" VERIFICATION_REF="V-M-PAYMENTS" />
-  <M-NOTIFY NAME="Notifications" TYPE="INTEGRATION" STATUS="pending" PATH="src/notify/index.ts" DEPENDS="M-CONFIG" VERIFICATION_REF="V-M-NOTIFY" />
-  <M-API NAME="HTTP API" TYPE="ENTRY_POINT" STATUS="pending" PATH="src/api/index.ts" DEPENDS="M-AUTH,M-ORDERS,M-PRODUCTS" VERIFICATION_REF="V-M-API" />
-  <M-CLI NAME="CLI" TYPE="ENTRY_POINT" STATUS="pending" PATH="src/cli/index.ts" DEPENDS="M-AUTH,M-ORDERS" VERIFICATION_REF="V-M-CLI" />
-  <M-CONFIG NAME="Config" TYPE="UTILITY" STATUS="done" PATH="src/config/index.ts" DEPENDS="" VERIFICATION_REF="V-M-CONFIG" />
-  <M-LOGGER NAME="Logger" TYPE="UTILITY" STATUS="done" PATH="src/logger/index.ts" DEPENDS="M-CONFIG" VERIFICATION_REF="V-M-LOGGER" />
-  <M-DB NAME="Database" TYPE="DATA_LAYER" STATUS="done" PATH="src/db/index.ts" DEPENDS="M-CONFIG" VERIFICATION_REF="V-M-DB" />
-  <M-AUTH NAME="Authentication" TYPE="CORE_LOGIC" STATUS="done" PATH="src/auth/index.ts" DEPENDS="M-CONFIG,M-DB" VERIFICATION_REF="V-M-AUTH" />
+  <keywords>demo, ecommerce, money, catalog, cart, mygrace, dogfood</keywords>
+  <annotation>A small but real three-module store used to dogfood MyGRACE end to end</annotation>
+  <M-MONEY NAME="Money" TYPE="UTILITY" STATUS="done" PATH="src/money/index.ts" DEPENDS="" VERIFICATION_REF="V-M-MONEY" />
+  <M-CATALOG NAME="Catalog" TYPE="CORE_LOGIC" STATUS="done" PATH="src/catalog/index.ts" DEPENDS="M-MONEY" VERIFICATION_REF="V-M-CATALOG" />
+  <M-CART NAME="Cart" TYPE="CORE_LOGIC" STATUS="done" PATH="src/cart/index.ts" DEPENDS="M-CATALOG,M-MONEY" VERIFICATION_REF="V-M-CART" />
 </GraphIndex>

@@ -1,0 +1,24 @@
+<!-- Canonical verification entry. <module-checks> is read by mygrace test/verify; commands are trust-gated (run `mygrace trust` after review). -->
+<V-M-MCP-COMMANDS MODULE="M-MCP-COMMANDS" PRIORITY="high" STATUS="done">
+  <test-files>
+    <file>test/grace-mcp-runtime.test.ts</file>
+    <file>test/grace-index.test.ts</file>
+  </test-files>
+
+  <module-checks>
+    <check-1>bun test</check-1>
+  </module-checks>
+
+  <scenarios>
+    <scenario-1 kind="success">All 16 tools validate args and map to the documented CLI argv.</scenario-1>
+    <scenario-2 kind="failure">Unknown tools and invalid/missing arguments produce structured USAGE errors.</scenario-2>
+  </scenarios>
+
+  <required-log-markers>
+    <marker-1>CLI text output and JSON envelopes are asserted by the tests; no runtime log markers are emitted by library modules.</marker-1>
+  </required-log-markers>
+
+  <notes>
+    <note-1>Covered by test/grace-mcp-runtime.test.ts, test/grace-index.test.ts.</note-1>
+  </notes>
+</V-M-MCP-COMMANDS>

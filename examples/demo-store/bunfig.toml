@@ -1,0 +1,4 @@
+# Self-contained demo project: scope bun test discovery to this directory so
+# the repository-level bunfig.toml (test root ./test) does not hide the demo tests.
+[test]
+root = "."

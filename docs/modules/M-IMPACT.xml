@@ -1,0 +1,40 @@
+<!-- Module contract for M-IMPACT. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-IMPACT NAME="Change impact analysis" TYPE="CORE_LOGIC" STATUS="done">
+  <purpose>Map changed files to affected modules, transitive dependents, verification blast radius and phases, and suggest the proving commands (Wave 3.3).</purpose>
+  <path>src/grace-impact.ts</path>
+  <depends>M-COMMON,M-CONFIG,M-ERRORS,M-PATHS,M-SHARD,M-TEST</depends>
+  <verification-ref>V-M-IMPACT</verification-ref>
+
+  <annotations>
+    <fn-resolveChangedFiles PURPOSE="Scope precedence: --files → --staged → --since/--base git diff → git diff HEAD; explicit files work without git; no source is a usage error (exit 2)." />
+    <fn-computeImpact PURPOSE="File → module mapping (exact PATH, module-directory prefix, docs entity edits), transitive reverse-DEPENDS closure, test-file blast radius, phase mentions, suggested commands." />
+    <export-impactCommand PURPOSE="mygrace impact [--files a,b,c] [--since <ref>] [--staged] [--path] [--format text|json]." />
+    <type-ImpactResult PURPOSE="JSON data: files, directModules, dependents, verificationStatus, affectedPhases, suggestedCommands, notes, findings." />
+  </annotations>
+
+  <CrossLink to="M-SHARD" relation="module entries and dependents come from the shard-transparent union" />
+  <CrossLink to="M-TEST" relation="suggested commands reuse the trust-gated verification plan" />
+  <CrossLink to="M-CLI" relation="registered as a top-level command" />
+
+  <contract>
+    <purpose>Answer "what does this change affect?" for an agent or CI job without reading every entity file.</purpose>
+    <inputs>
+      <param name="files" type="string" description="Comma-separated project-relative changed files (works without git)." />
+      <param name="since" type="string" description="Git revision to diff against (default HEAD)." />
+      <param name="staged" type="boolean" description="Use the git index (git diff --cached)." />
+    </inputs>
+    <outputs>
+      <param name="result" type="ImpactResult" description="files, directModules, dependents, verificationStatus, affectedPhases, suggestedCommands, notes." />
+    </outputs>
+    <errors>
+      <error code="USAGE" description="No changed-file source available (no git and no --files) — exit 2." />
+      <error code="NO_MODULES_AFFECTED" description="Changed files map to no indexed module (info; exit 0)." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>Read-only and argv-only: git is spawned without a shell, with a 2 s timeout; everything degrades gracefully outside a checkout.</note-1>
+    <note-2>Direct modules are matched by exact PATH, module-directory prefix, or docs entity edits; dependents are the transitive reverse DEPENDS closure.</note-2>
+    <note-3>Suggested commands include a `mygrace trust` note when the verification plan is untrusted, scoped `mygrace verify --module …` and the final `mygrace ci`.</note-3>
+  </notes>
+</M-IMPACT>

@@ -1,0 +1,31 @@
+<GraphIndex project="MyGRACE" version="2.0.0">
+  <keywords>mygrace,grace,index-first,semantic-markup,ai-agents,contracts,verification,cli,mcp</keywords>
+  <annotation>Index-first engineering harness for AI coding agents: enforced contracts, lazy-loading knowledge graph, verification traceability.</annotation>
+
+  <!-- One line per module. CAP 100 lines (indexCaps.graph). Source: src/*.ts. -->
+  <M-ERRORS NAME="Error and output contract" TYPE="FOUNDATION" STATUS="done" PATH="src/grace-errors.ts" DEPENDS="" VERIFICATION_REF="V-M-ERRORS" />
+  <M-XML NAME="Strict XML layer" TYPE="FOUNDATION" STATUS="done" PATH="src/grace-xml.ts" DEPENDS="M-ERRORS" VERIFICATION_REF="V-M-XML" />
+  <M-PATHS NAME="Ids and path safety" TYPE="FOUNDATION" STATUS="done" PATH="src/grace-paths.ts" DEPENDS="M-ERRORS" VERIFICATION_REF="V-M-PATHS" />
+  <M-CONFIG NAME="Project configuration" TYPE="FOUNDATION" STATUS="done" PATH="src/grace-config.ts" DEPENDS="M-ERRORS" VERIFICATION_REF="V-M-CONFIG" />
+  <M-COMMON NAME="Filesystem and index helpers" TYPE="CORE_LOGIC" STATUS="done" PATH="src/grace-common.ts" DEPENDS="M-ERRORS,M-XML" VERIFICATION_REF="V-M-COMMON" />
+  <M-CLI NAME="CLI entry point" TYPE="ENTRY_POINT" STATUS="done" PATH="src/grace.ts" DEPENDS="M-ERRORS,M-LINT,M-MODULE,M-FILE,M-INSTALL,M-INIT,M-STATUS,M-DOCTOR,M-TEST,M-VERIFY,M-PACKET,M-CONTEXT,M-CI,M-TRACE,M-IMPACT,M-NEXT,M-PROJECTS" VERIFICATION_REF="V-M-CLI" />
+  <M-LINT NAME="Enforced invariants (lint)" TYPE="CORE_LOGIC" STATUS="done" PATH="src/grace-lint.ts" DEPENDS="M-COMMON,M-XML,M-CONFIG,M-ERRORS,M-PATHS,M-SHARD" VERIFICATION_REF="V-M-LINT" />
+  <M-MODULE NAME="Index navigation commands" TYPE="CORE_LOGIC" STATUS="done" PATH="src/grace-module.ts" DEPENDS="M-COMMON,M-PATHS,M-ERRORS,M-XML,M-SHARD" VERIFICATION_REF="V-M-MODULE" />
+  <M-FILE NAME="File-local markup view" TYPE="CORE_LOGIC" STATUS="done" PATH="src/grace-file.ts" DEPENDS="M-LINT,M-COMMON,M-ERRORS" VERIFICATION_REF="V-M-FILE" />
+  <M-INIT NAME="Project bootstrap" TYPE="UTILITY" STATUS="done" PATH="src/grace-init.ts" DEPENDS="M-CONFIG" VERIFICATION_REF="V-M-INIT" />
+  <M-INSTALL NAME="DeepSeek Harness installer" TYPE="INTEGRATION" STATUS="done" PATH="src/grace-install.ts" DEPENDS="M-ERRORS" VERIFICATION_REF="V-M-INSTALL" />
+  <M-STATUS NAME="Project health status" TYPE="UTILITY" STATUS="done" PATH="src/grace-status.ts" DEPENDS="M-COMMON,M-LINT,M-ERRORS" VERIFICATION_REF="V-M-STATUS" />
+  <M-DOCTOR NAME="Environment doctor" TYPE="UTILITY" STATUS="done" PATH="src/grace-doctor.ts" DEPENDS="M-COMMON,M-LINT,M-CONFIG,M-INSTALL,M-ERRORS" VERIFICATION_REF="V-M-DOCTOR" />
+  <M-TEST NAME="Trusted command execution" TYPE="CORE_LOGIC" STATUS="done" PATH="src/grace-test.ts" DEPENDS="M-COMMON,M-XML,M-PATHS,M-CONFIG,M-ERRORS" VERIFICATION_REF="V-M-TEST" />
+  <M-VERIFY NAME="Verification digest loop" TYPE="CORE_LOGIC" STATUS="done" PATH="src/grace-verify.ts" DEPENDS="M-TEST,M-COMMON,M-CONFIG,M-ERRORS" VERIFICATION_REF="V-M-VERIFY" />
+  <M-PACKET NAME="Worker packet and focus" TYPE="UTILITY" STATUS="done" PATH="src/grace-packet.ts" DEPENDS="M-ERRORS,M-XML,M-PATHS,M-CONFIG,M-COMMON,M-TEST" VERIFICATION_REF="V-M-PACKET" />
+  <M-CONTEXT NAME="Context cost model" TYPE="UTILITY" STATUS="done" PATH="src/grace-context.ts" DEPENDS="M-COMMON,M-CONFIG,M-ERRORS" VERIFICATION_REF="V-M-CONTEXT" />
+  <M-MCP NAME="MCP stdio server" TYPE="INTEGRATION" STATUS="done" PATH="src/grace-mcp.ts" DEPENDS="M-MCP-COMMANDS" VERIFICATION_REF="V-M-MCP" />
+  <M-MCP-COMMANDS NAME="MCP tool catalog" TYPE="INTEGRATION" STATUS="done" PATH="src/grace-mcp-commands.ts" DEPENDS="M-ERRORS" VERIFICATION_REF="V-M-MCP-COMMANDS" />
+  <M-CI NAME="CI quality gate" TYPE="ORCHESTRATOR" STATUS="done" PATH="src/grace-ci.ts" DEPENDS="M-LINT,M-STATUS,M-TEST,M-VERIFY,M-CONFIG,M-ERRORS,M-COMMON" VERIFICATION_REF="V-M-CI" />
+  <M-SHARD NAME="Sharded indexes" TYPE="CORE_LOGIC" STATUS="done" PATH="src/grace-shard.ts" DEPENDS="M-ERRORS,M-XML,M-PATHS" VERIFICATION_REF="V-M-SHARD" />
+  <M-TRACE NAME="Traceability report" TYPE="CORE_LOGIC" STATUS="done" PATH="src/grace-trace.ts" DEPENDS="M-COMMON,M-CONFIG,M-ERRORS,M-PATHS,M-SHARD,M-TEST,M-XML" VERIFICATION_REF="V-M-TRACE" />
+  <M-IMPACT NAME="Change impact analysis" TYPE="CORE_LOGIC" STATUS="done" PATH="src/grace-impact.ts" DEPENDS="M-COMMON,M-CONFIG,M-ERRORS,M-PATHS,M-SHARD,M-TEST" VERIFICATION_REF="V-M-IMPACT" />
+  <M-NEXT NAME="Next-step advisor" TYPE="ORCHESTRATOR" STATUS="done" PATH="src/grace-next.ts" DEPENDS="M-COMMON,M-CONFIG,M-ERRORS,M-CI,M-LINT,M-SHARD,M-TEST" VERIFICATION_REF="V-M-NEXT" />
+  <M-PROJECTS NAME="Monorepo project discovery" TYPE="UTILITY" STATUS="done" PATH="src/grace-projects.ts" DEPENDS="M-COMMON,M-CONFIG,M-ERRORS,M-STATUS,M-LINT,M-CI,M-SHARD" VERIFICATION_REF="V-M-PROJECTS" />
+</GraphIndex>

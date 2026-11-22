@@ -1,0 +1,37 @@
+<!-- Module contract for M-VERIFY. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-VERIFY NAME="Verification digest loop" TYPE="CORE_LOGIC" STATUS="done">
+  <purpose>Agent-loop verification digest: scoped module runs, trust gate, failure artifact and JSON envelope (ADR-1, ADR-3, ADR-8).</purpose>
+  <path>src/grace-verify.ts</path>
+  <depends>M-TEST,M-COMMON,M-CONFIG,M-ERRORS</depends>
+  <verification-ref>V-M-VERIFY</verification-ref>
+
+  <annotations>
+    <export-FAILURE_REPORT_DIR PURPOSE=".mygrace state directory." />
+    <export-FAILURE_REPORT_FILENAME PURPOSE="last-failures.md failure artifact." />
+    <fn-writeFailureReport PURPOSE="Write the failure digest only on failure." />
+    <export-verifyCommand PURPOSE="mygrace verify [--module M-X | --all] [--allow-commands] [--format json]." />
+  </annotations>
+
+  <CrossLink to="M-TEST" relation="planning, authorization and execution" />
+
+  <contract>
+    <purpose>Agent-loop verification digest: scoped module runs, trust gate, failure artifact and JSON envelope (ADR-1, ADR-3, ADR-8).</purpose>
+    <inputs>
+      <param name="module" type="string" description="Optional module id; omitted means all modules." />
+    </inputs>
+    <outputs>
+      <param name="results" type="ModuleTestResult[]" description="Per-module outcome plus a compact digest." />
+      <param name="exitCode" type="ExitCode" description="1 when any module fails." />
+    </outputs>
+    <errors>
+      <error code="UNTRUSTED_PROJECT" description="Commands refused without trust (exit 2)." />
+      <error code="VERIFICATION_FAILED" description="At least one module failed (exit 1)." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>Failure details are written to .mygrace/last-failures.md only when something fails.</note-1>
+    <note-2>Orchestration only: trust, planning and process execution stay in grace-test.ts.</note-2>
+    <note-3>JSON mode exposes per-module ok, command, source, files and error.</note-3>
+  </notes>
+</M-VERIFY>

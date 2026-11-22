@@ -1,0 +1,38 @@
+<!-- Module contract for M-DOCTOR. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-DOCTOR NAME="Environment doctor" TYPE="UTILITY" STATUS="done">
+  <purpose>Honest health report for a MyGRACE project and its DSH integration: project docs, config, environment tools, skills, MCP row and panel.</purpose>
+  <path>src/grace-doctor.ts</path>
+  <depends>M-COMMON,M-LINT,M-CONFIG,M-INSTALL,M-ERRORS</depends>
+  <verification-ref>V-M-DOCTOR</verification-ref>
+
+  <annotations>
+    <fn-buildDoctorReport PURPOSE="Read-only report construction that never throws for unreadable inputs." />
+    <fn-doctorFindings PURPOSE="Map check rows to ADR-3 findings (exit-code source of truth)." />
+    <fn-printDoctorReport PURPOSE="Human text rendering." />
+    <export-doctorCommand PURPOSE="mygrace doctor [--format json]." />
+    <type-DoctorReport PURPOSE="Typed check rows plus error/warning totals and effective config." />
+  </annotations>
+
+  <CrossLink to="M-LINT" relation="project lint summary" />
+  <CrossLink to="M-CONFIG" relation="effective configuration row" />
+  <CrossLink to="M-INSTALL" relation="installed skills and MCP row checks" />
+
+  <contract>
+    <purpose>Honest health report for a MyGRACE project and its DSH integration: project docs, config, environment tools, skills, MCP row and panel.</purpose>
+    <inputs>
+      <param name="startDir" type="string" description="Directory to diagnose." />
+    </inputs>
+    <outputs>
+      <param name="report" type="DoctorReport" description="Project, environment, integration and dev-tool checks." />
+    </outputs>
+    <errors>
+      <error code="DOCTOR_FAILED" description="Environment probe failures are reported as check rows, not exceptions." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>Probes are read-only (execFileSync for versions, readFileSync for config files).</note-1>
+    <note-2>Project findings are derived from the same lint engine the gate uses, so doctor cannot disagree with lint.</note-2>
+    <note-3>Exit code matches findings in both text and JSON modes.</note-3>
+  </notes>
+</M-DOCTOR>

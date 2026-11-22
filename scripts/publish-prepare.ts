@@ -14,7 +14,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 
-const ROOT = join(import.meta.dir, "..");
+const ROOT = join(import.meta.dirname, "..");
 const BUNDLE_DIR = join(ROOT, "packages", "mygrace-dsh");
 const BUNDLE_PKG = join(BUNDLE_DIR, "package.json");
 

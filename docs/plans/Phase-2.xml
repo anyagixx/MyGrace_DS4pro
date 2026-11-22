@@ -1,0 +1,51 @@
+<!-- Phase-2 plan. Target 50-200 lines (sizeBudgets.phase): one step per workstream plus outcome/acceptance so an agent can execute without re-reading the whole plan. -->
+<Phase-2 name="Documentation and dogfooding" status="done">
+  <description>Wave 2: make every documented claim true, let the repository govern itself (docs/ + contracts + trust), and replace the cosmetic demo with realistic code and honest metrics.</description>
+
+  <step-1 module="M-STATUS" description="W2.1 documentation truth pass: single source for counts, commands, MCP names with host prefix, honest metrics (docs-impl)." status="done" />
+  <step-2 module="M-DOCTOR" description="W2-pre security and contribution docs: SECURITY.md threat model, CONTRIBUTING.md release gates, issue/PR templates, architecture page (docs-impl)." status="done" />
+  <step-3 module="M-CLI" description="W2.2 dogfooding: docs/ knowledge graph for every src module, contracts, plans, verification, trust and verify proof (core-impl, this repository)." status="done" />
+  <step-4 module="M-TEST" description="W2.3 realistic demo project with real logic and real failure tests, generated from verification scenarios (quality-impl)." status="done" />
+  <step-5 module="M-LINT" description="W2.3 honest metrics (documented line model and token proxy) plus a reproducible 12/50/200-module size sweep." status="done" />
+
+  <outcome>
+    <item-1>README, AGENTS.md, skills and templates describe only implemented behaviour; counts are auto-verified in CI.</item-1>
+    <item-2>This repository passes `mygrace lint --path . --strict` on itself and stores a valid, gitignored trust record.</item-2>
+    <item-3>examples/demo-store contains real logic, real failure tests and docs inside the configured budgets.</item-3>
+    <item-4>Documented savings are a labelled line/token model reproducible by scripts/measure-context.ts.</item-4>
+  </outcome>
+
+  <deliverables>
+    <item-1>docs/graph-index.xml, docs/modules/M-*.xml, docs/verification-index.xml and docs/verification/V-M-*.xml for every src module.</item-1>
+    <item-2>docs/plan-index.xml plus Phase-1/2/3 plans that match ROADMAP waves and real status.</item-2>
+    <item-3>docs/requirements.xml and docs/technology.xml grounded in the actual product and dependencies.</item-3>
+    <item-4>AGENTS.md rewritten for the index-first workflow and the trust model; SECURITY.md, CONTRIBUTING.md and docs/architecture.md published.</item-4>
+    <item-5>CI job that runs validate-docs so a stale count or command cannot silently ship.</item-5>
+  </deliverables>
+
+  <acceptance-gates>
+    <item-1>mygrace lint --path . --strict exits 0 with 0 errors and 0 warnings on this repository.</item-1>
+    <item-2>mygrace trust --path . followed by mygrace verify --path . --module M-LINT executes the real test command and exits 0.</item-2>
+    <item-3>mygrace status --path . reports module, phase and verification counts that match the indexes at the end of this phase.</item-3>
+    <item-4>scripts/validate-docs.ts and scripts/validate-marketplace.ts are green in CI.</item-4>
+  </acceptance-gates>
+
+  <evidence>
+    <item-1>AGENTS.md sha256 is identical before and after init-dsh without --force (the existing file must be preserved).</item-1>
+    <item-2>mygrace module show M-XML and mygrace packet M-LINT read the new docs successfully.</item-2>
+    <item-3>bun test remains green after the documentation work (no test was changed to fit docs).</item-3>
+  </evidence>
+
+  <risks>
+    <item-1>Docs can re-drift after later waves land; validate-docs must stay in the CI gate.</item-1>
+    <item-2>The demo is generated; a generator bug must fail CI rather than silently weaken lint.</item-2>
+    <item-3>Trust records are local state; committing one would defeat the security model.</item-3>
+  </risks>
+  <dependencies>
+    <item-1>Phase-1 gate: full test suite green, strict typecheck clean, demo lint --strict 0/0, pack-smoke green.</item-1>
+    <item-2>docs-impl owns README/AGENTS/skills/templates; core-impl owns docs/** and the src contracts.</item-2>
+    <item-3>quality-impl owns scripts/validators, the CI workflow and the demo generator.</item-3>
+    <item-4>Changing any docs/modules, docs/verification or config file invalidates `.mygrace/trust.json`; re-run `mygrace trust`.</item-4>
+  </dependencies>
+
+</Phase-2>

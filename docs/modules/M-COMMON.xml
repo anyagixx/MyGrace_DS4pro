@@ -1,0 +1,46 @@
+<!-- Module contract for M-COMMON. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-COMMON NAME="Filesystem and index helpers" TYPE="CORE_LOGIC" STATUS="done">
+  <purpose>Project-root discovery, safe index reading, deterministic file walking and table formatting.</purpose>
+  <path>src/grace-common.ts</path>
+  <depends>M-ERRORS,M-XML</depends>
+  <verification-ref>V-M-COMMON</verification-ref>
+
+  <annotations>
+    <fn-findProjectRoot PURPOSE="Walk up to docs/graph-index.xml; throws ProjectNotFoundError." />
+    <fn-tryFindProjectRoot PURPOSE="Non-throwing root discovery, null when absent." />
+    <fn-parseXmlAttributes PURPOSE="v1-compatible attribute helper delegating to grace-xml." />
+    <fn-readIndexFile PURPOSE="Read an index: missing file yields [], malformed throws XmlError." />
+    <fn-readIndexFileSafe PURPOSE="Non-throwing index read returning entries plus an optional XmlError." />
+    <fn-readFileOrNull PURPOSE="File content or null when absent." />
+    <fn-readTextFileOrThrow PURPOSE="Readable UsageError when a required file is unreadable." />
+    <fn-listEntityFiles PURPOSE="Sorted .xml files in a directory filtered by id prefix." />
+    <fn-walkFiles PURPOSE="Deterministic recursive walk with ignore dirs/exts and no symlink following." />
+    <fn-formatTable PURPOSE="Aligned text table that tolerates ragged rows." />
+    <fn-countLines PURPOSE="Line count used by index caps and size budgets." />
+    <fn-parseIndexEntries PURPOSE="Re-exported structural parser from grace-xml." />
+  </annotations>
+
+  <CrossLink to="M-XML" relation="delegates XML parsing" />
+
+  <contract>
+    <purpose>Project-root discovery, safe index reading, deterministic file walking and table formatting.</purpose>
+    <inputs>
+      <param name="startDir" type="string" description="Directory to start the root search from." />
+      <param name="baseDir" type="string" description="Directory to walk." />
+    </inputs>
+    <outputs>
+      <param name="root" type="string" description="Project root containing docs/graph-index.xml." />
+      <param name="files" type="string[]" description="Sorted absolute file paths." />
+    </outputs>
+    <errors>
+      <error code="PROJECT_NOT_FOUND" description="No project marker above startDir." />
+      <error code="XML_INVALID" description="Malformed index XML." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>The root walk is bounded: resolve(dir, ..) reaches the filesystem root, so a missing project fails fast.</note-1>
+    <note-2>walkFiles never follows symlinks, which avoids loops and escaping the project tree.</note-2>
+    <note-3>readIndexFileSafe is the reporting-friendly variant used by lint, status, doctor and context-cost.</note-3>
+  </notes>
+</M-COMMON>

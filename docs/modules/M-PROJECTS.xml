@@ -1,0 +1,43 @@
+<!-- Module contract for M-PROJECTS. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-PROJECTS NAME="Monorepo project discovery" TYPE="UTILITY" STATUS="done">
+  <purpose>Discover every MyGRACE project under a directory tree and report per-project counts, lint findings and verification coverage (Wave 3.7).</purpose>
+  <path>src/grace-projects.ts</path>
+  <depends>M-COMMON,M-CONFIG,M-ERRORS,M-STATUS,M-LINT,M-CI,M-SHARD</depends>
+  <verification-ref>V-M-PROJECTS</verification-ref>
+
+  <annotations>
+    <export-DEFAULT_MAX_DEPTH PURPOSE="Default BFS depth (4)." />
+    <export-DEFAULT_SCAN_CAP PURPOSE="Hard cap on scanned directories (2000); exceeding it sets truncated instead of hanging." />
+    <export-PROJECT_MARKER PURPOSE="docs/graph-index.xml — the only discovery marker." />
+    <fn-discoverProjects PURPOSE="Bounded BFS, skips configured ignoreDirs plus .git/node_modules/.bun*/dist/build/coverage; returns roots, depth, scannedDirs, truncated." />
+    <fn-summarizeProject PURPOSE="Per-project counts, lint error/warning totals, coverage counters and clean/findings status via the same APIs as status/lint/ci." />
+    <fn-aggregateProjects PURPOSE="Totals across discovered projects (modules, phases, verifications, errors, warnings)." />
+    <export-projectsCommand PURPOSE="mygrace projects [--path] [--depth 4] [--format text|json] [--strict]." />
+  </annotations>
+
+  <CrossLink to="M-STATUS" relation="per-project counts come from the status snapshot" />
+  <CrossLink to="M-LINT" relation="lint findings are collected with the same detectors" />
+  <CrossLink to="M-CI" relation="coverage counters reuse the ci collector" />
+
+  <contract>
+    <purpose>Answer "what MyGRACE projects live in this tree and how healthy are they?" without reading every per-entity file.</purpose>
+    <inputs>
+      <param name="path" type="string" description="Directory tree to scan." />
+      <param name="depth" type="number" description="Maximum directory depth (default 4)." />
+    </inputs>
+    <outputs>
+      <param name="discovery" type="ProjectsDiscovery" description="scanRoot, projects (root/name/depth), scannedDirs, truncated." />
+      <param name="summaries" type="ProjectSummary[]" description="counts, lint, coverage, status, findings per project plus totals." />
+    </outputs>
+    <errors>
+      <error code="USAGE" description="Invalid depth/format or unreadable scan root — exit 2." />
+      <error code="LINT" description="Any project has lint errors → exit 1; --strict also fails on warnings." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>Read-only: bounded BFS, no writes, no project-command execution, no network.</note-1>
+    <note-2>Discovery is marker-based (docs/graph-index.xml), so nested and sibling projects are both found deterministically.</note-2>
+    <note-3>Exit policy: 0 clean, 1 any findings, --strict promotes warnings; a truncated scan is reported, never silently ignored.</note-3>
+  </notes>
+</M-PROJECTS>

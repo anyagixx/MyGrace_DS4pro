@@ -1,0 +1,132 @@
+# MyGRACE CI — release gates from ROADMAP.md §6.
+#
+# Jobs: typecheck (bun + node 26 matrix), tests, Linux/Windows/macOS OS matrix, multi-language, demo lint, documentation and
+# marketplace truth checks, pack-smoke, generated-asset drift. The packaged
+# tarball is exercised by pack-smoke; nothing here publishes anything.
+name: ci
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  typecheck:
+    name: typecheck (${{ matrix.runtime }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        runtime: [bun, node]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.5"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "26"
+      - run: bun install --frozen-lockfile
+      - name: Typecheck with bun
+        if: matrix.runtime == 'bun'
+        run: bun run typecheck
+      - name: Typecheck with node 26 running tsc directly
+        if: matrix.runtime == 'node'
+        run: node node_modules/typescript/bin/tsc --noEmit
+
+  test:
+    name: tests (bun)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.5"
+      - run: bun install --frozen-lockfile
+      - name: Foundation + command unit tests (scoped by bunfig.toml)
+        run: bun test
+      - name: Demo-store integration tests (dedicated bunfig root)
+        run: bun run test:demo
+
+  os-matrix:
+    name: os matrix (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.5"
+      - run: bun install --frozen-lockfile
+      - name: Typecheck
+        run: bun run typecheck
+      - name: Unit tests (bunfig scopes discovery to ./test)
+        run: bun test
+      - name: Demo-store integration tests
+        run: bun run test:demo
+
+  language-matrix:
+    name: multi-language (${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.5"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: bun install --frozen-lockfile
+      - name: Python + Go multi-language fixtures (sourceDirs/markupExts/ignoreDirs/testRunner)
+        run: bun test test/grace-language.test.ts
+
+  lint-demo:
+    name: lint demo project (0 errors / 0 warnings)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.5"
+      - run: bun install --frozen-lockfile
+      - run: bun run lint:demo
+
+  truth-checks:
+    name: docs and marketplace truth
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.5"
+      - run: bun install --frozen-lockfile
+      - run: bun run validate:marketplace
+      - run: bun run validate:docs
+      - name: Negative tests for the marketplace validator (sabotage)
+        run: bun run scripts/validate-marketplace.ts --self-test
+
+  release:
+    name: packaged CLI and generated assets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.5"
+      - run: bun install --frozen-lockfile
+      - name: pack-smoke (pack tarball, install, init-dsh, lint, install-dsh --dry-run)
+        run: bun run pack:smoke
+      - name: generated demo is in sync
+        run: bun run scripts/gen-example.ts --check
+      - name: generated DSH skill package is in sync
+        run: bun run scripts/gen-dsh-skill-mygrace.ts --check

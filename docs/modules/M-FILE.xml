@@ -1,0 +1,34 @@
+<!-- Module contract for M-FILE. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-FILE NAME="File-local markup view" TYPE="CORE_LOGIC" STATUS="done">
+  <purpose>Show file-local semantic markup: MODULE_CONTRACT, MODULE_MAP, CHANGE_SUMMARY, function contracts and block integrity.</purpose>
+  <path>src/grace-file.ts</path>
+  <depends>M-LINT,M-COMMON,M-ERRORS</depends>
+  <verification-ref>V-M-FILE</verification-ref>
+
+  <annotations>
+    <export-fileCommand PURPOSE="file command group." />
+    <export-fileShowCmd PURPOSE="file show &lt;path&gt; [--root] [--contracts] [--blocks]." />
+  </annotations>
+
+  <CrossLink to="M-LINT" relation="shares analyzeMarkup so lint and file show cannot disagree" />
+
+  <contract>
+    <purpose>Show file-local semantic markup: MODULE_CONTRACT, MODULE_MAP, CHANGE_SUMMARY, function contracts and block integrity.</purpose>
+    <inputs>
+      <param name="path" type="string" description="File path relative to --root (absolute paths win)." />
+    </inputs>
+    <outputs>
+      <param name="text" type="string" description="Extracted markup sections and block pairing diagnostics." />
+    </outputs>
+    <errors>
+      <error code="USAGE" description="Missing file path or unreadable file (exit 2)." />
+      <error code="FILE_NOT_FOUND" description="Path does not exist (exit 1)." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>Block pairing printed here is name-aware, matching lint exactly.</note-1>
+    <note-2>Legacy === MODULE_CONTRACT === markers are still recognized for older files.</note-2>
+    <note-3>Read-only: no repository mutation.</note-3>
+  </notes>
+</M-FILE>

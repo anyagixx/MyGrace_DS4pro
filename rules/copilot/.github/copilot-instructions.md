@@ -1,43 +1,42 @@
-# MyGRACE Instructions
+# MyGRACE instructions
 
-This project uses **MyGRACE** (Graph-RAG Anchored Code Engineering) — a scalable GRACE methodology with lazy-loading indexes for large projects.
+This project uses **MyGRACE**, an index-first engineering harness. Copilot reads
+this file automatically; follow the navigation, trust and enforcement rules below.
 
-## Critical Navigation Rule
-Always start with index files. Never scan all per-entity files at once.
+## Navigation rule #1 (critical)
 
-1. Read `docs/graph-index.xml` first (≤100 lines) — this tells you every module
-2. Read `docs/modules/M-XXX.xml` only for the specific module you need (30-80 lines)
-3. Never read monolithic XML files — they don't exist in MyGRACE
+Always start with the indexes, never scan all entity files:
 
-## Core Principles
-- Never write code without a MODULE_CONTRACT
-- START_BLOCK/END_BLOCK are navigation anchors, not comments
-- graph-index.xml is always current — it never drifts from reality
-- Top-down: Requirements → Technology → Plan → Verification → Contracts → Code
-- Verification (tests, traces, logs) is part of the architecture
-- Governed autonomy: you have freedom in HOW, not in WHAT
+- `docs/graph-index.xml` — module index (default cap 100 lines) → then the one `docs/modules/M-XXX.xml` (30-80 lines)
+- `docs/plan-index.xml` — phase index (cap 50) → then the current `docs/plans/Phase-N.xml` (50-200 lines)
+- `docs/verification-index.xml` — verification index (cap 80) → then `docs/verification/V-M-XXX.xml` (20-60 lines)
 
-## Project Structure
-```
-docs/
-  graph-index.xml         # Module index (≤100 lines)
-  plan-index.xml          # Phase index (≤50 lines)
-  verification-index.xml  # Verification index (≤80 lines)
-  modules/                # Per-module files (M-XXX.xml)
-  plans/                  # Per-phase files (Phase-N.xml)
-  verification/           # Per-verification files (V-M-XXX.xml)
-```
+Caps and budgets come from `mygrace.config.json` (`indexCaps`, `sizeBudgets`) and are enforced by lint. Legacy monolithic `knowledge-graph.xml`, `development-plan.xml` and `verification-plan.xml` are not used.
 
-## File Markup
-Each governed source file has:
-- MODULE_CONTRACT (PURPOSE, SCOPE, DEPENDS, LINKS)
-- MODULE_MAP (exported/local symbols)
-- CHANGE_SUMMARY (recent changes)
-- START_BLOCK / END_BLOCK pairs (semantic navigation)
+## Project commands are trust-gated
 
-## CLI Commands (if available)
-- `mygrace module index` — show module list
-- `mygrace module find <query>` — search modules
-- `mygrace module show M-XXX` — show module details
-- `mygrace lint` — integrity check
-- `mygrace file show <path>` — file-local markup
+`<module-checks>` in `docs/verification/V-M-XXX.xml` is the canonical command source (module files are a deprecated fallback; `testRunner` from config is the last fallback). MyGRACE refuses to execute those project-declared commands unless one of these holds:
+
+- `.mygrace/trust.json` is current (created by `mygrace trust` after reviewing the commands);
+- `mygrace.config.json` sets `"allowCommands": true`;
+- the run passes `--allow-commands`.
+
+`.mygrace/` is local state and must stay gitignored. Editing `docs/modules/`, `docs/verification/` or the config invalidates the record — re-run `mygrace trust`. Commands run argv-only, never through a shell.
+
+## Enforcement and final gate
+
+- `mygrace lint --strict` — structural XML validity, index/entity field drift, duplicates, missing PATH/DEPENDS/VERIFICATION_REF, phase status/steps drift, index caps, entity size budgets, markup/contract fields.
+- `mygrace ci` — the one-command quality gate (strict lint + status + verification coverage); `mygrace ci --tests` adds trust-gated scoped tests. Run it before asking a human to review, as the agent's final self-check.
+- Exit codes: 0 ok, 1 findings/test failures, 2 usage/config/trust refusal.
+
+## Configuration
+
+`mygrace.config.json` (written by `mygrace init-dsh`): `sourceDirs`, `markupExts`, `ignoreDirs`, `indexCaps`, `sizeBudgets`, `testRunner`, `allowCommands`, `language`.
+
+## Archiving
+
+Archiving a completed phase means moving `docs/plans/Phase-N.xml` to `docs/archive/` **and removing its `plan-index.xml` entry**; otherwise lint reports an orphaned index entry.
+
+## Honest metrics
+
+The project publishes a line/byte measurement with a documented `ceil(bytes/4)` token **estimate** (`scripts/measure-context.ts`) — never claim measured "token savings". The classic baseline is synthesized; results depend on project size.

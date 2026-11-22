@@ -1,0 +1,26 @@
+<!-- Canonical verification entry. <module-checks> is read by mygrace test/verify; commands are trust-gated (run `mygrace trust` after review). -->
+<V-M-PROJECTS MODULE="M-PROJECTS" PRIORITY="medium" STATUS="done">
+  <test-files>
+    <file>test/grace-projects.test.ts</file>
+  </test-files>
+
+  <module-checks>
+    <check-1>bun test test/grace-projects.test.ts</check-1>
+  </module-checks>
+
+  <scenarios>
+    <scenario-1 kind="success">A tree with several projects (nested and sibling) is discovered by docs/graph-index.xml markers; each row reports counts, lint errors/warnings, coverage and clean/findings status, with correct totals.</scenario-1>
+    <scenario-2 kind="success">Depth bounds and ignoreDirs are honoured; a scan beyond the cap reports truncated instead of hanging; --files-free read-only run never writes.</scenario-2>
+    <scenario-3 kind="failure">Exit codes: 0 when every project is clean, 1 when any project has errors, --strict promotes warnings, 2 on usage/config errors; JSON exposes per-project summaries and totals.</scenario-3>
+  </scenarios>
+
+  <required-log-markers>
+    <marker-1>CLI text/JSON output is asserted by the tests; library paths emit no runtime log markers.</marker-1>
+  </required-log-markers>
+
+  <notes>
+    <note-1>Covered by test/grace-projects.test.ts (discovery, depth/ignore rules, cap/truncation, per-project summary, strict exit promotion, JSON envelope).</note-1>
+    <note-2>On this repository it reports three projects: MyGRACE, DemoStore (examples/demo-store) and TestProject (test/fixtures/mygrace-project).</note-2>
+    <note-3>CLI surface: mygrace projects [--path .] [--depth 4] [--format text|json] [--strict].</note-3>
+  </notes>
+</V-M-PROJECTS>

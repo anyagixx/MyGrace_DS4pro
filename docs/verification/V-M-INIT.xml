@@ -1,0 +1,26 @@
+<!-- Canonical verification entry. <module-checks> is read by mygrace test/verify; commands are trust-gated (run `mygrace trust` after review). -->
+<V-M-INIT MODULE="M-INIT" PRIORITY="low" STATUS="done">
+  <test-files>
+    <file>test/grace-init.test.ts</file>
+  </test-files>
+
+  <module-checks>
+    <check-1>bun test test/grace-init.test.ts</check-1>
+  </module-checks>
+
+  <scenarios>
+    <scenario-1 kind="success">init-dsh creates the docs indexes, AGENTS.md, mygrace.config.json and a .gitignore that ignores .mygrace/.</scenario-1>
+    <scenario-2 kind="failure">Existing files are skipped without --force, and an existing .gitignore is never rewritten.</scenario-2>
+    <scenario-3 kind="failure">--force overwrites a stale AGENTS.md instead of silently keeping it.</scenario-3>
+    <scenario-4 kind="success">The generated config carries the documented defaults and the requested language/testRunner.</scenario-4>
+  </scenarios>
+
+  <required-log-markers>
+    <marker-1>CLI text output (created/skipped lines) is asserted by the test; no runtime log markers are emitted by library modules.</marker-1>
+  </required-log-markers>
+
+  <notes>
+    <note-1>Release-level end-to-end coverage (packaged CLI, init-dsh, lint) lives in scripts/pack-smoke.ts (gate G1), not in this module verification.</note-1>
+    <note-2>The .gitignore step protects the local trust record from ADR-1 (never commit .mygrace/).</note-2>
+  </notes>
+</V-M-INIT>

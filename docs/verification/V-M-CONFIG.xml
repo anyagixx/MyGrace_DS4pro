@@ -1,0 +1,23 @@
+<!-- Canonical verification entry. <module-checks> is read by mygrace test/verify; commands are trust-gated (run `mygrace trust` after review). -->
+<V-M-CONFIG MODULE="M-CONFIG" PRIORITY="high" STATUS="done">
+  <test-files>
+    <file>test/grace-config.test.ts</file>
+  </test-files>
+
+  <module-checks>
+    <check-1>bun test</check-1>
+  </module-checks>
+
+  <scenarios>
+    <scenario-1 kind="success">Missing config yields defaults; valid overrides are applied.</scenario-1>
+    <scenario-2 kind="failure">Every invalid field is reported at once as CONFIG_INVALID; no partial config is used.</scenario-2>
+  </scenarios>
+
+  <required-log-markers>
+    <marker-1>CLI text output and JSON envelopes are asserted by the tests; no runtime log markers are emitted by library modules.</marker-1>
+  </required-log-markers>
+
+  <notes>
+    <note-1>Covered by test/grace-config.test.ts.</note-1>
+  </notes>
+</V-M-CONFIG>

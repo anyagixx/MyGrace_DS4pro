@@ -7,7 +7,7 @@ import { lintIndexSync, lintMarkup, lintVerificationRefs, collectLintIssues } fr
 import { buildToolCommand } from "../src/grace-mcp-commands";
 import { moduleListCmd, moduleFindCmd, moduleShowCmd } from "../src/grace-module";
 
-const FIXTURE_ROOT = import.meta.dir + "/fixtures/mygrace-project";
+const FIXTURE_ROOT = import.meta.dirname + "/fixtures/mygrace-project";
 
 // ─── findProjectRoot ────────────────────────────────────────────────────
 
@@ -95,6 +95,7 @@ describe("lintIndexSync", () => {
     try {
       const issues = lintIndexSync(root, "graph-index.xml", "modules", "M-");
       expect(issues.some((i) => i.severity === "error" && i.message.includes("Orphaned index entry: M-ORPHAN"))).toBe(true);
+      expect(issues.some((i) => i.code === "ORPHANED_INDEX_ENTRY" && i.file === "docs/graph-index.xml")).toBe(true);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -105,6 +106,7 @@ describe("lintIndexSync", () => {
     try {
       const issues = lintIndexSync(root, "graph-index.xml", "modules", "M-");
       expect(issues.some((i) => i.severity === "error" && i.message.includes("Missing index entry: M-EXTRA"))).toBe(true);
+      expect(issues.some((i) => i.code === "MISSING_INDEX_ENTRY" && i.file === "docs/modules/M-EXTRA.xml")).toBe(true);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -118,6 +120,7 @@ describe("lintIndexSync", () => {
     try {
       const issues = lintIndexSync(root, "graph-index.xml", "modules", "M-");
       expect(issues.some((i) => i.severity === "warning" && i.message.includes("STATUS drift: M-AUTH"))).toBe(true);
+      expect(issues.some((i) => i.code === "STATUS_DRIFT" && i.severity === "warning")).toBe(true);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

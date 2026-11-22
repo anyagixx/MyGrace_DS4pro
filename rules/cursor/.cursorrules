@@ -1,64 +1,42 @@
-# MyGRACE — Scalable GRACE with Lazy-Loading
+# MyGRACE — index-first engineering harness
 
-This project uses **MyGRACE** (Graph-RAG Anchored Code Engineering) — a scalable variant of GRACE designed for large projects (20-200+ modules).
+This project uses **MyGRACE**. Cursor reads this file as project rules; follow
+the navigation, trust and enforcement rules below.
 
-## Navigation Rule #1 (CRITICAL)
-**ALWAYS start with index files. NEVER scan all per-entity files.**
+## Navigation rule #1 (critical)
 
-1. Read `docs/graph-index.xml` first (≤100 lines) — find the module ID
-2. Read `docs/modules/M-XXX.xml` next (30-80 lines) — only the module you need
-3. Done. ~130 lines vs ~6500 in classic GRACE.
+Always start with the indexes, never scan all entity files:
 
-**NEVER** read monolithic `knowledge-graph.xml`, `development-plan.xml`, or `verification-plan.xml` — they don't exist in MyGRACE.
+- `docs/graph-index.xml` — module index (default cap 100 lines) → then the one `docs/modules/M-XXX.xml` (30-80 lines)
+- `docs/plan-index.xml` — phase index (cap 50) → then the current `docs/plans/Phase-N.xml` (50-200 lines)
+- `docs/verification-index.xml` — verification index (cap 80) → then `docs/verification/V-M-XXX.xml` (20-60 lines)
 
-## Six Core Principles
-1. **Never Write Code Without a Contract** — MODULE_CONTRACT before code
-2. **Semantic Markup Is Not Comments** — `START_BLOCK`/`END_BLOCK` are navigation anchors
-3. **Knowledge Graph Is Always Current** — `graph-index.xml` never drifts
-4. **Top-Down Synthesis** — Requirements → Technology → Plan → Verification → Contracts → Code
-5. **Verification Is Architecture** — tests, traces, log markers are part of the blueprint
-6. **Governed Autonomy (PCAM)** — Purpose, Constraints, Autonomy, Metrics
+Caps and budgets come from `mygrace.config.json` (`indexCaps`, `sizeBudgets`) and are enforced by lint. Legacy monolithic `knowledge-graph.xml`, `development-plan.xml` and `verification-plan.xml` are not used.
 
-## Project Structure
-```
-docs/
-  graph-index.xml              ← ← ← ALWAYS read first (≤100 lines)
-  plan-index.xml               ← Phase index (≤50 lines)
-  verification-index.xml       ← Verification index (≤80 lines)
-  operational-packets.xml      ← Packet templates
-  modules/                     ← Per-module files (M-XXX.xml)
-  plans/                       ← Per-phase files (Phase-N.xml)
-  verification/                ← Per-verification files (V-M-XXX.xml)
-  archive/                     ← Completed phases
-```
+## Project commands are trust-gated
 
-## Key Artifacts
-- `MODULE_CONTRACT` in each file — WHAT each module does
-- `START_BLOCK` / `END_BLOCK` — semantic navigation anchors
-- `CHANGE_SUMMARY` — change tracking
-- `docs/modules/M-XXX.xml` — per-module contracts (30-80 lines each)
-- `docs/plans/Phase-N.xml` — per-phase steps (50-200 lines each)
-- `docs/verification/V-M-XXX.xml` — per-module verification (20-60 lines each)
+`<module-checks>` in `docs/verification/V-M-XXX.xml` is the canonical command source (module files are a deprecated fallback; `testRunner` from config is the last fallback). MyGRACE refuses to execute those project-declared commands unless one of these holds:
 
-## Module Types
-ENTRY_POINT, CORE_LOGIC, DATA_LAYER, UI_COMPONENT, UTILITY, INTEGRATION
+- `.mygrace/trust.json` is current (created by `mygrace trust` after reviewing the commands);
+- `mygrace.config.json` sets `"allowCommands": true`;
+- the run passes `--allow-commands`.
 
-## CLI (if mygrace is installed)
-```bash
-mygrace module index              # Show graph-index.xml
-mygrace module find <query>       # Resolve module IDs
-mygrace module show M-XXX         # Per-module file
-mygrace module show M-XXX --with-verification  # Module + verification
-mygrace module list --status=wip  # Filter modules
-mygrace phase show Phase-N        # Per-phase file
-mygrace verification index        # Show verification-index.xml
-mygrace lint                      # Integrity check
-mygrace file show <path>          # File-local markup
-```
+`.mygrace/` is local state and must stay gitignored. Editing `docs/modules/`, `docs/verification/` or the config invalidates the record — re-run `mygrace trust`. Commands run argv-only, never through a shell.
 
-## Token Budget
-| Task | Classic GRACE | MyGRACE | Savings |
-|------|--------------|---------|---------|
-| Status check | ~6500 lines | ~230 lines | 96% |
-| Single module work | ~6500 lines | ~180 lines | 97% |
-| Phase execution | ~6500 lines | ~280 lines | 96% |
+## Enforcement and final gate
+
+- `mygrace lint --strict` — structural XML validity, index/entity field drift, duplicates, missing PATH/DEPENDS/VERIFICATION_REF, phase status/steps drift, index caps, entity size budgets, markup/contract fields.
+- `mygrace ci` — the one-command quality gate (strict lint + status + verification coverage); `mygrace ci --tests` adds trust-gated scoped tests. Run it before asking a human to review, as the agent's final self-check.
+- Exit codes: 0 ok, 1 findings/test failures, 2 usage/config/trust refusal.
+
+## Configuration
+
+`mygrace.config.json` (written by `mygrace init-dsh`): `sourceDirs`, `markupExts`, `ignoreDirs`, `indexCaps`, `sizeBudgets`, `testRunner`, `allowCommands`, `language`.
+
+## Archiving
+
+Archiving a completed phase means moving `docs/plans/Phase-N.xml` to `docs/archive/` **and removing its `plan-index.xml` entry**; otherwise lint reports an orphaned index entry.
+
+## Honest metrics
+
+The project publishes a line/byte measurement with a documented `ceil(bytes/4)` token **estimate** (`scripts/measure-context.ts`) — never claim measured "token savings". The classic baseline is synthesized; results depend on project size.

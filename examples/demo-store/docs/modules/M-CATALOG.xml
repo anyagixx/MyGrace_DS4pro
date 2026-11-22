@@ -1,0 +1,33 @@
+<M-CATALOG NAME="Catalog" TYPE="CORE_LOGIC" STATUS="done">
+  <purpose>Build a validated product catalog and resolve products by id.</purpose>
+  <path>src/catalog/index.ts</path>
+  <depends>M-MONEY</depends>
+  <verification-ref>V-M-CATALOG</verification-ref>
+
+  <annotations>
+    <fn-createCatalog PURPOSE="Catalog exports createCatalog with validated inputs and explicit errors." />
+    <fn-findProduct PURPOSE="Catalog exports findProduct with validated inputs and explicit errors." />
+    <fn-describeProduct PURPOSE="Catalog exports describeProduct with validated inputs and explicit errors." />
+    <type-CATALOG_INVALID PURPOSE="Catalog validation error raised on invalid input." />
+  </annotations>
+
+  <CrossLink to="M-CART" relation="used-by" />
+
+  <contract>
+    <purpose>Build a validated product catalog and resolve products by id.</purpose>
+    <inputs>
+      <param name="input" type="unknown" description="Catalog validates every input before use and reports errors explicitly." />
+    </inputs>
+    <outputs>
+      <param name="result" type="unknown" description="Catalog returns deterministic results; failures throw instead of returning sentinel values." />
+    </outputs>
+    <errors>
+      <error code="CATALOG_INVALID" description="Raised when Catalog receives invalid input." />
+    </errors>
+  </contract>
+
+  <notes>
+    Catalog validation rejects duplicate ids, non-positive prices and negative stock.
+    Unknown product lookups throw instead of returning undefined so callers cannot ignore them.
+  </notes>
+</M-CATALOG>

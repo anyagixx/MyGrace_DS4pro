@@ -1,0 +1,23 @@
+<!-- Canonical verification entry. <module-checks> is read by mygrace test/verify; commands are trust-gated (run `mygrace trust` after review). -->
+<V-M-COMMON MODULE="M-COMMON" PRIORITY="high" STATUS="done">
+  <test-files>
+    <file>test/grace-index.test.ts</file>
+  </test-files>
+
+  <module-checks>
+    <check-1>bun test</check-1>
+  </module-checks>
+
+  <scenarios>
+    <scenario-1 kind="success">Root discovery, safe index reads and deterministic walks behave as documented.</scenario-1>
+    <scenario-2 kind="failure">A missing project fails fast with PROJECT_NOT_FOUND; malformed XML throws XML_INVALID.</scenario-2>
+  </scenarios>
+
+  <required-log-markers>
+    <marker-1>CLI text output and JSON envelopes are asserted by the tests; no runtime log markers are emitted by library modules.</marker-1>
+  </required-log-markers>
+
+  <notes>
+    <note-1>Covered by test/grace-index.test.ts.</note-1>
+  </notes>
+</V-M-COMMON>

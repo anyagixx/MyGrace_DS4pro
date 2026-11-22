@@ -1,0 +1,23 @@
+<!-- Canonical verification entry. <module-checks> is read by mygrace test/verify; commands are trust-gated (run `mygrace trust` after review). -->
+<V-M-PATHS MODULE="M-PATHS" PRIORITY="high" STATUS="done">
+  <test-files>
+    <file>test/grace-paths.test.ts</file>
+  </test-files>
+
+  <module-checks>
+    <check-1>bun test</check-1>
+  </module-checks>
+
+  <scenarios>
+    <scenario-1 kind="success">All documented id grammars and in-project paths are accepted.</scenario-1>
+    <scenario-2 kind="failure">Traversal, absolute, empty, NUL and leading-dash ids/paths are rejected with USAGE.</scenario-2>
+  </scenarios>
+
+  <required-log-markers>
+    <marker-1>CLI text output and JSON envelopes are asserted by the tests; no runtime log markers are emitted by library modules.</marker-1>
+  </required-log-markers>
+
+  <notes>
+    <note-1>Covered by test/grace-paths.test.ts.</note-1>
+  </notes>
+</V-M-PATHS>

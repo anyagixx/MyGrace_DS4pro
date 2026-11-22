@@ -1,8 +1,9 @@
 <GraphIndex project="$PROJECT_NAME" version="1.0.0">
+  <!-- Module index: one line per module, never details. Sorted by status: wip > pending > done.
+       Default cap: indexCaps.graph = 100 lines (mygrace.config.json); lint errors above it. -->
   <keywords>$KEYWORDS</keywords>
   <annotation>$ANNOTATION</annotation>
 
-  <!-- Modules: one line each, never details. Sorted by status: wip > pending > done -->
   <!-- <M-XXX NAME="ModuleName" TYPE="TYPE" STATUS="pending" PATH="src/path/index.ts" DEPENDS="M-YYY,M-ZZZ" VERIFICATION_REF="V-M-XXX" /> -->
 
 </GraphIndex>

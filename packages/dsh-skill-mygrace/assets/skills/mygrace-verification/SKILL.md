@@ -1,73 +1,72 @@
 ---
 name: mygrace-verification
-description: "Design verification for MyGRACE projects — scenarios, log markers, evidence per module — with per-entry files. Use before executing modules or when tests are weak or brittle."
-whenToUse: "Before first plan execution, when tests are too brittle or shallow, when bugs recur and logs aren't actionable, or before enabling autonomous execution."
+description: "Design verification for MyGRACE modules: scenarios, log markers, canonical <module-checks> and evidence in per-module verification files. Use before executing a module or when tests are weak, brittle or unactionable."
+whenToUse: "Before first execution, when tests are too shallow, or when a bug needs reproducible evidence and actionable logs."
 ---
 
-Design verification with lazy-loading. Creates per-module files, not monolithic XML.
+# Design verification
 
-## Prerequisites
-- `docs/development-plan.xml` does NOT exist in MyGRACE — use `docs/graph-index.xml` + `docs/modules/M-XXX.xml`
-- `docs/verification-index.xml` must exist (created by the `mygrace-init` skill)
-- `docs/verification/` directory must exist
+## Where things live
 
-## Key Difference from Classic GRACE
-**DO NOT** create monolithic `verification-plan.xml`.
-Instead:
-- Update `docs/verification-index.xml` with one line per entry (≤80 lines total)
-- Create `docs/verification/V-M-XXX.xml` for each module (20-60 lines each)
+- One file per module: `docs/verification/V-M-XXX.xml` (20–60 lines; budget
+  configurable in `mygrace.config.json`).
+- One index line per entry: `docs/verification-index.xml`.
+- **`<module-checks>` belongs in the verification file** — it is the canonical
+  command source for `mygrace test` / `mygrace verify` (a module-file
+  `<module-checks>` is a deprecated fallback). Do not duplicate it.
+- Commands are trust-gated: after creating/editing verification files, the trust
+  record is stale. Review the commands, then run `mygrace trust --path <root>`
+  before running tests.
 
-## LAZY PROCESS
+## Lazy process
 
-### Step 1: Load Context Efficiently
-1. Read `docs/graph-index.xml` (≤100 lines) — find all modules (MCP: `mygrace_list_modules`)
-2. For target module, read `docs/modules/M-XXX.xml` (30-80 lines) (MCP: `mygrace_show_module`)
-3. If verification already exists, read `docs/verification/V-M-XXX.xml` (20-60 lines)
-4. **DO NOT** scan all modules — focus on one at a time
+1. Read `docs/graph-index.xml` (index only) → find the module.
+2. Read that `docs/modules/M-XXX.xml` (contract) and the existing
+   `docs/verification/V-M-XXX.xml` if present.
+3. Do not scan other modules or the whole plan.
 
-### Step 2: Derive Verification Targets
-From module contract, extract: success scenarios, failure scenarios, critical invariants, side effects
+## Design the file
 
-### Step 3: Design Observability
-Define `[Module][function][BLOCK_NAME]` log markers, critical branch visibility, redaction rules
+For the target module derive:
 
-### Step 4: Create Per-Module Verification File
-Create/update `docs/verification/V-M-XXX.xml`:
+- **success scenarios** — observable outcomes for the main paths;
+- **failure scenarios** — invalid input, missing dependency, timeout, failed
+  assertion, and the error surface (typed error/finding code);
+- **side effects / invariants** — state that must hold after the call;
+- **log markers** — `[ModuleName][functionName][BLOCK_NAME] message`, on
+  critical branches; never log secrets or payloads;
+- **checks** — deterministic first: one or more `<check-N>` commands that fail
+  on regressions (fast module-local command; broader wave/phase command only when
+  it adds signal).
+
 ```xml
 <V-M-XXX MODULE="M-XXX" PRIORITY="high" STATUS="pending">
-  <test-files><file>$TEST_PATH</file></test-files>
-  <module-checks><check-1>$COMMAND</check-1></module-checks>
+  <test-files><file>src/module/index.test.ts</file></test-files>
+  <module-checks><check-1>bun test src/module/index.test.ts</check-1></module-checks>
   <scenarios>
-    <scenario-1 kind="success">$SCENARIO</scenario-1>
-    <scenario-2 kind="failure">$SCENARIO</scenario-2>
+    <scenario-1 kind="success">...</scenario-1>
+    <scenario-2 kind="failure">...</scenario-2>
   </scenarios>
-  <required-log-markers>
-    <marker-1>[Module][function][BLOCK]</marker-1>
-  </required-log-markers>
+  <required-log-markers><marker-1>[Module][fn][BLOCK]</marker-1></required-log-markers>
 </V-M-XXX>
 ```
 
-### Step 5: Update Verification Index
-Add or update line in `docs/verification-index.xml`:
-```xml
-<V-M-XXX MODULE="M-XXX" PRIORITY="high" STATUS="pending" />
-```
+Then add/update the one-line entry in `docs/verification-index.xml` (sorted by
+priority) and run `mygrace lint --strict --path <root>`.
 
-### Step 6: Choose Evidence Types
-Deterministic assertions first, trace assertions second, integration checks third
+## Evidence quality bar
 
-### Step 7: Apply Verification Levels
-Module-local → wave-level → phase-level. Make explicit in the verification file.
+- A scenario states an input, the expected observable result and the failure
+  signal — not "it works".
+- Every `<check-N>` is a real command that can fail; commands with shell
+  metacharacters or interpreters need `--allow-commands` (explicit opt-in).
+- Log markers must be actionable for an agent: enough to locate module/function/
+  block, not a dump of all data.
+- Keep the file contract-sized; if it grows past the budget, split scenarios into
+  clearer checks instead of prose.
 
 ## Deliverables
-1. Updated `docs/verification-index.xml` (one line per module)
-2. `docs/verification/V-M-XXX.xml` for each scoped module
-3. Verification matrix
-4. Telemetry requirements
-5. Assessment of autonomous execution safety
 
-## When to Use
-- Before first plan execution (`mygrace-execute` or `mygrace-multiagent-execute`)
-- When tests are too brittle or too shallow
-- When bugs recur and logs aren't actionable
-- Before enabling autonomous execution for a module
+Updated `docs/verification/V-M-XXX.xml` + index entry, a short verification
+matrix (module | file | checks | markers), and the explicit next command
+(`mygrace trust` then `mygrace verify --module M-XXX`).

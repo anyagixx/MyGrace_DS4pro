@@ -1,21 +1,30 @@
 #!/usr/bin/env bun
 /**
- * MyGRACE DSH Skill Provider Generator
+ * MyGRACE DSH Skill Provider Generator.
  *
- * Generates packages/dsh-skill-mygrace — the DSH bundled skill provider
- * registering the 14 MyGRace skills (skills/mygrace/grace-* → mygrace-*)
- * through the DSH skill provider API (modeled on @deepseek-ai/dsh-skill-badge).
+ * Generates `packages/dsh-skill-mygrace` — the optional DSH bundled skill
+ * provider that registers the 15 MyGRACE skills (skills/mygrace/grace-* →
+ * mygrace-*) through the DSH skill provider API.
  *
- * Run: bun run scripts/gen-dsh-skill-mygrace.ts
+ * The package is OPTIONAL (ADR-7): the CLI itself needs no DSH packages.
+ * Version 0.1.0 is published separately from the main CLI.
+ *
+ * Deterministic generation: `--check` builds the package in a temporary
+ * directory and diffs it against the checkout, exiting 1 on drift (used by CI
+ * instead of `git diff`, because this workspace may not be a git repository).
+ *
+ * Usage:
+ *   bun run scripts/gen-dsh-skill-mygrace.ts            # regenerate the package
+ *   bun run scripts/gen-dsh-skill-mygrace.ts --check    # verify checkout is in sync
  */
 
-import { mkdirSync, readFileSync, writeFileSync, readdirSync, cpSync, rmSync } from "node:fs";
-import { join } from "node:path";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, relative, resolve, sep } from "node:path";
 
-const ROOT = join(import.meta.dir, "..");
+const ROOT = resolve(import.meta.dirname, "..");
 const SKILLS_SRC = join(ROOT, "skills", "mygrace");
 const PKG_DIR = join(ROOT, "packages", "dsh-skill-mygrace");
-const ASSETS_DIR = join(PKG_DIR, "assets", "skills");
 
 interface SkillMeta {
   id: string;
@@ -25,71 +34,80 @@ interface SkillMeta {
 }
 
 function parseFrontmatter(content: string): { name?: string; description?: string; whenToUse?: string } {
-  const m = content.match(/^---\n([\s\S]*?)\n---/);
-  if (!m) return {};
-  const lines = m[1].split("\n");
+  const match = content.match(/^---\n([\s\S]*?)\n---/);
+  if (match === null) return {};
+  const lines = match[1]!.split("\n");
   const get = (key: string): string | undefined => {
-    const line = lines.find((l) => l.startsWith(`${key}:`));
-    if (!line) return undefined;
-    return line.slice(key.length + 1).trim().replace(/^"|"$/g, "");
+    const line = lines.find((candidate) => candidate.startsWith(`${key}:`));
+    if (line === undefined) return undefined;
+    return line
+      .slice(key.length + 1)
+      .trim()
+      .replace(/^"|"$/g, "");
   };
   return { name: get("name"), description: get("description"), whenToUse: get("whenToUse") };
 }
 
-function q(s: string): string {
-  return `'${s.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/\n/g, "\\n")}'`;
+function quote(value: string): string {
+  return `'${value.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/\n/g, "\\n")}'`;
 }
 
-function main() {
-  rmSync(PKG_DIR, { recursive: true, force: true });
-  mkdirSync(ASSETS_DIR, { recursive: true });
-  mkdirSync(join(PKG_DIR, "lib"), { recursive: true });
-
-  const skills: SkillMeta[] = readdirSync(SKILLS_SRC)
-    .filter((d) => d.startsWith("grace-"))
+function readSkills(): SkillMeta[] {
+  if (!existsSync(SKILLS_SRC)) {
+    throw new Error(`skills source directory not found: ${SKILLS_SRC}`);
+  }
+  return readdirSync(SKILLS_SRC)
+    .filter((entry) => entry.startsWith("grace-"))
     .sort()
-    .map((d) => {
-      const id = d.replace(/^grace-/, "mygrace-");
-      const content = readFileSync(join(SKILLS_SRC, d, "SKILL.md"), "utf-8");
-      const fm = parseFrontmatter(content);
-      const name = fm.name || id;
-      const description = fm.description || `${name} — MyGRACE skill`;
-      const whenToUse = fm.whenToUse || description;
-      cpSync(join(SKILLS_SRC, d), join(ASSETS_DIR, id), { recursive: true });
+    .map((dirName) => {
+      const id = dirName.replace(/^grace-/, "mygrace-");
+      const frontmatter = parseFrontmatter(readFileSync(join(SKILLS_SRC, dirName, "SKILL.md"), "utf-8"));
+      const name = frontmatter.name ?? id;
+      const description = frontmatter.description ?? `${name} — MyGRACE skill`;
+      const whenToUse = frontmatter.whenToUse ?? description;
       return { id, name, description, whenToUse };
     });
+}
 
-  writeFileSync(
-    join(PKG_DIR, "package.json"),
-    JSON.stringify(
-      {
-        name: "@osovv/dsh-skill-mygrace",
-        description: "Bundled DSH skill provider for the MyGRACE methodology (14 MyGRACE skills).",
-        version: "0.1.0",
-        type: "module",
-        main: "lib/index.js",
-        exports: {
-          ".": { types: "./lib/types/index.d.ts", default: "./lib/index.js" },
-          "./package.json": "./package.json",
-        },
-        files: ["lib/index.js", "assets", "package.json"],
-        license: "MIT",
-        publishConfig: { access: "public" },
-        peerDependencies: { "@deepseek-ai/dsh-skill": "*", "@deepseek-ai/cordis": "*" },
-        repository: { type: "git", url: "git+https://github.com/anyagixx/MyGrace.git", directory: "packages/dsh-skill-mygrace" },
+function packageJson(skills: readonly SkillMeta[]): Record<string, unknown> {
+  return {
+    name: "@osovv/dsh-skill-mygrace",
+    description:
+      `Bundled DSH skill provider for the MyGRACE methodology (${skills.length} MyGRACE skills). ` +
+      "Optional plugin — the CLI itself needs no DSH packages.",
+    version: "0.1.0",
+    type: "module",
+    main: "lib/index.js",
+    exports: {
+      ".": {
+        types: "./lib/types/index.d.ts",
+        default: "./lib/index.js",
       },
-      null,
-      2
-    ) + "\n"
-  );
+      "./package.json": "./package.json",
+    },
+    files: ["lib/index.js", "assets", "package.json"],
+    license: "MIT",
+    publishConfig: { access: "public" },
+    peerDependencies: {
+      "@deepseek-ai/dsh-skill": "*",
+      "@deepseek-ai/cordis": "*",
+    },
+    repository: {
+      type: "git",
+      url: "git+https://github.com/anyagixx/MyGrace_DS4pro.git",
+      directory: "packages/dsh-skill-mygrace",
+    },
+  };
+}
 
+function providerSource(skills: readonly SkillMeta[]): string {
   const skillsLiteral = skills
-    .map((s) => `  { id: ${q(s.id)}, name: ${q(s.name)}, description: ${q(s.description)}, whenToUse: ${q(s.whenToUse)} },`)
+    .map(
+      (skill) =>
+        `  { id: ${quote(skill.id)}, name: ${quote(skill.name)}, description: ${quote(skill.description)}, whenToUse: ${quote(skill.whenToUse)} },`
+    )
     .join("\n");
-
-  writeFileSync(
-    join(PKG_DIR, "lib", "index.js"),
-    `// GENERATED by scripts/gen-dsh-skill-mygrace.ts — do not edit by hand.
+  return `// GENERATED by scripts/gen-dsh-skill-mygrace.ts — do not edit by hand.
 import { readFile } from "node:fs/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import path from "node:path";
@@ -150,10 +168,95 @@ function apply(ctx) {
 }
 
 export { apply, inject, name, provider };
-`
-  );
-
-  console.log(`Generated ${PKG_DIR}: ${skills.length} skills (${skills.map((s) => s.id).join(", ")})`);
+`;
 }
 
-main();
+function generateInto(targetDir: string, skills: readonly SkillMeta[]): void {
+  const assetsDir = join(targetDir, "assets", "skills");
+  rmSync(targetDir, { recursive: true, force: true });
+  mkdirSync(assetsDir, { recursive: true });
+  mkdirSync(join(targetDir, "lib"), { recursive: true });
+  writeFileSync(join(targetDir, "package.json"), `${JSON.stringify(packageJson(skills), null, 2)}\n`);
+  writeFileSync(join(targetDir, "lib", "index.js"), providerSource(skills));
+  for (const skill of skills) {
+    cpSync(join(SKILLS_SRC, skill.id.replace(/^mygrace-/, "grace-")), join(assetsDir, skill.id), { recursive: true });
+  }
+}
+
+function listFilesRecursive(root: string, base = root): string[] {
+  if (!existsSync(root)) return [];
+  const output: string[] = [];
+  for (const entry of readdirSync(root, { withFileTypes: true })) {
+    const full = join(root, entry.name);
+    if (entry.isDirectory()) output.push(...listFilesRecursive(full, base));
+    else if (entry.isFile()) output.push(relative(base, full).split(sep).join("/"));
+  }
+  return output.sort();
+}
+
+function compareDirectories(expectedDir: string, actualDir: string): string[] {
+  const drift: string[] = [];
+  const expectedFiles = listFilesRecursive(expectedDir);
+  const actualFiles = new Set(listFilesRecursive(actualDir));
+  for (const path of expectedFiles) {
+    if (!actualFiles.has(path)) {
+      drift.push(`missing from packages/dsh-skill-mygrace: ${path}`);
+      continue;
+    }
+    const expected = readFileSync(join(expectedDir, path), "utf-8");
+    const actual = readFileSync(join(actualDir, path), "utf-8");
+    if (expected !== actual) drift.push(`content differs: packages/dsh-skill-mygrace/${path}`);
+  }
+  for (const path of actualFiles) {
+    if (!expectedFiles.includes(path)) drift.push(`unexpected file in packages/dsh-skill-mygrace: ${path}`);
+  }
+  return drift;
+}
+
+function main(): void {
+  const argv = process.argv.slice(2);
+  const check = argv.includes("--check");
+  if (argv.includes("--help") || argv.includes("-h")) {
+    console.log(
+      "Usage: bun run scripts/gen-dsh-skill-mygrace.ts [--check]\n" +
+        "  (default) regenerate packages/dsh-skill-mygrace\n" +
+        "  --check   generate into a temporary directory and fail on drift"
+    );
+    process.exit(0);
+  }
+  const unknown = argv.filter((argument) => argument !== "--check");
+  if (unknown.length > 0) {
+    console.error(`gen-dsh-skill-mygrace: unknown argument(s): ${unknown.join(", ")}`);
+    process.exit(2);
+  }
+
+  const skills = readSkills();
+
+  if (check) {
+    const tempDir = mkdtempSync(join(tmpdir(), "mygrace-dsh-skill-"));
+    try {
+      generateInto(tempDir, skills);
+      const drift = compareDirectories(tempDir, PKG_DIR);
+      if (drift.length === 0) {
+        console.log(`✓ packages/dsh-skill-mygrace is in sync with skills/mygrace (${skills.length} skills).`);
+        process.exit(0);
+      }
+      console.log(`✗ packages/dsh-skill-mygrace drift detected (${drift.length} file(s)):`);
+      for (const line of drift.slice(0, 20)) console.log(`  - ${line}`);
+      console.log("Run `bun run scripts/gen-dsh-skill-mygrace.ts` to regenerate.");
+      process.exit(1);
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  }
+
+  generateInto(PKG_DIR, skills);
+  console.log(`Generated ${PKG_DIR}: ${skills.length} skills (${skills.map((skill) => skill.id).join(", ")})`);
+}
+
+try {
+  main();
+} catch (error) {
+  console.error(`gen-dsh-skill-mygrace: ${error instanceof Error ? error.message : String(error)}`);
+  process.exit(3);
+}

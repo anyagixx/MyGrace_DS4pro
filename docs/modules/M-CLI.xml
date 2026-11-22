@@ -1,0 +1,39 @@
+<!-- Module contract for M-CLI. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-CLI NAME="CLI entry point" TYPE="ENTRY_POINT" STATUS="done">
+  <purpose>Compose the mygrace command tree and report failures through the ADR-3 error boundary.</purpose>
+  <path>src/grace.ts</path>
+  <depends>M-ERRORS,M-LINT,M-MODULE,M-FILE,M-INSTALL,M-INIT,M-STATUS,M-DOCTOR,M-TEST,M-VERIFY,M-PACKET,M-CONTEXT,M-CI,M-TRACE,M-IMPACT,M-NEXT,M-PROJECTS</depends>
+  <verification-ref>V-M-CLI</verification-ref>
+
+  <annotations>
+    <export-main PURPOSE="Root citty CommandDef (exported for validators/tests/MCP parity checks)." />
+    <fn-guard PURPOSE="Recursive error boundary around every command and subcommand." />
+    <fn-isDirectInvocation PURPOSE="True only when this file is the process entry point." />
+    <export-main PURPOSE="Registers the 20 top-level commands, including ci, trace, impact, next and projects." />
+  </annotations>
+
+  <CrossLink to="M-LINT" relation="registers lint" />
+  <CrossLink to="M-CI" relation="registers the ci gate" />
+  <CrossLink to="M-MODULE" relation="registers module/phase/verification" />
+  <CrossLink to="M-TEST" relation="registers test and trust" />
+  <CrossLink to="M-VERIFY" relation="registers verify" />
+
+  <contract>
+    <purpose>Compose the mygrace command tree and report failures through the ADR-3 error boundary.</purpose>
+    <inputs>
+      <param name="argv" type="string[]" description="Process arguments." />
+    </inputs>
+    <outputs>
+      <param name="exitCode" type="ExitCode" description="Documented exit code for every command." />
+    </outputs>
+    <errors>
+      <error code="INTERNAL" description="Unexpected failure not wrapped by a command; printed with a debug hint." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>20 top-level commands: ci, lint, module, phase, verification, file, status, install-dsh, init-dsh, doctor, test, trust, verify, packet, focus, context-cost, trace, impact, next, projects.</note-1>
+    <note-2>Importing this module never executes a command, so scripts and tests can load the command tree.</note-2>
+    <note-3>Every command is wrapped by guard(), so a typed error becomes one line plus its documented exit code.</note-3>
+  </notes>
+</M-CLI>

@@ -1,71 +1,66 @@
 ---
 name: mygrace-reviewer
-description: "Review MyGRACE integrity — index consistency, module contracts, verification quality — with lazy scoped modes. Use before merging waves, after refactors, or at phase boundaries."
-whenToUse: "Before merging a wave, after a refactor, at phase boundaries, or when index drift is suspected."
+description: "Review MyGRACE integrity: run the codified lint gate, then check what tooling cannot (contract↔code match, verification quality, trust hygiene). Use before merging waves, after refactors, or at phase boundaries."
+whenToUse: "Before merging a wave, after a refactor, at a phase boundary, or when drift or a stale trust record is suspected."
 ---
 
-You are the MyGRACE Reviewer.
+# Integrity review
 
-## Your Role
-Validate MyGRACE integrity:
-1. Index files are consistent with per-entity files
-2. Module contracts match implementations
-3. Verification entries match actual tests and markers
-4. Semantic markup is correct
+## First pass — automated (do this first)
 
-Run `mygrace lint --path <root>` (MCP: `mygrace_lint`) as a first pass — it automates the mechanical checks below. Manual review then focuses on what lint cannot check: contract ↔ code match, verification quality, log markers.
+Run `mygrace ci --format json --path <root>` first — the umbrella gate that runs
+strict lint, checks index readability and verification coverage, and (with
+`--tests`, trust required) the scoped test suite. Then, when you need the raw
+findings, `mygrace lint --strict --format json --path <root>`. Lint enforces:
+XML validity, all field drift, duplicates, missing PATH/DEPENDS/VERIFICATION_REF,
+phase status/steps drift, index caps, entity size budgets, name-aware block
+pairing and contract fields. Report its finding codes; do not re-check by hand
+what it already covers.
 
-## LAZY Review Modes
+Then run the read-only query trio — `mygrace trace <M-XXX> --format json`
+(chain gaps: MISSING_VERIFICATION_REF, VERIFICATION_FILE_MISSING,
+TEST_FILE_MISSING, MODULE_PATH_MISSING), `mygrace impact --files <changed>`
+(blast radius/dependents) and `mygrace next --path <root>` (does the tooling
+agree with the review?).
 
-### `scoped-gate` (default)
-Review only:
-- `docs/graph-index.xml` entry for the changed module
-- `docs/modules/M-XXX.xml` for the target module
-- Changed source files
-- `docs/verification/V-M-XXX.xml` if verification changed
+Also check:
 
-**Read only the modules that changed.** Not the full index set.
+- `mygrace status --format json --path <root>` — counts and lint summary;
+- `.mygrace/trust.json` — present, current (no stale/missing entries), and
+  `.mygrace/` gitignored; otherwise `mygrace trust` is needed after review;
+- `docs/verification/V-M-XXX.xml` — `<module-checks>` present in the canonical
+  location (module-file fallback is deprecated and should be flagged to the owner).
 
-### `wave-audit`
-After a wave:
-- Check `docs/graph-index.xml` — all modified module statuses are correct
-- Check `docs/plan-index.xml` — phase step counts match reality
-- Check `docs/verification-index.xml` — new entries present
-- Spot-check 2-3 per-module files for consistency
+## Modes
 
-### `full-integrity`
-At phase boundaries:
-- Verify every index entry has a corresponding per-entity file
-- Verify no orphaned files (exist but not in index)
-- Check STATUS consistency across indexes and files
-- Verify CrossLink bidirectionality in graph-index
+- **scoped-gate** (default): the changed module's index entry, its
+  `docs/modules/M-XXX.xml`, changed source files, and its verification file.
+- **wave-audit**: after a wave — all modified statuses, phase step counts,
+  new verification entries, spot-check 2–3 entity files.
+- **full-integrity**: at phase boundaries — every index entry ↔ file, no orphans,
+  STATUS consistency, CrossLink bidirectionality, caps/budgets.
 
-## Checklist
-- [ ] graph-index.xml has entry for every module in docs/modules/
-- [ ] Every graph-index entry has a file in docs/modules/
-- [ ] STATUS matches between index and per-module file
-- [ ] PATH in index matches actual file location
-- [ ] DEPENDS in index matches actual imports
-- [ ] VERIFICATION_REF in index has matching file in docs/verification/
-- [ ] plan-index.xml phase step counts match Phase-N.xml
-- [ ] verification-index.xml has entry for every file in docs/verification/
-- [ ] MODULE_CONTRACT, MODULE_MAP, CHANGE_SUMMARY present in source files
-- [ ] Semantic blocks paired and unique
+## What only a human/agent can check
 
-## Output Format
+- Contract ↔ code: does the implementation match PURPOSE/SCOPE/interfaces?
+- Verification quality: do scenarios assert observable behaviour (not "returns
+  true"), do failure paths have checks, are log markers actionable?
+- Trust hygiene: were the executed commands reviewed before `mygrace trust`?
+- Change discipline: indexes updated in the same change as the code.
+
+## Output
+
 ```
 MyGRACE Review Report
 =====================
 Mode: scoped-gate / wave-audit / full-integrity
-Index entries checked: N
-Per-module files checked: N
-Issues found: N (critical: N, minor: N)
-Consistency: indexes synced / drift detected
+Lint: N errors, M warnings (codes: ...)
+Trust: current / stale / missing / not gitignored
+Contract↔code: PASS / issues
+Verification quality: PASS / issues
 Summary: PASS / FAIL
 ```
 
-## Rules
-- Default to smallest scope
-- Index consistency is CRITICAL — if indexes drift, lazy navigation breaks
-- Never auto-fix — report only
-- Escalate to full audit when scoped check reveals wider drift
+Rules: smallest useful scope; index consistency is critical; never auto-fix
+contracts or architecture — propose the change; escalate when a scoped check
+reveals wider drift.

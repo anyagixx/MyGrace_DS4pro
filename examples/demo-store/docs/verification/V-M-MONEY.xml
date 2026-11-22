@@ -1,0 +1,27 @@
+<V-M-MONEY MODULE="M-MONEY" PRIORITY="high" STATUS="done">
+  <test-files>
+    <file>src/money/index.test.ts</file>
+  </test-files>
+
+  <module-checks>
+    <check-1>bun test src/money/index.test.ts</check-1>
+  </module-checks>
+
+  <scenarios>
+    <scenario-1 kind="success">parseAmount("12.34") returns 1234 cents.</scenario-1>
+    <scenario-2 kind="failure">parseAmount("abc") throws MoneyError.</scenario-2>
+    <scenario-3 kind="failure">parseAmount("12.345") throws MoneyError.</scenario-3>
+    <scenario-4 kind="failure">parseAmount("-1") throws MoneyError.</scenario-4>
+    <scenario-5 kind="success">formatAmount(1234) returns "12.34".</scenario-5>
+  </scenarios>
+
+  <required-log-markers>
+    <marker-1>[Money][parseAmount][BLOCK_VALIDATE_AMOUNT]</marker-1>
+    <marker-2>[Money][parseAmount][BLOCK_CONVERT_TO_CENTS]</marker-2>
+  </required-log-markers>
+
+  <notes>
+    Failure scenarios assert the exact error class so silent regressions cannot pass.
+    The module-checks block lives here (canonical location), never in docs/modules/.
+  </notes>
+</V-M-MONEY>

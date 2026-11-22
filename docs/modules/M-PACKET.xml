@@ -1,0 +1,38 @@
+<!-- Module contract for M-PACKET. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-PACKET NAME="Worker packet and focus" TYPE="UTILITY" STATUS="done">
+  <purpose>Build the self-contained per-module worker prompt (packet) and the minimal working set (focus) with validated ids and JSON envelopes.</purpose>
+  <path>src/grace-packet.ts</path>
+  <depends>M-ERRORS,M-XML,M-PATHS,M-CONFIG,M-COMMON,M-TEST</depends>
+  <verification-ref>V-M-PACKET</verification-ref>
+
+  <annotations>
+    <fn-loadModuleDocument PURPOSE="Validated and structurally parsed module file." />
+    <fn-depTable PURPOSE="Dependency rows resolved from the graph index." />
+    <export-packetCommand PURPOSE="mygrace packet &lt;id&gt; [--format json]." />
+    <export-focusCommand PURPOSE="mygrace focus &lt;id&gt; [--format json]." />
+  </annotations>
+
+  <CrossLink to="M-PATHS" relation="validates the module id before reading" />
+  <CrossLink to="M-TEST" relation="uses the canonical command source" />
+
+  <contract>
+    <purpose>Build the self-contained per-module worker prompt (packet) and the minimal working set (focus) with validated ids and JSON envelopes.</purpose>
+    <inputs>
+      <param name="id" type="string" description="Module id." />
+      <param name="root" type="string" description="Project root." />
+    </inputs>
+    <outputs>
+      <param name="prompt" type="string" description="Contract, verification excerpt and dependency list in one block." />
+    </outputs>
+    <errors>
+      <error code="USAGE" description="Malformed or traversal module id (exit 2)." />
+      <error code="MODULE_NOT_FOUND" description="No module file for the id (exit 2)." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>Packets are smaller than reading several files, which is the point of lazy navigation.</note-1>
+    <note-2>Focus prints contract, dependencies and the canonical test command only.</note-2>
+    <note-3>Both commands are read-only.</note-3>
+  </notes>
+</M-PACKET>

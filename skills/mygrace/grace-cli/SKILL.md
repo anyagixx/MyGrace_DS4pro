@@ -1,52 +1,65 @@
 ---
 name: mygrace-cli
-description: "Operate the mygrace CLI and MCP tools for linting and lazy module/phase/verification queries. Use when a fast, token-efficient read layer over MyGRACE artifacts is needed."
-whenToUse: "Prefer this skill when the mygrace CLI or MCP server is available; it saves context vs raw file reads."
+description: "Reference for the mygrace CLI (20 commands) and MCP server (21 tools): quality gate, trust, index reads, verification and JSON envelopes. Use when you need the exact command/flag/tool for a MyGRACE operation."
+whenToUse: "You need a concrete CLI command or MCP tool — flags, exit codes, trust behaviour or JSON output."
 ---
 
-Use the `mygrace` CLI as a fast MyGRACE-aware read/query layer, and the MCP tools as the preferred in-agent access path.
+Use `mygrace` as the MyGRACE-aware read/execute layer, and the MCP tools as the
+preferred in-agent access path (21 tools; DSH exposes them as
+`mcp__mygrace__<tool>`).
 
-## MCP Tools (preferred when connected)
-- `mygrace_list_modules` — modules from graph-index.xml (filter by status/type)
-- `mygrace_show_module` — per-module file (optionally with verification)
-- `mygrace_show_phase` — per-phase file
-- `mygrace_list_verifications` — verification entries
-- `mygrace_lint` — integrity check including index sync
-- `mygrace_show_file` — file-local markup
-- `mygrace_status` — aggregated health (module/phase/verification counts + lint) as JSON
-If the MCP server is not connected, fall back to the CLI commands below or direct file reads.
+## Contract
 
-## CLI Commands
+- Exit codes: `0` ok · `1` findings/failed tests/drift · `2` usage/config/trust
+  refusal · `3` internal error. `--strict` promotes warnings to `1`.
+- Every `--format json` command prints
+  `{ ok, exitCode, data, findings[], meta }` and exits with `exitCode`.
+- Project-declared commands (`test`/`verify`) are **trust-gated**: they execute
+  only with `.mygrace/trust.json` (via `mygrace trust`), `config.allowCommands`,
+  or `--allow-commands`.
 
-### Index Commands
-- `mygrace module index --path <root>` — show graph-index.xml (≤100 lines)
-- `mygrace phase index --path <root>` — show plan-index.xml (≤50 lines)
-- `mygrace verification index --path <root>` — show verification-index.xml (≤80 lines)
+## Gate + read commands
 
-### Module Commands
-- `mygrace module find <query> --path <root>` — resolve module IDs from the index
-- `mygrace module show <id> --path <root>` — read per-module file (docs/modules/M-XXX.xml)
-- `mygrace module show <id> --with-verification --path <root>` — module + verification file
-- `mygrace module list --status=wip --path <root>` — filter modules by status
-- `mygrace module list --type=CORE_LOGIC --path <root>` — filter by type
-- `mygrace module list --format json --path <root>` — machine-readable output
+- `mygrace ci --path <root> [--tests] [--allow-commands] [--format json]` — one-command quality gate (strict lint + status + coverage; `--tests` adds trust-gated tests)
+- `mygrace status --path <root> [--format json]` — counts + lint summary
+- `mygrace module index --path <root>` (prints a shard summary when the index is sharded) · `mygrace module find <query> --path <root>` · `mygrace module show <id> --path <root>` (add `--with-verification`) · `mygrace module list --status=<s> --type=<t> --path <root>`
+- `mygrace module shard --path <root>` — dry-run shard plan (`--apply` writes `docs/modules/shard-<slug>.xml` + `<Shard/>` refs with a backup; dry run is the default; `--group-by type|status|prefix`). Reads are shard-transparent except `module show`.
+- `mygrace phase index --path <root>` · `mygrace phase show <Phase-N> --path <root>`
+- `mygrace verification index --priority <p> --format json --path <root>`
+- `mygrace file show <path> --root <root> [--contracts] [--blocks]`
+- `mygrace context-cost --path <root>` — read budget per operation
+- `mygrace doctor --path <root> [--format json]` — environment + DSH integration
 
-### Phase Commands
-- `mygrace phase show Phase-N --path <root>` — read per-phase file
+## Execution commands (trust-gated)
 
-### General
-- `mygrace lint --path <root>` — integrity check including index synchronization
-- `mygrace status --path <root>` — aggregated health from the 3 indexes + lint
-- `mygrace status --path <root> --format json` — machine-readable health (use for dashboards/panels)
-- `mygrace file show <path> --root <root>` — file-local markup
-- `mygrace file show <path> --root <root> --contracts --blocks` — with contracts and blocks
+- `mygrace trust --path <root>` — review declared commands, write `.mygrace/trust.json`
+- `mygrace test --module <M-XXX> [--compact] [--allow-commands] --path <root>`
+- `mygrace verify [--module <M-XXX>] [--allow-commands] --path <root>` — digest; `.mygrace/last-failures.md` on failure
+- `mygrace lint --strict --path <root>` — integrity gate; incremental scope with `--changed [--base <ref>]` or `--files a,b,c`
+- `mygrace trace <ID> --path <root> [--format json]` — proof chain (module/verification → tests → command provenance → requirements → phases → dependents); ID is M-XXX or V-M-XXX; exit 1 on broken chain
+- `mygrace impact [--files a,b,c] [--staged] [--since <ref>] --path <root> [--format json]` — changed files → modules, dependents, verification blast radius, phases, suggested commands (`--files` works without git)
+- `mygrace next --path <root> [--format json]` — deterministic nine-code advice (NEXT/WHY/RUN/IDS/CODE); exit 0 for any advice
+- `mygrace projects --path <root> [--depth 4] [--strict] [--format json]` — monorepo discovery with per-project lint/coverage
+- `mygrace packet <M-XXX>` / `mygrace focus <M-XXX>` — worker prompt / minimal set
 
-## Lazy Navigation Pattern
-1. Start with an index command (≤100 lines)
-2. Use module/phase show for details (30-200 lines)
-3. **Never read monolithic XML** — it doesn't exist in MyGRACE
+## MCP tools (21)
 
-## Output Guidance
-- Use default text output for quick review
-- Use `--format json` for scripts and subagents
-- Treat the CLI as navigation help — read source files for exact evidence when needed
+`mygrace_list_modules`, `mygrace_show_module`, `mygrace_show_phase`,
+`mygrace_find_modules`, `mygrace_phase_index`, `mygrace_doctor`,
+`mygrace_test`, `mygrace_trust`, `mygrace_ci`, `mygrace_packet`,
+`mygrace_focus`, `mygrace_context_cost`, `mygrace_verify`,
+`mygrace_list_verifications`, `mygrace_lint`, `mygrace_show_file`,
+`mygrace_status`, `mygrace_trace`, `mygrace_impact`, `mygrace_next`,
+`mygrace_projects`.
+
+MCP `path` is optional: explicit argument → `MYGRACE_PROJECT_ROOT` → server
+working directory. Prefer MCP for index reads; use the CLI for anything the MCP
+catalogue does not cover. Local state (`.mygrace/`) is never committed.
+
+## Configuration
+
+`mygrace.config.json` (optional; written by `mygrace init-dsh`) sets
+`sourceDirs`, `markupExts`, `ignoreDirs`, `indexCaps`, `sizeBudgets`,
+`testRunner`, `allowCommands` and `language`. A list you set replaces the default
+entirely, and `testRunner` is only the fallback when no canonical
+`<module-checks>` exists.

@@ -1,44 +1,56 @@
 ---
 name: mygrace-fix
-description: "Debug using MyGRACE lazy navigation: index → relevant module → block → fix. Use when a bug report or failing test needs tracing to a governed module."
-whenToUse: "A bug, error, or failing test needs to be traced and fixed inside a MyGRACE-governed project."
+description: "Debug using MyGRACE lazy navigation: index → module contract → semantic block → fix, then update metadata and re-verify. Use when a bug report or failing test needs tracing to a governed module."
+whenToUse: "A bug, error or failing test must be traced and fixed inside a MyGRACE-governed project."
 ---
 
-Debug using MyGRACE lazy navigation.
+# Debug with lazy navigation
 
-## LAZY PROCESS (CRITICAL — saves 95%+ context tokens)
+## 1. Locate via the index
 
-### Step 1: Locate via Index
-Read **ONLY** `docs/graph-index.xml` (≤100 lines) (MCP: `mygrace_list_modules`).
-- Find the module likely involved in the error
-- Note its PATH and VERIFICATION_REF
-- **DO NOT** read all modules — you know which one you need from the error description
+Read `docs/graph-index.xml` (≤100 lines, or MCP `mygrace_list_modules`). Find the
+module implied by the error/log marker. Note its `PATH` and `VERIFICATION_REF`.
+Do not read all modules.
 
-### Step 2: Read Only the Target Module
-- Read `docs/modules/M-XXX.xml` (30-80 lines) — the module contract (MCP: `mygrace_show_module`)
-- Read `docs/verification/V-M-XXX.xml` (20-60 lines) — relevant scenarios
-- **DO NOT** read unrelated modules
+## 2. Read the contract and its verification
 
-### Step 3: Navigate to Block
-From error with `[Module][function][BLOCK_NAME]`:
-- Search for `START_BLOCK_BLOCK_NAME` in source at PATH from index
-- `mygrace file show <path> --root <root> --contracts --blocks` lists file-local markup compactly (MCP: `mygrace_show_file`)
-- Read the containing function's CONTRACT
+- `docs/modules/M-XXX.xml` (30–80 lines) — expected purpose, inputs/outputs, errors.
+- `docs/verification/V-M-XXX.xml` (20–60 lines) — scenarios, `<module-checks>`,
+  required log markers.
 
-### Step 4: Analyze and Fix
-- Compare CONTRACT (expected) vs code (actual)
-- Apply fix WITHIN semantic block boundaries
-- Update CHANGE_SUMMARY
+## 3. Navigate to the block
 
-### Step 5: Update Metadata
-- Update module file if contract changed
-- Update graph-index.xml if STATUS changed
-- Update verification file if tests/markers changed
-- Run module-local verification
-- Run `mygrace lint --path <root>` (MCP: `mygrace_lint`) to confirm indexes are still synced
+From a log line `[Module][function][BLOCK_NAME]`, find `START_BLOCK_BLOCK_NAME`
+in the source at `PATH`. `mygrace file show <path> --root <root> --contracts --blocks`
+lists the file's contracts and blocks compactly. Read the enclosing function's
+contract.
 
-## Important
-- **Always start with graph-index.xml** — one file, ≤100 lines
-- **Read only the target module** — ~130 lines total vs ~6500 in classic GRACE
-- Never fix code without reading its CONTRACT
-- Never change CONTRACT without approval
+## 4. Compare and fix
+
+Compare contract (expected) vs code (actual). Apply the smallest fix inside the
+semantic block boundaries; update `CHANGE_SUMMARY`.
+
+## 5. Narrow the scope first (optional)
+
+- `mygrace next --path <root>` — deterministic recommendation and its code/WHY;
+  follow it when the project has an obvious blocking state.
+- `mygrace lint --changed [--base <ref>]` (or `--files a,b,c`) — lint only the
+  files touched by the fix (index/entity/source classification).
+- `mygrace trace <M-XXX> --path <root>` — confirm the module→verification→tests
+  chain before and after the fix.
+
+## 6. Update metadata and verify
+
+- Contract changed → update `docs/modules/M-XXX.xml` and the index entry.
+- Tests/markers changed → update the verification file, then re-run
+  `mygrace trust --path <root>` (the trust record hashes command sources).
+- Run `mygrace test --module <M-XXX> --compact --path <root>` (trust-gated) and
+  `mygrace lint --strict --path <root>`.
+
+## Rules
+
+- Always start with the index; read only the target module (plus its verification).
+- Never fix code without reading its contract.
+- Never change a contract silently — propose it.
+- If a verification command is refused by the trust gate, review it and re-run
+  `mygrace trust`; do not bypass with ad-hoc execution.

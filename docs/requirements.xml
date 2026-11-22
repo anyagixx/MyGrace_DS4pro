@@ -1,0 +1,128 @@
+<RequirementsAnalysis VERSION="2.0.0">
+  <Project>
+    <name>MyGRACE</name>
+    <annotation>Index-first engineering harness for AI coding agents: enforced contracts, lazy-loading knowledge graph, verification traceability.</annotation>
+    <keywords>mygrace,grace,index-first,semantic-markup,ai-agents,contracts,verification,cli,mcp,deepseek-harness</keywords>
+  </Project>
+
+  <Actors>
+    <actor-HumanMaintainer>Reviews the repository map, runs the CI gate and trusts project-declared commands explicitly.</actor-HumanMaintainer>
+    <actor-AIAgent>Navigates indexes first, implements one module at a time and reports verification evidence.</actor-AIAgent>
+    <actor-CIHost>Runs non-interactive gates (lint --strict, ci) and requires stable exit codes and JSON envelopes.</actor-CIHost>
+    <actor-DSHHost>Provides the DeepSeek Harness session, skill catalog and MCP client transport.</actor-DSHHost>
+  </Actors>
+
+  <UseCases>
+    <UC-001>
+      <Actor>AIAgent</Actor>
+      <Action>Reads the three small index files before any per-entity file.</Action>
+      <Goal>Learn the module/phase/verification map with bounded context cost.</Goal>
+      <Preconditions>docs/graph-index.xml exists and is under its configured cap.</Preconditions>
+      <AcceptanceCriteria>mygrace module list, phase index and verification index answer from the indexes alone.</AcceptanceCriteria>
+      <Priority>high</Priority>
+      <RelatedModules>M-COMMON,M-MODULE</RelatedModules>
+    </UC-001>
+    <UC-002>
+      <Actor>HumanMaintainer</Actor>
+      <Action>Runs mygrace lint --strict on the repository.</Action>
+      <Goal>Prove that XML, drift, paths, dependencies, caps, budgets and markup invariants still hold.</Goal>
+      <Preconditions>The repository has docs/ and mygrace.config.json.</Preconditions>
+      <AcceptanceCriteria>Exit 0 with 0 errors and 0 warnings; every finding has a stable code.</AcceptanceCriteria>
+      <Priority>high</Priority>
+      <RelatedModules>M-LINT,M-XML,M-ERRORS</RelatedModules>
+    </UC-002>
+    <UC-003>
+      <Actor>HumanMaintainer</Actor>
+      <Action>Reviews declared verification commands and runs mygrace trust before test/verify.</Action>
+      <Goal>Execute project-declared commands only after explicit trust, never silently from repository data.</Goal>
+      <Preconditions>docs/verification/V-M-XXX.xml declares module-checks; .mygrace/ is gitignored.</Preconditions>
+      <AcceptanceCriteria>Untrusted runs refuse with exit 2 and print the commands that would run; after trust the commands execute argv-only.</AcceptanceCriteria>
+      <Priority>high</Priority>
+      <RelatedModules>M-TEST,M-VERIFY</RelatedModules>
+    </UC-003>
+    <UC-004>
+      <Actor>CIHost</Actor>
+      <Action>Runs mygrace ci --path . (optionally --tests).</Action>
+      <Goal>Get one merge gate combining strict lint, status, verification coverage and optional trust-gated tests.</Goal>
+      <Preconditions>A MyGRACE project with docs/ indexes.</Preconditions>
+      <AcceptanceCriteria>Exit 0 pass, 1 findings/failures, 2 usage or trust refusal; JSON envelope when requested.</AcceptanceCriteria>
+      <Priority>high</Priority>
+      <RelatedModules>M-CI</RelatedModules>
+    </UC-004>
+    <UC-005>
+      <Actor>HumanMaintainer</Actor>
+      <Action>Runs mygrace init-dsh on a new project.</Action>
+      <Goal>Bootstrap docs/ indexes, AGENTS.md and mygrace.config.json from templates without overwriting existing files.</Goal>
+      <Preconditions>Bundled templates are present in the package.</Preconditions>
+      <AcceptanceCriteria>Generated scaffold is lint-clean; existing AGENTS.md is preserved unless --force is passed.</AcceptanceCriteria>
+      <Priority>high</Priority>
+      <RelatedModules>M-INIT,M-CONFIG</RelatedModules>
+    </UC-005>
+    <UC-006>
+      <Actor>AIAgent</Actor>
+      <Action>Calls MyGRACE tools through the MCP server.</Action>
+      <Goal>Use the same behaviour as the CLI with structured argument validation and no PATH dependency.</Goal>
+      <Preconditions>The MCP client launched the mygrace server over stdio.</Preconditions>
+      <AcceptanceCriteria>All 17 tools respond from a plain checkout; invalid arguments produce structured errors.</AcceptanceCriteria>
+      <Priority>high</Priority>
+      <RelatedModules>M-MCP,M-MCP-COMMANDS</RelatedModules>
+    </UC-006>
+    <UC-007>
+      <Actor>AIAgent</Actor>
+      <Action>Runs mygrace packet, focus and context-cost.</Action>
+      <Goal>Budget context before reading, and receive a self-contained worker prompt per module.</Goal>
+      <Preconditions>The module id exists in docs/graph-index.xml.</Preconditions>
+      <AcceptanceCriteria>Output includes the module contract, canonical command and dependencies; ids are validated.</AcceptanceCriteria>
+      <Priority>medium</Priority>
+      <RelatedModules>M-PACKET,M-CONTEXT</RelatedModules>
+    </UC-007>
+    <UC-008>
+      <Actor>HumanMaintainer</Actor>
+      <Action>Runs mygrace status and mygrace doctor.</Action>
+      <Goal>See honest project and environment health with an exit code that matches the findings.</Goal>
+      <Preconditions>Optional DSH integration for environment checks.</Preconditions>
+      <AcceptanceCriteria>Counts match the indexes; malformed indexes are findings, never crashes.</AcceptanceCriteria>
+      <Priority>medium</Priority>
+      <RelatedModules>M-STATUS,M-DOCTOR</RelatedModules>
+    </UC-008>
+    <UC-009>
+      <Actor>HomeMaintainer</Actor>
+      <Action>Runs mygrace install-dsh.</Action>
+      <Goal>Wire skills, the MCP row and the status-panel row into DeepSeek Harness safely and reversibly.</Goal>
+      <Preconditions>DSH home and profile exist; the user may opt into the bundle.</Preconditions>
+      <AcceptanceCriteria>Atomic validated YAML edits, timestamped backups, byte-identical uninstall, non-zero on failed steps.</AcceptanceCriteria>
+      <Priority>medium</Priority>
+      <RelatedModules>M-INSTALL</RelatedModules>
+    </UC-009>
+  </UseCases>
+
+  <NonGoals>
+    <item-1>Not an IDE, code generator or model provider: MyGRACE maps and enforces, it does not write the product for you.</item-1>
+    <item-2>No telemetry and no network access at runtime except explicitly invoked install/doctor probes.</item-2>
+    <item-3>Not multi-tenant: one repository is one MyGRACE project (monorepos are discovered sub-projects, Wave 3).</item-3>
+    <item-4>No monolithic legacy XML files: knowledge-graph, development-plan and verification-plan do not exist by design.</item-4>
+  </NonGoals>
+
+  <Constraints>
+    <constraint-1>Bun is the primary runtime (engines bun >=1.3.8); Node >=22.6 is the documented secondary target.</constraint-1>
+    <constraint-2>Every command honours the ADR-3 exit-code contract in text and JSON modes.</constraint-2>
+    <constraint-3>Project-declared commands execute only behind the trust record, config opt-in or --allow-commands, argv-only with no shell.</constraint-3>
+    <constraint-4>Default index caps and entity budgets are usable without a custom config (graph 100, plan 50, verification 80; module 30-80, phase 50-200, verification 20-60 lines).</constraint-4>
+    <constraint-5>The published package must contain every runtime source; pack-smoke gates the release.</constraint-5>
+    <constraint-6>docs XML is parsed with a real parser; regex scraping of XML is forbidden.</constraint-6>
+  </Constraints>
+
+  <Risks>
+    <risk-1>Docs and indexes can drift from code after new commands land; validate-docs and lint --strict must stay in CI.</risk-1>
+    <risk-2>Trust fatigue: frequent docs edits invalidate the trust record; the refusal message must explain the exact next command.</risk-2>
+    <risk-3>Agents may over-trust repository instructions; the trust model and SECURITY.md must be read first.</risk-3>
+    <risk-4>Scale beyond the root index cap requires sharding (ADR-6) which is not implemented yet.</risk-4>
+    <risk-5>Windows support is limited by POSIX-style launchers and waits for the CI matrix.</risk-5>
+  </Risks>
+
+  <OpenQuestions>
+    <question-1>Which tokenizer should back the honest token metric instead of the labelled line model?</question-1>
+    <question-2>Should sharded indexes be generated automatically by mygrace module shard or maintained by agents?</question-2>
+    <question-3>What is the minimum Node runtime matrix for the dual-runtime release gate?</question-3>
+  </OpenQuestions>
+</RequirementsAnalysis>

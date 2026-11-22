@@ -1,5 +1,7 @@
 <PlanIndex project="$PROJECT_NAME" version="1.0.0">
-  <!-- Phases: one line each. Sorted by order. -->
+  <!-- Phase index: one line per phase, sorted by order. Default cap: indexCaps.plan = 50 lines.
+       When archiving a phase: move docs/plans/Phase-N.xml to docs/archive/ AND remove its entry
+       here (or lint reports an orphaned index entry). -->
   <!-- <Phase-N name="Phase Name" status="pending" steps="0" /> -->
 
 </PlanIndex>

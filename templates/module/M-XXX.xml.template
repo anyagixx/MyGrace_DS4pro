@@ -1,3 +1,5 @@
+<!-- Module contract file. Target length: 30-80 lines (sizeBudgets.module in mygrace.config.json);
+     lint reports a warning outside that range. Keep it a contract, not an implementation log. -->
 <M-XXX NAME="$MODULE_NAME" TYPE="$MODULE_TYPE" STATUS="pending">
   <purpose>$MODULE_PURPOSE</purpose>
   <path>$MODULE_PATH</path>
@@ -5,7 +7,7 @@
   <verification-ref>$VERIFICATION_REF</verification-ref>
 
   <annotations>
-    <!-- Public interface only — not private helpers -->
+    <!-- Public interface only - not private helpers -->
     <!-- <fn-functionName PURPOSE="What this function does" /> -->
     <!-- <type-TypeName PURPOSE="What this type represents" /> -->
     <!-- <export-CONSTANT_NAME PURPOSE="What this constant is for" /> -->

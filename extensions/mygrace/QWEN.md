@@ -1,31 +1,40 @@
-# MyGRACE — Scalable GRACE with Lazy-Loading
+# MyGRACE (legacy Qwen Code extension)
 
-This project uses **MyGRACE** — a scalable variant of GRACE designed for large projects (20-200+ modules).
+> This extension is a **legacy packaging** of MyGRACE. DeepSeek Harness is the
+> primary platform (`mygrace install-dsh`); this file and the companion commands
+> are kept for reference and are not maintained feature-for-feature.
 
-## Why MyGRACE?
-Classic GRACE degrades at ~15 modules because monolithic XML files exceed 5000 lines, burning 80-95% of LLM context tokens on irrelevant data.
+If you use this project with Qwen Code, follow the same rules the CLI enforces:
 
-MyGRACE replaces monolithic files with **indexes + per-entity files**:
-- `graph-index.xml` (≤100 lines) → `docs/modules/M-XXX.xml` (30-80 lines each)
-- `plan-index.xml` (≤50 lines) → `docs/plans/Phase-N.xml` (50-200 lines each)
-- `verification-index.xml` (≤80 lines) → `docs/verification/V-M-XXX.xml` (20-60 lines each)
+## Navigation
 
-**Token savings: 96%** per navigation operation.
+- Read `docs/graph-index.xml` first (module index), then only the
+  `docs/modules/M-XXX.xml` you need.
+- Read `docs/plan-index.xml` before a phase file; `docs/verification-index.xml`
+  before a verification file.
+- Never read all entity files and never create legacy monolithic XML
+  (`knowledge-graph.xml`, `development-plan.xml`, `verification-plan.xml`).
 
-## Navigation Rule #1
-**ALWAYS** start with the index file. **NEVER** scan all per-entity files.
-1. Read `docs/graph-index.xml` → find module ID
-2. Read `docs/modules/M-XXX.xml` → only that module
-3. Done. ~180 lines vs ~6500.
+## Trust model
 
-## Quick Reference
-| Task | Command | Context Used |
-|------|---------|-------------|
-| Status | `/mygrace:status` | ~230 lines (3 indexes) |
-| Find module | `mygrace module find auth` | ~100 lines (index) |
-| Show module | `mygrace module show M-AUTH` | ~130 lines (index + module) |
-| Execute plan | `/mygrace:execute` | ~280 lines per step |
-| Health check | `mygrace lint` | ~230 lines (indexes) + files |
+`<module-checks>` in `docs/verification/V-M-XXX.xml` is the canonical command
+source. `mygrace test` / `mygrace verify` refuse to run those project-declared
+commands unless `.mygrace/trust.json` is current (`mygrace trust` after review),
+`mygrace.config.json` sets `allowCommands: true`, or you pass `--allow-commands`.
+`.mygrace/` is local state and stays out of version control.
+
+## Commands
+
+- `mygrace ci --path .` — one-command quality gate (add `--tests` when trusted)
+- `mygrace status --path .`, `mygrace lint --strict --path .`
+- `mygrace module show <id> --path .`, `mygrace phase show <Phase-N> --path .`
+- `mygrace trust --path .`, then `mygrace test --module <M-XXX>` / `mygrace verify --path .`
+- `mygrace doctor --path .`
 
 ## Skills
-`/mygrace:init` · `/mygrace:plan` · `/mygrace:execute` · `/mygrace:multiagent` · `/mygrace:refactor` · `/mygrace:refresh` · `/mygrace:reviewer` · `/mygrace:fix` · `/mygrace:status` · `/mygrace:ask` · `/mygrace:verification` · `/mygrace:cli` · `/mygrace:explainer` · `/mygrace:setup-subagents`
+
+The 15 shared skills live in `skills/mygrace/grace-*` and are installed as
+`mygrace-*`; prefer them over re-deriving the process.
+
+Configuration: `mygrace.config.json` (`sourceDirs`, `markupExts`, `ignoreDirs`,
+`indexCaps`, `sizeBudgets`, `testRunner`, `allowCommands`, `language`).

@@ -1,0 +1,7 @@
+{
+  "sizeBudgets": {
+    "module": [1, 200],
+    "phase": [1, 500],
+    "verification": [1, 200]
+  }
+}

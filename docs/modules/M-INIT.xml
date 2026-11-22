@@ -1,0 +1,37 @@
+<!-- Module contract for M-INIT. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-INIT NAME="Project bootstrap" TYPE="UTILITY" STATUS="done">
+  <purpose>Bootstrap a MyGRACE project from bundled templates: docs/ structure, AGENTS.md and mygrace.config.json (ADR-5).</purpose>
+  <path>src/grace-init.ts</path>
+  <depends>M-CONFIG</depends>
+  <verification-ref>V-M-INIT</verification-ref>
+
+  <annotations>
+    <fn-substitute PURPOSE="Replace $VARS in template content." />
+    <fn-buildSpecs PURPOSE="Template to destination mapping (docs indexes, AGENTS.md)." />
+    <fn-ensureGitignore PURPOSE="Create .gitignore with .mygrace/ (or note it) so the trust record is never committed." />
+    <export-initDshCommand PURPOSE="init-dsh command with --path/--name/--force and runtime options." />
+  </annotations>
+
+  <CrossLink to="M-CONFIG" relation="writes the default mygrace.config.json" />
+
+  <contract>
+    <purpose>Bootstrap a MyGRACE project from bundled templates: docs/ structure, AGENTS.md and mygrace.config.json (ADR-5).</purpose>
+    <inputs>
+      <param name="path" type="string" description="Project root to initialize." />
+      <param name="name" type="string" description="Project name used in templates." />
+    </inputs>
+    <outputs>
+      <param name="files" type="string[]" description="Created docs/*.xml, AGENTS.md and mygrace.config.json." />
+    </outputs>
+    <errors>
+      <error code="INIT_TEMPLATES_MISSING" description="Bundled templates directory is absent in an incomplete package." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>Never overwrites existing files without --force; the repository AGENTS.md is preserved by design.</note-1>
+    <note-2>Generated scaffold is lint-clean; scripts/pack-smoke.ts verifies this end-to-end on the packaged CLI.</note-2>
+    <note-4>Also ensures .mygrace/ is gitignored (ADR-1); an existing .gitignore is never rewritten, only annotated.</note-4>
+    <note-3>The interactive, question-driven bootstrap remains the mygrace-init skill.</note-3>
+  </notes>
+</M-INIT>

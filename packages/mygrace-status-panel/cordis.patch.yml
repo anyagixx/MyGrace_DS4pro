@@ -1,6 +1,12 @@
 # Bundle layer for the `dsh plugin add` installation path.
-# `mygrace install-dsh` inserts this row into the profile patch directly,
-# so this file doubles as documentation of the entry shape.
+#
+# This package is the LIVE MyGRACE status card (`private: true`, unpublished
+# preview). It is installed only by `mygrace install-dsh --panel`, which
+# inserts this row into the profile patch directly. The row loads the host half
+# (registers GET /api/mygrace.status on DSH's connection service) and the
+# `dsh.client` declaration serves the polling browser card in the sidebar.
+# The file doubles as documentation of the entry shape and lets a manual
+# `dsh plugin add` keep the same row id.
 - insert:
     - id: mygrace-status-panel
       name: mygrace-status-panel

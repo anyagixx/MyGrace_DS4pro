@@ -1,0 +1,26 @@
+<!-- Canonical verification entry. <module-checks> is read by mygrace test/verify; commands are trust-gated (run `mygrace trust` after review). -->
+<V-M-NEXT MODULE="M-NEXT" PRIORITY="high" STATUS="done">
+  <test-files>
+    <file>test/grace-next.test.ts</file>
+  </test-files>
+
+  <module-checks>
+    <check-1>bun test test/grace-next.test.ts</check-1>
+  </module-checks>
+
+  <scenarios>
+    <scenario-1 kind="success">The ladder is deterministic on every fixture: INIT_PROJECT, FIX_INDEX, FIX_LINT_ERRORS, ADD_VERIFICATION_COVERAGE, TRUST_COMMANDS, VERIFY_MODULE, REFRESH_WARNINGS, NEXT_PHASE, NOTHING_TO_DO are returned in priority order with stable ids.</scenario-1>
+    <scenario-2 kind="success">A clean, fully verified project with a pending phase recommends NEXT_PHASE; when every phase is done it recommends NOTHING_TO_DO; both exit 0.</scenario-2>
+    <scenario-3 kind="failure">Advice never fails the build: even FIX_LINT_ERRORS exits 0; only usage/config errors exit 2, and JSON mode returns the ADR-8 envelope.</scenario-3>
+  </scenarios>
+
+  <required-log-markers>
+    <marker-1>CLI text/JSON output is asserted by the tests; library paths emit no runtime log markers.</marker-1>
+  </required-log-markers>
+
+  <notes>
+    <note-1>Covered by test/grace-next.test.ts (all nine codes, priority ordering, trust/coverage/plan-index branches, exit codes, JSON envelope).</note-1>
+    <note-2>Text digest lines: NEXT / WHY / RUN / IDS / CODE; json data is { action: { code, summary, why, command?, ids? }, root, findings }.</note-2>
+    <note-3>CLI surface: mygrace next [--path .] [--format text|json].</note-3>
+  </notes>
+</V-M-NEXT>

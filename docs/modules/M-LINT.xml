@@ -1,0 +1,53 @@
+<!-- Module contract for M-LINT. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-LINT NAME="Enforced invariants (lint)" TYPE="CORE_LOGIC" STATUS="done">
+  <purpose>Enforce MyGRACE invariants: XML validity, index/entity drift, path and dependency integrity, caps/budgets and markup discipline.</purpose>
+  <path>src/grace-lint.ts</path>
+  <depends>M-COMMON,M-XML,M-CONFIG,M-ERRORS,M-PATHS,M-SHARD</depends>
+  <verification-ref>V-M-LINT</verification-ref>
+
+  <annotations>
+    <fn-analyzeMarkup PURPOSE="Text-markup analysis shared with file show (contract fields, name-aware block pairing)." />
+    <fn-lintXmlFiles PURPOSE="Structural XML validity plus index-root and entity-tag checks for every docs/*.xml." />
+    <fn-lintIndexSync PURPOSE="Index to entity sync, field drift, PATH existence and DEPENDS integrity for one flat index." />
+    <fn-lintGraphIndex PURPOSE="Shard-aware graph-index validation: flat entries plus &lt;Shard&gt; refs (ADR-6)." />
+    <fn-lintIndexCaps PURPOSE="Index line caps from mygrace.config.json (errors above cap)." />
+    <fn-lintEntityBudgets PURPOSE="Entity line budgets from config (warnings outside the range)." />
+    <fn-lintVerificationRefs PURPOSE="Verification ref integrity in both directions, all refs." />
+    <fn-lintDeprecatedModuleChecks PURPOSE="Legacy &lt;module-checks&gt; in module files (warning only)." />
+    <fn-lintXmlTags PURPOSE="Generic XML tag conventions (warning)." />
+    <fn-lintMarkup PURPOSE="Semantic markup over configured source dirs with name-aware block pairing." />
+    <fn-collectLintIssues PURPOSE="Aggregate every detector; backwards compatible 2-arg form for status/doctor." />
+    <export-lintCommand PURPOSE="citty command with --strict, --format, --allow-missing-docs and the incremental --changed/--base/--files scope." />
+    <type-Finding PURPOSE="Re-exported finding shape used by every detector." />
+  </annotations>
+
+  <CrossLink to="M-COMMON" relation="index reads and file walking" />
+  <CrossLink to="M-CONFIG" relation="caps and budgets" />
+  <CrossLink to="M-PATHS" relation="PATH containment" />
+
+  <contract>
+    <purpose>Enforce MyGRACE invariants: XML validity, index/entity drift, path and dependency integrity, caps/budgets and markup discipline.</purpose>
+    <inputs>
+      <param name="root" type="string" description="Project root." />
+      <param name="config" type="MyGraceConfig" description="Effective caps/budgets/layout." />
+    </inputs>
+    <outputs>
+      <param name="findings" type="Finding[]" description="Coded findings with stable severity and location." />
+      <param name="exitCode" type="ExitCode" description="0 ok, 1 findings, --strict promotes warnings." />
+    </outputs>
+    <errors>
+      <error code="XML_INVALID" description="Malformed docs XML." />
+      <error code="DUPLICATE_INDEX_ENTRY" description="Duplicate entity id in an index." />
+      <error code="MODULE_PATH_NOT_FOUND" description="Declared module PATH does not exist." />
+      <error code="UNKNOWN_DEPENDENCY" description="DEPENDS target missing from the index." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>Every drift class has a stable code and a negative test in test/grace-lint-strict.test.ts.</note-1>
+    <note-2>Block pairing is name-aware: START_BLOCK_A closed by END_BLOCK_B is an error even when counts match.</note-2>
+    <note-3>JSON mode emits the ADR-8 envelope and honours the exit code (the v1 always-zero bug is fixed).</note-3>
+    <note-5>Incremental mode (--changed): git diff base (default HEAD) plus untracked files, or explicit --files without git; index changes trigger full index checks, entity changes only that entity, source changes only markup. `Scope: N changed file(s) (scanned: X, skipped: Y)` is printed and JSON adds data.scope.</note-5>
+    <note-4>Sharding (ADR-6): graph-index and shard unions are validated like a flat index; shard problems use SHARD_COUNT_MISMATCH, SHARD_FILE_MISSING, SHARD_ROOT_INVALID, PATH_UNSAFE and per-shard INDEX_TOO_LARGE.</note-4>
+  </notes>
+</M-LINT>

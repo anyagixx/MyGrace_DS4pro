@@ -1,0 +1,64 @@
+{
+  "sourceDirs": [
+    "src",
+    "lib",
+    "apps",
+    "packages"
+  ],
+  "markupExts": [
+    ".ts",
+    ".js",
+    ".mjs",
+    ".cjs",
+    ".tsx",
+    ".jsx",
+    ".py",
+    ".go",
+    ".java",
+    ".rs",
+    ".rb"
+  ],
+  "ignoreDirs": [
+    "node_modules",
+    ".git",
+    ".hg",
+    ".svn",
+    "dist",
+    "build",
+    "out",
+    "target",
+    "vendor",
+    "coverage",
+    ".next",
+    ".nuxt",
+    ".venv",
+    "venv",
+    "__pycache__",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".idea",
+    ".vscode"
+  ],
+  "indexCaps": {
+    "graph": 100,
+    "plan": 50,
+    "verification": 80
+  },
+  "sizeBudgets": {
+    "module": [
+      30,
+      80
+    ],
+    "phase": [
+      50,
+      200
+    ],
+    "verification": [
+      20,
+      60
+    ]
+  },
+  "testRunner": "bun test",
+  "allowCommands": false,
+  "language": "typescript"
+}

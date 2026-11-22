@@ -1,0 +1,42 @@
+<!-- Module contract for M-XML. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-XML NAME="Strict XML layer" TYPE="FOUNDATION" STATUS="done">
+  <purpose>Parse and validate MyGRACE project XML with fast-xml-parser and expose small typed accessors (ADR-2).</purpose>
+  <path>src/grace-xml.ts</path>
+  <depends>M-ERRORS</depends>
+  <verification-ref>V-M-XML</verification-ref>
+
+  <annotations>
+    <export-INDEX_TAG_RE PURPOSE="Grammar of index entry tags: M-XXX, V-M-XXX and Phase-N." />
+    <fn-validateXml PURPOSE="Well-formedness check with line/column, null when valid." />
+    <fn-parseXml PURPOSE="Validate then parse; throws XmlError on malformed input." />
+    <fn-tryParseXml PURPOSE="Non-throwing parse for lint-style callers." />
+    <fn-parseIndexEntries PURPOSE="Structural index entries with attributes and a rendered raw tag." />
+    <fn-indexEntriesFromDocument PURPOSE="Index entries from an already parsed document." />
+    <fn-parseAttributes PURPOSE="Legacy helper: attributes from a raw tag body string." />
+    <fn-findElements PURPOSE="Filter all elements of a document by predicate." />
+    <fn-childElements PURPOSE="Direct child elements, optionally filtered by tag." />
+    <fn-childElement PURPOSE="First direct child with the given tag." />
+    <fn-textOf PURPOSE="Trimmed direct text content of an element." />
+    <fn-attr PURPOSE="Attribute value or undefined." />
+  </annotations>
+
+  <contract>
+    <purpose>Parse and validate MyGRACE project XML with fast-xml-parser and expose small typed accessors (ADR-2).</purpose>
+    <inputs>
+      <param name="content" type="string" description="Raw XML text read by a caller." />
+      <param name="filePath" type="string" description="Path used in error messages." />
+    </inputs>
+    <outputs>
+      <param name="document" type="XmlDocument" description="Root element plus a flat element list in document order." />
+    </outputs>
+    <errors>
+      <error code="XML_INVALID" description="Malformed XML (line/column included)." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>Comments, CDATA wrappers and processing instructions are not elements, so template examples never leak into results.</note-1>
+    <note-2>Attribute quoting, attribute values containing &gt; or quotes, and Phase-1a names are handled by the parser, not by regexes.</note-2>
+    <note-3>Every reader in MyGRACE (indexes, entities, MCP payloads) goes through this module so behaviour cannot drift.</note-3>
+  </notes>
+</M-XML>

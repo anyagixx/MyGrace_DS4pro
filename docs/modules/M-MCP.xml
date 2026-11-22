@@ -1,0 +1,40 @@
+<!-- Module contract for M-MCP. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-MCP NAME="MCP stdio server" TYPE="INTEGRATION" STATUS="done">
+  <purpose>Expose the MyGRACE tool catalog to MCP clients over stdio with a PATH-free CLI launcher, strict argument validation and full output passthrough (ADR-7, ADR-8).</purpose>
+  <path>src/grace-mcp.ts</path>
+  <depends>M-MCP-COMMANDS</depends>
+  <verification-ref>V-M-MCP</verification-ref>
+
+  <annotations>
+    <export-DEFAULT_TIMEOUT_MS PURPOSE="Default CLI budget, 120 s." />
+    <export-CLI_MAX_BUFFER PURPOSE="10 MB stdout/stderr capture budget." />
+    <fn-resolveLauncher PURPOSE="MYGRACE_BIN then process.execPath plus src/grace.ts then mygrace on PATH." />
+    <fn-resolveTimeoutMs PURPOSE="Parse MYGRACE_MCP_TIMEOUT_MS with a safe default." />
+    <fn-runCli PURPOSE="execFile the launcher; capture stdout/stderr, timeout, maxBuffer, spawn errors." />
+    <fn-createMcpServer PURPOSE="Server with ListTools/CallTool handlers driven by the catalog." />
+    <fn-main PURPOSE="Connect the stdio transport." />
+  </annotations>
+
+  <CrossLink to="M-MCP-COMMANDS" relation="single tool catalog, schemas and argv mapping" />
+
+  <contract>
+    <purpose>Expose the MyGRACE tool catalog to MCP clients over stdio with a PATH-free CLI launcher, strict argument validation and full output passthrough (ADR-7, ADR-8).</purpose>
+    <inputs>
+      <param name="name" type="string" description="Tool name from the catalog." />
+      <param name="arguments" type="object" description="Unvalidated MCP arguments." />
+    </inputs>
+    <outputs>
+      <param name="content" type="MCP content" description="CLI text output (stdout and stderr preserved on failure)." />
+    </outputs>
+    <errors>
+      <error code="INVALID_TOOL_ARGUMENTS" description="Structured validation error listing the offending fields." />
+      <error code="INTERNAL" description="Transport or process-start failure." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>The server is a transport adapter, not a second implementation: every tool maps to a CLI command (21 tools including mygrace_ci, mygrace_trace, mygrace_impact, mygrace_next and mygrace_projects).</note-1>
+    <note-2>The launcher works from a plain checkout without a global mygrace binary or PATH entry.</note-2>
+    <note-3>Failure details are returned with isError instead of a stack trace.</note-3>
+  </notes>
+</M-MCP>

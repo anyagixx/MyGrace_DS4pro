@@ -1,0 +1,48 @@
+<!-- Module contract for M-TEST. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-TEST NAME="Trusted command execution" TYPE="CORE_LOGIC" STATUS="done">
+  <purpose>Execute project-declared verification commands safely: canonical command source, trust record, argv-only execution, quote-aware splitting (ADR-1, ADR-4).</purpose>
+  <path>src/grace-test.ts</path>
+  <depends>M-COMMON,M-XML,M-PATHS,M-CONFIG,M-ERRORS</depends>
+  <verification-ref>V-M-TEST</verification-ref>
+
+  <annotations>
+    <fn-parseTestFiles PURPOSE="Structural &lt;test-files&gt; entries from a verification file." />
+    <fn-parseCheckCommands PURPOSE="All &lt;module-checks&gt; commands, canonical first." />
+    <fn-parseCheckCommand PURPOSE="First declared check command with a config fallback." />
+    <fn-tokenizeCommand PURPOSE="Quote-aware argv splitter; no shell." />
+    <fn-inspectCheckCommand PURPOSE="Flags shell-style commands that need explicit opt-in." />
+    <fn-planModuleTest PURPOSE="Pure plan: files, command, argv, source and validation errors." />
+    <fn-executeModulePlan PURPOSE="Authorize then spawn one plan; never throws for findings." />
+    <fn-runModuleTests PURPOSE="Plan plus execute convenience used by verify and tests." />
+    <fn-loadTrustRecord PURPOSE="Read .mygrace/trust.json." />
+    <fn-writeTrustRecord PURPOSE="Atomically write the trust record (0600)." />
+    <fn-computeTrustHashes PURPOSE="sha256 of docs/modules, docs/verification and the config." />
+    <fn-checkTrust PURPOSE="Hash comparison with actionable stale/missing details." />
+  </annotations>
+
+  <CrossLink to="M-PATHS" relation="validates ids and test-file entries" />
+  <CrossLink to="M-CONFIG" relation="testRunner fallback and allowCommands" />
+  <CrossLink to="M-ERRORS" relation="TrustError and envelope contract" />
+
+  <contract>
+    <purpose>Execute project-declared verification commands safely: canonical command source, trust record, argv-only execution, quote-aware splitting (ADR-1, ADR-4).</purpose>
+    <inputs>
+      <param name="root" type="string" description="Project root." />
+      <param name="moduleId" type="string" description="Module id to plan tests for." />
+    </inputs>
+    <outputs>
+      <param name="plan" type="ModulePlan" description="Spanwable command with source and validation state." />
+    </outputs>
+    <errors>
+      <error code="UNTRUSTED_PROJECT" description="No valid trust record and no opt-in (exit 2)." />
+      <error code="INVALID_TEST_FILE" description="Test-file entry escapes the project or starts with -." />
+      <error code="INVALID_PLAN" description="No usable command/test files." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>No shell interpolation: argv-only spawnSync with shell false.</note-1>
+    <note-2>Trust is content-based: editing docs/modules, docs/verification or the config invalidates the record.</note-2>
+    <note-3>Command source precedence is documentation: verification file (canonical), module file (deprecated), config testRunner.</note-3>
+  </notes>
+</M-TEST>

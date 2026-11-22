@@ -1,0 +1,65 @@
+name: Feature request
+description: Propose a capability or improvement. Small, verifiable proposals move fastest.
+title: "[feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        MyGRACE is a **contract layer between human intent and AI-executed work**: it
+        optimizes for traceability, enforced invariants and small context reads.
+        Before proposing a feature, read `ROADMAP.md` — it contains
+        the vision, the ADRs and an explicit non-goals list; several ideas are already
+        planned or intentionally out of scope.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What can you not do today, for whom, and why does it matter? Describe the workflow, not only the missing command.
+      placeholder: "When I ... I have to ... which is slow/inaccurate because ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: What should happen? Include the CLI/MCP shape if relevant, and how an agent would consume it (text output plus the `--format json` envelope).
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Workarounds, other tools, or why a smaller change would not be enough.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - lint / index validation
+        - module / phase / verification commands
+        - test / verify / trust
+        - MCP server
+        - install-dsh / DSH integration
+        - CLI / output / exit codes
+        - docs, templates, skills
+        - new command / workflow
+        - other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I read ROADMAP.md and this is neither a non-goal nor an already-planned item.
+          required: true
+        - label: I am willing to open a PR for this (docs-only proposals are welcome too).
+          required: false

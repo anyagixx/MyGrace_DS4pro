@@ -1,3 +1,5 @@
+<!-- Phase plan. Target length: 50-200 lines (sizeBudgets.phase in mygrace.config.json): one step
+     per module with enough context for an agent to execute it without re-reading the whole plan. -->
 <Phase-N name="$PHASE_NAME" status="pending">
   <description>$PHASE_DESCRIPTION</description>
 

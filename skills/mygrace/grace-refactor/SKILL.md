@@ -1,50 +1,56 @@
 ---
 name: mygrace-refactor
-description: "Refactor MyGRACE-governed code safely, updating per-module files and indexes atomically. Use for rename, move, split, merge, extract, interface changes, or path-only moves."
+description: "Refactor MyGRACE-governed code safely: classify the change, update code + per-entity files + indexes atomically, re-record trust, verify by blast radius. Use for rename, move, split, merge, extract or interface changes."
 whenToUse: "Any structural change to governed modules — rename, move, split, merge, extract, interface-tighten, path-only."
 ---
 
-Refactor without letting architecture, indexes, or verification drift.
+# Refactor safely
 
-## When to Use
-rename, move, split, merge, extract, interface-tighten, path-only
+## 1. Classify and scope
 
-## Key Difference from Classic GRACE
-In addition to updating code and per-module files, you MUST update the **index entries**. If the index drifts, lazy navigation breaks.
+Identify the refactor type and the affected module/phase/verification ids from
+`docs/graph-index.xml` (index only). Read the affected entity files; do not scan
+unrelated modules.
 
-## LAZY PROCESS
+## 2. Build the refactor packet
 
-### Step 1: Classify the Refactor
-Identify type, source/target module IDs and paths from `docs/graph-index.xml` (MCP: `mygrace_list_modules`).
+For the source and target scope list: files/tests, `docs/modules/M-XXX.xml`,
+`docs/plans/Phase-N.xml`, `docs/verification/V-M-XXX.xml`, and the three index
+entries that reference them.
 
-### Step 2: Build Refactor Packet
-Source scope, target scope, invariants, and delta summaries for:
-- Source files and tests
-- Per-module files (`docs/modules/M-XXX.xml`)
-- Index entries (`docs/graph-index.xml`)
-- Phase files (`docs/plans/Phase-N.xml`) and index (`docs/plan-index.xml`)
-- Verification files (`docs/verification/V-M-XXX.xml`) and index (`docs/verification-index.xml`)
+## 3. Apply the smallest safe change
 
-### Step 3: Apply Smallest Safe Refactor
-- Update source code
-- Update per-module files
-- **Update index entries** — this is new and critical in MyGRACE
-- Preserve semantic markup
+- Update source code; keep semantic markup and contracts consistent with reality.
+- Update per-entity files (contract, CrossLinks, annotations).
+- **Update index entries** — a refactor is not done until indexes match reality.
+- If a contract/interface changes, get explicit approval first.
 
-### Step 4: Synchronize All Indexes
-1. `docs/graph-index.xml` — update module IDs, names, paths, dependencies, statuses
-2. `docs/plan-index.xml` — update phase step counts, statuses
-3. `docs/verification-index.xml` — update verification entries
+## 4. Synchronize
 
-### Step 5: Verify by Blast Radius
-Module-local → integration surfaces → index consistency check (`mygrace lint --path <root>`, MCP: `mygrace_lint`)
+1. `docs/graph-index.xml` — ids, names, paths, dependencies, statuses.
+2. `docs/plan-index.xml` — phase names, step counts, statuses.
+3. `docs/verification-index.xml` — verification entries (module/priority/status).
+4. Verification files — test paths and `<module-checks>` if they moved.
+5. If the refactor changes the module count, re-check the root index cap and
+   re-shard (`mygrace module shard --path <root>` dry run, then `--apply`); old
+   generated shards are removed with a backup and the operation is idempotent.
 
-### Step 6: Review and Refresh
-- Scoped review pass (call the `mygrace-reviewer` skill)
-- Targeted refresh on touched modules and indexes (call the `mygrace-refresh` skill, scoped)
+## 5. Verify by blast radius
+
+- `mygrace lint --strict --path <root>` first (structural drift),
+- module-local checks (`mygrace verify --module <M-XXX>`; trust-gated — re-run
+  `mygrace trust` if docs/verification changed),
+- then integration surfaces touched by the refactor.
+
+## 6. Review and refresh
+
+Scoped review (`mygrace-reviewer` skill) and targeted refresh
+(`mygrace-refresh` skill) for touched modules; re-record trust if command
+sources changed.
 
 ## Rules
-- **Index updates are mandatory** — refactor is not done until indexes match reality
-- Never silently invent new architecture
-- Get user approval for any contract/interface changes
-- For split/merge: create new per-module files, update index with new entries, remove old entries
+
+- Index updates are mandatory; `--strict` lint must pass.
+- Never silently invent architecture; propose contract changes.
+- For split/merge: create the new per-entity files and index entries, remove the
+  old ones, and update `plan-index.xml` step references.

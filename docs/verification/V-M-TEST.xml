@@ -1,0 +1,25 @@
+<!-- Canonical verification entry. <module-checks> is read by mygrace test/verify; commands are trust-gated (run `mygrace trust` after review). -->
+<V-M-TEST MODULE="M-TEST" PRIORITY="high" STATUS="done">
+  <test-files>
+    <file>test/grace-test.test.ts</file>
+    <file>test/grace-trust.test.ts</file>
+    <file>test/grace-security.test.ts</file>
+  </test-files>
+
+  <module-checks>
+    <check-1>bun test</check-1>
+  </module-checks>
+
+  <scenarios>
+    <scenario-1 kind="success">Declared commands plan and execute only after trust; argv-only spawning is enforced.</scenario-1>
+    <scenario-2 kind="failure">Untrusted projects are refused with UNTRUSTED_PROJECT (exit 2); shell-style commands need explicit opt-in.</scenario-2>
+  </scenarios>
+
+  <required-log-markers>
+    <marker-1>CLI text output and JSON envelopes are asserted by the tests; no runtime log markers are emitted by library modules.</marker-1>
+  </required-log-markers>
+
+  <notes>
+    <note-1>Covered by test/grace-test.test.ts, test/grace-trust.test.ts, test/grace-security.test.ts.</note-1>
+  </notes>
+</V-M-TEST>

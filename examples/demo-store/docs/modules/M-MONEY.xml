@@ -1,0 +1,32 @@
+<M-MONEY NAME="Money" TYPE="UTILITY" STATUS="done">
+  <purpose>Parse and format monetary amounts as integer cents without floating-point drift.</purpose>
+  <path>src/money/index.ts</path>
+  <depends>none</depends>
+  <verification-ref>V-M-MONEY</verification-ref>
+
+  <annotations>
+    <fn-parseAmount PURPOSE="Money exports parseAmount with validated inputs and explicit errors." />
+    <fn-formatAmount PURPOSE="Money exports formatAmount with validated inputs and explicit errors." />
+    <type-MONEY_INVALID PURPOSE="Money validation error raised on invalid input." />
+  </annotations>
+
+  <CrossLink to="M-CATALOG" relation="used-by" />
+
+  <contract>
+    <purpose>Parse and format monetary amounts as integer cents without floating-point drift.</purpose>
+    <inputs>
+      <param name="input" type="unknown" description="Money validates every input before use and reports errors explicitly." />
+    </inputs>
+    <outputs>
+      <param name="result" type="unknown" description="Money returns deterministic results; failures throw instead of returning sentinel values." />
+    </outputs>
+    <errors>
+      <error code="MONEY_INVALID" description="Raised when Money receives invalid input." />
+    </errors>
+  </contract>
+
+  <notes>
+    All demo arithmetic is performed on integer cents so subtotals are exact.
+    Floats are never used for storage; formatting is the only place decimals appear.
+  </notes>
+</M-MONEY>

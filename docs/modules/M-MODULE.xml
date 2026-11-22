@@ -1,0 +1,44 @@
+<!-- Module contract for M-MODULE. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-MODULE NAME="Index navigation commands" TYPE="CORE_LOGIC" STATUS="done">
+  <purpose>Expose index-first navigation commands (module/phase/verification) with validated ids and readable XML errors.</purpose>
+  <path>src/grace-module.ts</path>
+  <depends>M-COMMON,M-PATHS,M-ERRORS,M-XML,M-SHARD</depends>
+  <verification-ref>V-M-MODULE</verification-ref>
+
+  <annotations>
+    <export-moduleCommand PURPOSE="module {index,find,show,list} command group." />
+    <export-moduleFindCmd PURPOSE="Search modules by name/path/type/status/dependency." />
+    <export-moduleShowCmd PURPOSE="Show one module file; unique id prefixes are resolved." />
+    <export-moduleListCmd PURPOSE="List modules with status/type filters." />
+    <export-phaseCommand PURPOSE="phase {index,show} command group." />
+    <export-phaseShowCmd PURPOSE="Show one phase plan file." />
+    <export-verificationCommand PURPOSE="verification {index} command group." />
+  </annotations>
+
+  <CrossLink to="M-PATHS" relation="validates every id before it reaches the filesystem" />
+  <CrossLink to="M-XML" relation="structural reads; malformed XML becomes XML_INVALID" />
+
+  <contract>
+    <purpose>Expose index-first navigation commands (module/phase/verification) with validated ids and readable XML errors.</purpose>
+    <inputs>
+      <param name="id" type="string" description="Module, phase or verification id or unique module prefix." />
+      <param name="path" type="string" description="Project root." />
+    </inputs>
+    <outputs>
+      <param name="stdout" type="string" description="Index text, entity text or filtered tables." />
+      <param name="json" type="object" description="--format json arrays/objects." />
+    </outputs>
+    <errors>
+      <error code="USAGE" description="Malformed or traversal id (exit 2)." />
+      <error code="XML_INVALID" description="Malformed index/entity XML (exit 1)." />
+      <error code="INVALID_INDEX_ENTRY_ID" description="Index contains an id outside the grammar." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>Index-first is enforced by design: commands read docs/*.xml indexes, not arbitrary files.</note-1>
+    <note-2>Raw index text is validated before printing so a corrupt index never looks like an empty one.</note-2>
+    <note-3>Ids printed from an index are re-validated defensively before they reach other tools.</note-3>
+    <note-4>Sharding: list/find/index and unique-prefix resolution read the transparent union of root and shard entries; module show still reads docs/modules/M-XXX.xml directly.</note-4>
+  </notes>
+</M-MODULE>

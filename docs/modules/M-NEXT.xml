@@ -1,0 +1,37 @@
+<!-- Module contract for M-NEXT. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-NEXT NAME="Next-step advisor" TYPE="ORCHESTRATOR" STATUS="done">
+  <purpose>Give an agent without session memory one deterministic next action, driven by the same gates CI uses (Wave 3.4); never guess and never fail the build.</purpose>
+  <path>src/grace-next.ts</path>
+  <depends>M-COMMON,M-CONFIG,M-ERRORS,M-CI,M-LINT,M-SHARD,M-TEST</depends>
+  <verification-ref>V-M-NEXT</verification-ref>
+
+  <annotations>
+    <export-NextActionCode PURPOSE="Nine fixed codes, highest priority first: INIT_PROJECT, FIX_INDEX, FIX_LINT_ERRORS, ADD_VERIFICATION_COVERAGE, TRUST_COMMANDS, VERIFY_MODULE, REFRESH_WARNINGS, NEXT_PHASE, NOTHING_TO_DO." />
+    <fn-recommendNext PURPOSE="Run the fixed ladder over config, shard-aware indexes, lint, coverage, trust state and plan index; throws only usage/config errors." />
+    <export-nextCommand PURPOSE="mygrace next [--path] [--format text|json]; text = NEXT / WHY / RUN / IDS / CODE lines; exit 0 for any advice." />
+    <type-NextResult PURPOSE="JSON data: action {code, summary, why, command?, ids?} plus root and info findings." />
+  </annotations>
+
+  <CrossLink to="M-CI" relation="coverage and gate checks are the same collectors ci uses" />
+  <CrossLink to="M-LINT" relation="lint errors/warnings feed FIX_LINT_ERRORS and REFRESH_WARNINGS" />
+  <CrossLink to="M-TEST" relation="TRUST_COMMANDS/VERIFY_MODULE decisions read the trust record and verification plan" />
+
+  <contract>
+    <purpose>Return exactly one deterministic recommendation, ordered by a fixed priority ladder.</purpose>
+    <inputs>
+      <param name="root" type="string" description="Project root resolved from --path." />
+    </inputs>
+    <outputs>
+      <param name="result" type="NextResult" description="root (null outside a project), action, findings, exitCode." />
+    </outputs>
+    <errors>
+      <error code="USAGE" description="Invalid path/format/config — exit 2; advice itself never exits non-zero." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>Deterministic: ids/findings are sorted, no heuristics, no model calls; the same tree always yields the same advice.</note-1>
+    <note-2>Read-only: it reports the trust verdict but never executes project commands and never writes.</note-2>
+    <note-3>NEXT_PHASE follows docs/plan-index.xml order and only recommends phases still pending/wip; NOTHING_TO_DO means indexes clean, coverage complete and every phase done.</note-3>
+  </notes>
+</M-NEXT>

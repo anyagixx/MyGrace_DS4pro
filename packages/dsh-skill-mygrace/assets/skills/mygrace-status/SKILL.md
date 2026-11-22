@@ -1,43 +1,50 @@
 ---
 name: mygrace-status
-description: "Show MyGRACE project health by reading ONLY the three index files (~230 lines). Use to get a fast project status before planning next work."
-whenToUse: "Before starting a work session or deciding the next action, when a quick project health read is needed."
+description: "Report MyGRACE project health from the three indexes plus the lint summary, and choose the next action. Use before starting a work session or when deciding what to do next."
+whenToUse: "You need a fast, truthful status snapshot and a recommended next action without reading the codebase."
 ---
 
-Show the current state of the MyGRACE project.
+# Project status
 
-## LAZY REPORT (reads only indexes — ~230 lines total)
+## What to read (bounded)
 
-### 1. Index Status (read these 3 files — ALWAYS)
-- `docs/graph-index.xml` (≤100 lines) — module count, status distribution (MCP: `mygrace_list_modules`)
-- `docs/plan-index.xml` (≤50 lines) — phase count, status distribution
-- `docs/verification-index.xml` (≤80 lines) — verification count, priority distribution (MCP: `mygrace_list_verifications`)
+Run the status command; it reads only the three index files plus the lint result
+and returns counts — it never scans the source tree for you:
 
-### 2. Codebase Metrics (fast scan)
-- Total source files
-- Files WITH MODULE_CONTRACT
-- Files WITHOUT MODULE_CONTRACT (warning)
-- Paired vs unpaired semantic blocks
+- `mygrace status --path <root> --format json` — modules/phases/verifications by
+  status and priority, plus lint error/warning counts.
+- `mygrace ci --path <root>` — one-command gate (strict lint + status + verification coverage).
+- `mygrace lint --strict --path <root>` when you need the findings themselves.
+- `mygrace doctor --path <root>` when the environment/integration looks wrong.
+- `mygrace next --path <root>` — the deterministic recommendation with its code
+  (INIT_PROJECT · FIX_INDEX · FIX_LINT_ERRORS · ADD_VERIFICATION_COVERAGE ·
+  TRUST_COMMANDS · VERIFY_MODULE · REFRESH_WARNINGS · NEXT_PHASE · NOTHING_TO_DO);
+  use it instead of inventing the next action.
 
-### 3. Index Consistency Check
-One-call shortcut: MCP `mygrace_status` (or `mygrace status --path <root> --format json`) returns module/phase/verification counts plus lint errors/warnings in one JSON call — use it to skip steps 1–3 when only the health summary is needed.
-Otherwise run `mygrace lint --path <root>` (MCP: `mygrace_lint`):
-- Modules in graph-index vs files in docs/modules/
-- Modules in graph-index vs source files with MODULE_CONTRACT
-- Verification entries in verification-index vs files in docs/verification/
-- Orphaned entries (in index but file missing)
-- Missing entries (file exists but not in index)
+Do not read `docs/modules/`, `docs/plans/` or `docs/verification/` in bulk for a
+status report; the indexes are the source of truth for counts and status.
 
-### 4. Recent Changes
-List 5 most recent CHANGE_SUMMARY entries (scan source files quickly)
+## Report
 
-### 5. Suggested Next Action
-- No modules in index → run the `mygrace-plan` skill
-- Modules pending, no verification → run the `mygrace-verification` skill
-- Modules ready but not executed → run the `mygrace-execute` skill (or `mygrace-multiagent-execute` for parallel waves)
-- Drift detected → run the `mygrace-refresh` skill
-- All synced → "Project is healthy"
+1. **Counts** — modules (by status), phases (by status), verifications (by
+   status/priority); index caps from `mygrace.config.json` if the project sets
+   them. When the module index is sharded, `mygrace module index --path <root>`
+   prints the shard summary; counts still come from the transparent union.
+2. **Integrity** — `lint --strict` result: error/warning counts + finding codes
+   (`ORPHANED_INDEX_ENTRY`, `STATUS_DRIFT`, `PATH_MISSING`, `XML_INVALID`, …).
+3. **Blockers** — missing requirements/technology, empty indexes, stale trust
+   record (run `mygrace trust` after reviewing commands).
+4. **Next action** — prefer `mygrace next` (deterministic, code + WHY/RUN/IDS);
+   otherwise pick one:
+   - no modules in the index → `mygrace-plan` skill;
+   - modules planned but no verification surfaces → `mygrace-verification` skill;
+   - verification ready but modules unimplemented → `mygrace-execute` skill
+     (or `mygrace-multiagent-execute` for independent waves);
+   - drift findings → `mygrace-refresh` skill;
+   - clean and complete → say so and stop.
 
-## Token Budget
-This entire report uses ~230 lines of context. Classic GRACE equivalent: ~6500 lines.
-**Savings: 96%**
+## Honest scope
+
+This report is about indexes and lint, not code quality. Do not claim a
+"percentage saved" or estimate tokens; if you need read-budget numbers, run
+`mygrace context-cost --path <root>`.

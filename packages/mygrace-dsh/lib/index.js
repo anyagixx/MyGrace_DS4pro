@@ -1,4 +1,10 @@
-// MyGRACE DSH bundle — host plugin.
+// MyGRACE DSH bundle — host plugin (UNPUBLISHED PREVIEW, see README.md).
+//
+// NOT installed by `mygrace install-dsh` in v1.1: `--bundle` was removed because
+// this package needs unpublished @osovv/* packages (and a private panel) and a
+// local `dsh plugin add` does not install its file: dependencies into the
+// profile. Kept for a future release decision; do not document it as a
+// supported path.
 //
 // Mounts the MyGRACE MCP server (`bun run src/grace-mcp.ts` of
 // @osovv/mygrace-cli) into the DSH session by mounting @deepseek-ai/dsh-mcp-client
@@ -76,7 +82,7 @@ export function resolveMcpConfig() {
   };
 }
 
-/** Locate the @deepspeed-ai/dsh-mcp-client entry path (without importing it). */
+/** Locate the @deepseek-ai/dsh-mcp-client entry path (without importing it). */
 function resolveMcpClientPath() {
   // 1. From the plugin's own tree (installed in the same node_modules).
   try {
@@ -99,19 +105,19 @@ function resolveMcpClientPath() {
 async function mountMcp(ctx) {
   const config = resolveMcpConfig();
   if (!config) {
-    ctx.logger?.warn?.("mygrace: MCP server not mounted (grace-mcp.ts not found)");
+    ctx.logger?.warn?.("mygrace-dsh (preview): MCP server not mounted (grace-mcp.ts not found)");
     return false;
   }
   const clientPath = resolveMcpClientPath();
   if (!clientPath) {
-    ctx.logger?.warn?.("mygrace: @deepseek-ai/dsh-mcp-client not resolvable — MCP server not mounted");
+    ctx.logger?.warn?.("mygrace-dsh (preview): @deepseek-ai/dsh-mcp-client not resolvable — MCP server not mounted");
     return false;
   }
   let McpClient;
   try {
     McpClient = await import(pathToFileURL(clientPath).href);
   } catch {
-    ctx.logger?.warn?.("mygrace: import of @deepseek-ai/dsh-mcp-client failed — MCP server not mounted");
+    ctx.logger?.warn?.("mygrace-dsh (preview): import of @deepseek-ai/dsh-mcp-client failed — MCP server not mounted");
     return false;
   }
   await ctx.plugin(McpClient, config);

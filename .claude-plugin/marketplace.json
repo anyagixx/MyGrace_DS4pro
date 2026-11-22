@@ -2,15 +2,15 @@
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "metadata": {
     "name": "mygrace",
-    "version": "0.3.0",
+    "version": "1.3.0",
     "owner": "osovv",
-    "homepage": "https://github.com/anyagixx/MyGrace"
+    "homepage": "https://github.com/anyagixx/MyGrace_DS4pro"
   },
   "plugins": [
     {
       "name": "mygrace",
-      "source": "./extensions/mygrace",
-      "version": "1.0.1",
+      "source": "./plugins/claude",
+      "version": "1.3.0",
       "strict": true,
       "components": {
         "skills": [
@@ -67,6 +67,10 @@
             "name": "mygrace-status"
           },
           {
+            "source": "skills/mygrace/grace-token-budget",
+            "name": "mygrace-token-budget"
+          },
+          {
             "source": "skills/mygrace/grace-verification",
             "name": "mygrace-verification"
           }
@@ -74,5 +78,5 @@
       }
     }
   ],
-  "version": "1.0.1"
+  "version": "1.3.0"
 }

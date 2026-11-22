@@ -1,60 +1,43 @@
-# MyGRACE Instructions for ChatGPT (Codex)
+# MyGRACE instructions for Codex
 
-You are assisting with a project that uses **MyGRACE** (Graph-RAG Anchored Code Engineering) — a scalable methodology for AI-driven code generation designed for large projects with 20-200+ modules.
+This project uses **MyGRACE**, an index-first engineering harness. Codex reads
+`AGENTS.md` from the repository root; keep it authoritative and use this file as
+the same reference for Codex sessions that do not load `AGENTS.md`.
 
-## Critical Navigation Rule
-**Always start with index files. Never scan all files at once.**
+## Navigation rule #1 (critical)
 
-This project replaces monolithic documentation files with a lazy-loading index pattern:
+Always start with the indexes, never scan all entity files:
 
-1. **Read `docs/graph-index.xml` first** (≤100 lines) — this tells you every module that exists
-2. **Read `docs/modules/M-XXX.xml`** (30-80 lines each) — only for the specific module you need
-3. **Done** — ~130 lines vs ~6500 lines in classic approaches
+- `docs/graph-index.xml` — module index (default cap 100 lines) → then the one `docs/modules/M-XXX.xml` (30-80 lines)
+- `docs/plan-index.xml` — phase index (cap 50) → then the current `docs/plans/Phase-N.xml` (50-200 lines)
+- `docs/verification-index.xml` — verification index (cap 80) → then `docs/verification/V-M-XXX.xml` (20-60 lines)
 
-**Do NOT** look for or read `knowledge-graph.xml`, `development-plan.xml`, or `verification-plan.xml` — these monolithic files do NOT exist in MyGRACE.
+Caps and budgets come from `mygrace.config.json` (`indexCaps`, `sizeBudgets`) and are enforced by lint. Legacy monolithic `knowledge-graph.xml`, `development-plan.xml` and `verification-plan.xml` are not used.
 
-## Six Core Principles
-1. **Never write code without a contract** — Every file must have a MODULE_CONTRACT comment block defining PURPOSE, SCOPE, DEPENDS, and LINKS before any code is written
-2. **Semantic markup is not comments** — `START_BLOCK_NAME` and `END_BLOCK_NAME` markers are navigation anchors, not documentation
-3. **Knowledge graph is always current** — `docs/graph-index.xml` never drifts from reality
-4. **Top-down synthesis** — Requirements → Technology → Plan → Verification → Contracts → Code. Never jump to code
-5. **Verification is architecture** — Tests, traces, and log markers are part of the architectural blueprint
-6. **Governed autonomy** — You have freedom in HOW to implement, not in WHAT. The contract defines WHAT
+## Project commands are trust-gated
 
-## Project Structure
-```
-docs/
-  graph-index.xml         # Module index — ALWAYS read this first (≤100 lines)
-  plan-index.xml          # Phase index (≤50 lines)
-  verification-index.xml  # Verification index (≤80 lines)
-  operational-packets.xml # Execution packet templates
-  modules/                # Per-module files: M-CONFIG.xml, M-AUTH.xml, etc.
-  plans/                  # Per-phase files: Phase-1.xml, Phase-2.xml, etc.
-  verification/           # Per-verification files: V-M-CONFIG.xml, etc.
-  archive/                # Completed phases (moved here when project grows)
-```
+`<module-checks>` in `docs/verification/V-M-XXX.xml` is the canonical command source (module files are a deprecated fallback; `testRunner` from config is the last fallback). MyGRACE refuses to execute those project-declared commands unless one of these holds:
 
-## File Conventions
-Each governed source file contains:
-- `MODULE_CONTRACT` — PURPOSE, SCOPE, DEPENDS, LINKS (what to build)
-- `MODULE_MAP` — List of exported/local symbols
-- `CHANGE_SUMMARY` — Recent changes with reasons
-- `START_BLOCK_X` / `END_BLOCK_X` — Semantic code sections for navigation
+- `.mygrace/trust.json` is current (created by `mygrace trust` after reviewing the commands);
+- `mygrace.config.json` sets `"allowCommands": true`;
+- the run passes `--allow-commands`.
 
-## When Writing or Editing Code
-- Always preserve MODULE_CONTRACT, MODULE_MAP, CHANGE_SUMMARY
-- Always preserve START_BLOCK/END_BLOCK boundaries unless restructuring
-- Update CHANGE_SUMMARY after making changes
-- Update docs/graph-index.xml if module public interfaces change
-- If a contract seems wrong, propose a change — don't silently deviate
+`.mygrace/` is local state and must stay gitignored. Editing `docs/modules/`, `docs/verification/` or the config invalidates the record — re-run `mygrace trust`. Commands run argv-only, never through a shell.
 
-## Module Types
-- ENTRY_POINT — Where execution begins (CLI, HTTP handler)
-- CORE_LOGIC — Business rules and domain logic
-- DATA_LAYER — Persistence, queries, caching
-- UI_COMPONENT — User interface elements
-- UTILITY — Shared helpers, configuration, logging
-- INTEGRATION — External service adapters
+## Enforcement and final gate
 
-## Token Efficiency
-This methodology saves 96-97% of context tokens compared to classic approaches. Always leverage the index-first pattern.
+- `mygrace lint --strict` — structural XML validity, index/entity field drift, duplicates, missing PATH/DEPENDS/VERIFICATION_REF, phase status/steps drift, index caps, entity size budgets, markup/contract fields.
+- `mygrace ci` — the one-command quality gate (strict lint + status + verification coverage); `mygrace ci --tests` adds trust-gated scoped tests. Run it before asking a human to review, as the agent's final self-check.
+- Exit codes: 0 ok, 1 findings/test failures, 2 usage/config/trust refusal.
+
+## Configuration
+
+`mygrace.config.json` (written by `mygrace init-dsh`): `sourceDirs`, `markupExts`, `ignoreDirs`, `indexCaps`, `sizeBudgets`, `testRunner`, `allowCommands`, `language`.
+
+## Archiving
+
+Archiving a completed phase means moving `docs/plans/Phase-N.xml` to `docs/archive/` **and removing its `plan-index.xml` entry**; otherwise lint reports an orphaned index entry.
+
+## Honest metrics
+
+The project publishes a line/byte measurement with a documented `ceil(bytes/4)` token **estimate** (`scripts/measure-context.ts`) — never claim measured "token savings". The classic baseline is synthesized; results depend on project size.

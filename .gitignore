@@ -2,6 +2,15 @@ node_modules/
 *.lock
 !bun.lock
 !.gitignore
-.bun-tmp/
+
+# local tool caches / build artifacts
 .bun-install/
+.bun-tmp/
 .bun-cache/
+.npm-cache/
+.pack-smoke/
+.release-assets/
+.mygrace/
+dist/
+coverage/
+*.tgz

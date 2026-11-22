@@ -1,0 +1,15 @@
+# Lefthook configuration — corrected filename.
+# v1 shipped `lefhook.yml` (misspelled), so no hook manager ever read it.
+# Args are prefixed with `root =` to run from the repository root.
+pre-commit:
+  parallel: true
+  commands:
+    typecheck:
+      run: bun run typecheck
+    test:
+      run: bun test --bail
+
+pre-push:
+  commands:
+    release-gates:
+      run: bun run ci

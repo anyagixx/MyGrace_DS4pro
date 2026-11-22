@@ -1,60 +1,68 @@
 ---
 name: mygrace-multiagent-execute
-description: "Execute a MyGRACE plan in parallel waves using DSH subagents, each worker reading only its module. Use for large plans where sequential execution is too slow or many modules are independent."
-whenToUse: "A plan has multiple pending modules whose write scopes are disjoint and whose dependencies are complete — parallelize them."
+description: "Execute a MyGRACE plan in parallel waves using DSH subagents: disjoint module write scopes, controller-owned indexes, trust-gated commands. Use when a plan has many independent modules and sequential execution is too slow."
+whenToUse: "Multiple pending modules have disjoint write scopes and their dependencies are complete — parallelize them as a wave."
 ---
 
-Execute a MyGRACE plan in parallel waves using DSH-native agents.
+# Parallel execution with subagents
+
+## Core principle
+
+Parallelize **module implementation**, not architectural truth:
+
+- **Controller (you)** owns indexes, phase files, and trust decisions.
+- **Workers** own only their assigned module and tests.
+- Each worker reads only its module file, its verification file and the source it
+  needs — never the whole plan or all modules.
 
 ## Prerequisites
-- `docs/plan-index.xml`, `docs/graph-index.xml` must exist
-- `docs/verification-index.xml` should exist
-- `docs/plans/` with Phase-N.xml files
-- Call the `mygrace-plan` / `mygrace-verification` skills first if these are missing
-- Read indexes index-first: MCP `mygrace_phase_index` / `mygrace_find_modules` or CLI `mygrace phase index` / `mygrace module find <query>`
 
-## Core Principle
-Parallelize **module implementation**, not **architectural truth**.
-- Controller (you) owns indexes and current phase files
-- Workers own only their assigned module files
-- Each worker reads ONLY its module — never the full plan
+`docs/plan-index.xml`, `docs/graph-index.xml` and `docs/verification-index.xml`
+exist; `mygrace lint --strict --path <root>` is clean.
 
-## Execution Profiles
-- `safe` — approval per wave, review per module
-- `balanced` (default) — one up-front approval, scoped reviews
-- `fast` — mature codebases, minimal blocking
+## Building waves
 
-## LAZY LOADING (CRITICAL)
+1. Read `docs/plan-index.xml` (≤50 lines) → pending phases; read only the current
+   `docs/plans/Phase-N.xml`.
+2. Group steps into waves: disjoint write scopes, dependencies complete, no two
+   workers editing the same files.
+3. Do not read future phases.
 
-### Step 1: Build Waves from Index
-1. Read `docs/plan-index.xml` (≤50 lines) — find pending phases
-2. Read current `docs/plans/Phase-N.xml` — get steps
-3. Group steps into parallel-safe waves (disjoint write scopes, all dependencies complete)
-4. **DO NOT** read future phases — they're irrelevant now
+## Dispatching workers
 
-### Step 2: Dispatch Workers (DSH subagents)
-For each wave, for each module, launch a background `subagent` with a self-contained prompt:
-- Point it at `docs/modules/M-XXX.xml` (30-80 lines) + verification excerpt (give paths; the worker reads the files itself, or use `mygrace_show_module` if the MCP server is connected)
-- Instruct: "Read ONLY your module file and its verification excerpt. Do NOT read the plan, indexes, or other modules. Implement per the contract, add module-local tests, run module-local verification, then report what you changed."
-- Workers in one wave run in parallel: start independent subagents in the same turn and continue working while they run
-- For very large fan-out (many independent modules), the `workflow` tool is the better option — it orchestrates batches of subagents with phases and structured results
+For each module in a wave, launch a background `subagent` with a self-contained
+prompt containing:
 
-### Step 3: Review and Integrate
-1. Collect worker reports; scoped review of changed files
-2. Update `docs/graph-index.xml` — module statuses
-3. Update `docs/plans/Phase-N.xml` — step statuses
-4. Update `docs/plan-index.xml` — phase status when all steps done
-5. Run targeted refresh on touched modules (call the `mygrace-refresh` skill, scoped)
+- the module id, its `docs/modules/M-XXX.xml` path, its
+  `docs/verification/V-M-XXX.xml` path and the exact write scope;
+- the instruction: read only those files, implement per contract, add tests, run
+  module-local checks, report what changed;
+- the trust rule: project commands are trust-gated. If checks are required, the
+  controller reviews `<module-checks>` and runs `mygrace trust` (or the wave runs
+  with `--allow-commands`) — workers must not bypass it.
 
-### Step 4: Report
-```
-=== WAVE COMPLETE ===
-Wave: N | Modules: M-xxx, M-yyy
-Context tokens per worker: ~130 lines (vs ~6500 in classic GRACE)
-```
+For large fan-out the `workflow` tool is the better option; keep one module per
+worker.
+
+## Trust gate for the wave
+
+Before any worker/controller executes project commands: review the declared
+`<module-checks>`, then `mygrace trust --path <root>` once for the current docs
+state (editing docs invalidates it). CI-only waves may use `--allow-commands`.
+
+## Integration
+
+1. Collect worker reports; run a scoped review of changed files.
+2. Controller updates `docs/graph-index.xml` statuses, `docs/plans/Phase-N.xml`
+   steps, and `docs/plan-index.xml` when the phase completes.
+3. Run `mygrace ci --path <root>` (add `--tests` once trust is current) as the
+   wave gate, then targeted refresh (`mygrace-refresh` skill) for touched modules.
+4. Archiving a phase = move the file to `docs/archive/` **and remove its
+   plan-index entry** (otherwise lint reports an orphan).
 
 ## Rules
-- Workers report results; the controller applies index/phase updates
-- Controller updates only indexes and current phase files
-- Never let workers read the full plan
-- Archive completed phases to `docs/archive/` when project grows
+
+- Workers never update indexes; the controller does.
+- One writer per file; no overlapping write scopes in a wave.
+- No worker reads the full plan or execution packet for other modules.
+- Never execute untrusted project commands; report a refusal instead of forcing.

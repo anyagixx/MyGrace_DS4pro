@@ -1,0 +1,60 @@
+<TechnologyStack VERSION="2.0.0">
+  <Runtime>bun &gt;=1.3.8 (primary); Node &gt;=22.6 (documented secondary target)</Runtime>
+  <Language>typescript 6 strict</Language>
+  <Framework>none (CLI + MCP server)</Framework>
+
+  <Dependencies>
+    <dep name="citty" version="^0.2.2" purpose="Declarative CLI command tree (commands, subcommands, typed args, help)." />
+    <dep name="fast-xml-parser" version="^5.12.1" purpose="Strict structural XML parsing and well-formedness validation (ADR-2)." />
+    <dep name="yaml" version="^2.9.1" purpose="Parse and validate cordis.patch.yml before and after installer edits (ADR-7)." />
+    <dep name="@modelcontextprotocol/sdk" version="^1.30.0" purpose="MCP stdio server transport and protocol schemas." />
+    <dep name="typescript" version="^6.0.2" purpose="Development-only: strict typecheck (tsc --noEmit); not shipped at runtime." />
+    <dep name="@types/node" version="^26.6.6" purpose="Development-only: Node type definitions for tsc." />
+  </Dependencies>
+
+  <VersionConstraints>
+    <constraint lib="bun" min="1.3.8" max="1.x" reason="Bun is the packaged runtime; engines field and pack-smoke enforce it." />
+    <constraint lib="node" min="22.6.0" max="26.x" reason="Node native type stripping target documented by ADR-7." />
+    <constraint lib="fast-xml-parser" min="5.12.1" max="5.x" reason="Structural parser API used by grace-xml; no regex XML fallback." />
+    <constraint lib="@modelcontextprotocol/sdk" min="1.30.0" max="1.x" reason="Server/JSON-RPC API used by grace-mcp." />
+  </VersionConstraints>
+
+  <Tooling>
+    <tool name="runtime" value="bun" version="1.4.x" />
+    <tool name="package-manager" value="bun" version="1.4.x" />
+    <tool name="typecheck" value="tsc --noEmit" version="6.x" />
+    <tool name="test-runner" value="bun test" version="1.4.x" />
+    <tool name="pack-gate" value="bun run pack:smoke" version="1.4.x" />
+    <tool name="docs-gates" value="bun run validate:docs / validate:marketplace" version="1.4.x" />
+    <tool name="ci" value=".github/workflows/ci.yml" version="actions" />
+  </Tooling>
+
+  <Testing>
+    <module-level>
+      <command>bun test test/grace-lint-strict.test.ts</command>
+      <focus>Fast deterministic unit and contract checks per module; one negative test per detector class.</focus>
+    </module-level>
+    <wave-level>
+      <command>bun test test/grace-mcp-runtime.test.ts test/grace-security.test.ts test/grace-trust.test.ts</command>
+      <focus>Integration surfaces touched by a wave: MCP stdio, trust model, path safety.</focus>
+    </wave-level>
+    <phase-level>
+      <command>bun run ci</command>
+      <focus>Full gate: strict typecheck, bun test, demo lint --strict, docs validators, pack-smoke.</focus>
+    </phase-level>
+    <mocking-policy>Prefer fakes and temp directories over broad monkey-patching; real filesystem temp projects are used for CLI behaviour.</mocking-policy>
+  </Testing>
+
+  <Observability>
+    <logger>console (CLI text) and JSON envelopes (machines)</logger>
+    <log-format>Findings carry stable codes and file/line locations; text mode is a compact human digest.</log-format>
+    <required-fields>ok, exitCode, findings, meta; each finding: severity, code, message, file, line, hint</required-fields>
+    <redaction>Never log secrets or environment dumps; doctor prints only tool versions and paths.</redaction>
+  </Observability>
+
+  <DeliveryShape>
+    <shape>One npm package (@osovv/mygrace-cli) with all runtime sources and a bun shebang; optional DeepSeek Harness bundle, skills and status panel are published separately.</shape>
+    <shape>MCP server runs over stdio and launches the CLI through the absolute runtime path (no PATH dependency).</shape>
+    <shape>Release gate: pack-smoke on a fresh temp dir plus the full CI suite; semver policy and honest CHANGELOG.</shape>
+  </DeliveryShape>
+</TechnologyStack>
