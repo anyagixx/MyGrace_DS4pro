@@ -380,8 +380,11 @@ describe("MCP argument validation", () => {
     expect(resolveProjectRoot(tool, { path: resolve("/explicit/root") }, { env: { MYGRACE_PROJECT_ROOT: "/env/root" }, cwd: "/cwd" })).toBe(
       resolve("/explicit/root")
     );
-    expect(resolveProjectRoot(tool, {}, { env: { MYGRACE_PROJECT_ROOT: "/env/root" }, cwd: "/cwd" })).toBe("/env/root");
-    expect(resolveProjectRoot(tool, {}, { env: {}, cwd: "/cwd" })).toBe("/cwd");
+    // resolveProjectRoot resolves every source against cwd (platform-native).
+    expect(resolveProjectRoot(tool, {}, { env: { MYGRACE_PROJECT_ROOT: "/env/root" }, cwd: "/cwd" })).toBe(
+      resolve("/cwd", "/env/root")
+    );
+    expect(resolveProjectRoot(tool, {}, { env: {}, cwd: "/cwd" })).toBe(resolve("/cwd"));
 
     const showFile = getToolDefinition("mygrace_show_file")!;
     expect(
