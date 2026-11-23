@@ -23,12 +23,17 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { cpSync, existsSync, mkdtempSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import {
   CLI_MAX_BUFFER,
   DEFAULT_TIMEOUT_MS,
+  activeProjectFile,
+  applyProjectMemory,
   createMcpServer,
+  readActiveProject,
+  rememberActiveProject,
   resolveLauncher,
   resolveTimeoutMs,
 } from "../src/grace-mcp";
@@ -45,6 +50,9 @@ import {
 const ROOT = resolve(import.meta.dirname, "..");
 const MCP_ENTRY = resolve(ROOT, "src", "grace-mcp.ts");
 const DEMO = resolve(ROOT, "examples", "demo-store");
+/** Isolated remembered-project state file: tests never touch the real ~/.mygrace. */
+const MEMORY_FILE = join(tmpdir(), `mygrace-mcp-memory-${process.pid}.json`);
+afterAll(() => rmSync(MEMORY_FILE, { force: true }));
 /** buildToolCommand resolves project roots; use the platform-native spelling. */
 const P = resolve("/p");
 
@@ -112,6 +120,7 @@ function scrubbedEnv(extra: Record<string, string> = {}): Record<string, string>
     HOME: process.env.HOME ?? "/tmp",
     TMPDIR: process.env.TMPDIR ?? "/tmp",
     MYGRACE_MCP_TIMEOUT_MS: "60000",
+    MYGRACE_ACTIVE_PROJECT_FILE: MEMORY_FILE,
     ...extra,
   };
 }
@@ -587,6 +596,36 @@ describe("MCP server path resolution via MYGRACE_PROJECT_ROOT", () => {
   }, 30_000);
 });
 
+// ─── Session workspace following (harness started outside a project) ───
+
+describe("MCP server project memory (session started outside a project)", () => {
+  test("remembers an explicit project root and reuses it when `path` is omitted", async () => {
+    const memory = join(mkdtempSync(join(tmpdir(), "mygrace-mem-")), "active-project");
+    const outside = mkdtempSync(join(tmpdir(), "mygrace-outside-"));
+    const client = await connectServer({
+      cwd: outside,
+      env: { MYGRACE_ACTIVE_PROJECT_FILE: memory },
+    });
+    try {
+      const first = await client.callTool({
+        name: "mygrace_status",
+        arguments: { path: DEMO },
+      });
+      expect(first.isError).toBeFalsy();
+      // No `path`: the server must follow the remembered session workspace.
+      const second = await client.callTool({ name: "mygrace_status", arguments: {} });
+      expect(second.isError).toBeFalsy();
+      const text = textOf(second as { content?: Array<{ type: string; text?: string }> });
+      expect(text).toContain('"project"');
+      expect(text).toContain(DEMO);
+    } finally {
+      await client.close();
+      rmSync(outside, { recursive: true, force: true });
+      rmSync(memory, { force: true });
+    }
+  }, 60_000);
+});
+
 // ─── Launcher failure: broken MYGRACE_BIN → structured error, no stack ──
 
 describe("MCP server launcher failure (broken MYGRACE_BIN)", () => {
@@ -649,5 +688,50 @@ describe("createMcpServer", () => {
     const server = createMcpServer(launcher);
     expect(server).toBeDefined();
     expect(typeof server.connect).toBe("function");
+  });
+});
+
+// ─── Project memory helpers (unit) ─────────────────────────────────────
+
+describe("project memory helpers", () => {
+  const envFor = (file: string): NodeJS.ProcessEnv => ({ MYGRACE_ACTIVE_PROJECT_FILE: file });
+
+  test("activeProjectFile honours the env override and defaults to $HOME/.mygrace/active-project", () => {
+    expect(activeProjectFile(envFor("/tmp/state.json"))).toBe(resolve("/tmp/state.json"));
+    const file = activeProjectFile({ HOME: "/home/example" });
+    expect(file).toBe(join("/home/example", ".mygrace", "active-project"));
+  });
+
+  test("rememberActiveProject stores only real projects; readActiveProject rejects stale entries", () => {
+    const file = join(mkdtempSync(join(tmpdir(), "mygrace-mem-unit-")), "active-project");
+    try {
+      rememberActiveProject(DEMO, envFor(file));
+      expect(readActiveProject(envFor(file))).toBe(resolve(DEMO));
+
+      writeFileSync(file, `${join(tmpdir(), "no-such-project")}\n`);
+      expect(readActiveProject(envFor(file))).toBeUndefined();
+
+      rememberActiveProject(join(tmpdir(), "no-such-project"), envFor(file));
+      expect(readActiveProject(envFor(file))).toBeUndefined();
+    } finally {
+      rmSync(file, { force: true });
+    }
+  });
+
+  test("applyProjectMemory prefers explicit args and injects the remembered root otherwise", () => {
+    const file = join(mkdtempSync(join(tmpdir(), "mygrace-mem-apply-")), "active-project");
+    const tool = getToolDefinition("mygrace_status")!;
+    try {
+      rememberActiveProject(DEMO, envFor(file));
+      expect(applyProjectMemory(tool, {}, envFor(file)).path).toBe(resolve(DEMO));
+      expect(applyProjectMemory(tool, { path: resolve("/explicit/root") }, envFor(file)).path).toBe(
+        resolve("/explicit/root")
+      );
+      // A non-project explicit root does not replace the remembered valid one.
+      applyProjectMemory(tool, { path: join(tmpdir(), "no-such-project") }, envFor(file));
+      expect(readActiveProject(envFor(file))).toBe(resolve(DEMO));
+    } finally {
+      rmSync(file, { force: true });
+    }
   });
 });

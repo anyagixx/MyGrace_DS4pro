@@ -109,9 +109,14 @@ const PHASE_ID_PATTERN = "^Phase-[0-9]+[A-Za-z]?$";
 
 /** Shared wording required in every tool description (audit M2/M3). */
 const ROOT_NOTE =
-  "`path` is optional: it defaults to `MYGRACE_PROJECT_ROOT`, then to the MCP server's working directory.";
+  "`path` MUST be the absolute project root of the session workspace you are working in. The harness " +
+  "starts this server in its own launch directory, so pass it explicitly; when omitted, resolution falls " +
+  "back to `MYGRACE_PROJECT_ROOT`, then the last project remembered from an explicit call, then the " +
+  "server's working directory.";
 const ROOT_NOTE_FILE =
-  "`path` is the file to inspect; `projectRoot` is optional and defaults to `MYGRACE_PROJECT_ROOT`, then to the MCP server's working directory.";
+  "`path` is the file to inspect; `projectRoot` MUST be the absolute session-workspace root (when omitted " +
+  "it falls back like `path`: `MYGRACE_PROJECT_ROOT`, then the remembered project, then the server's " +
+  "working directory).";
 // END_BLOCK_CONSTANTS
 
 // START_BLOCK_ARG_HELPERS
@@ -160,7 +165,7 @@ export const TOOLS: readonly ToolDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        path: { type: "string", description: "Project root to inspect (optional).", minLength: 1 },
+        path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
         status: { type: "string", enum: ["pending", "wip", "done"], description: "Filter by module STATUS." },
         type: { type: "string", description: "Filter by module TYPE (e.g. CORE_LOGIC)." },
         format: { type: "string", enum: ["text", "json"], default: "text", description: "Output format." },
@@ -191,7 +196,7 @@ export const TOOLS: readonly ToolDefinition[] = [
           pattern: MODULE_ID_PATTERN,
           description: "Module ID (e.g. M-AUTH; a unique ID prefix such as M-A is accepted by the CLI).",
         },
-        path: { type: "string", description: "Project root to inspect (optional).", minLength: 1 },
+        path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
         withVerification: { type: "boolean", default: false, description: "Append the matching verification file." },
       },
       required: ["id"],
@@ -213,7 +218,7 @@ export const TOOLS: readonly ToolDefinition[] = [
       type: "object",
       properties: {
         name: { type: "string", pattern: PHASE_ID_PATTERN, description: "Phase ID (e.g. Phase-1)." },
-        path: { type: "string", description: "Project root to inspect (optional).", minLength: 1 },
+        path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
       },
       required: ["name"],
     },
@@ -232,7 +237,7 @@ export const TOOLS: readonly ToolDefinition[] = [
       type: "object",
       properties: {
         query: { type: "string", description: "Search query (matches ID, NAME, TYPE, STATUS, DEPENDS, PATH; empty = list all)." },
-        path: { type: "string", description: "Project root to inspect (optional).", minLength: 1 },
+        path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
         status: { type: "string", enum: ["pending", "wip", "done"], description: "Filter by module STATUS." },
         type: { type: "string", description: "Filter by module TYPE." },
         format: { type: "string", enum: ["text", "json"], default: "text", description: "Output format." },
@@ -259,7 +264,7 @@ export const TOOLS: readonly ToolDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        path: { type: "string", description: "Project root to inspect (optional).", minLength: 1 },
+        path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
       },
     },
     rootArg: "path",
@@ -276,7 +281,7 @@ export const TOOLS: readonly ToolDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        path: { type: "string", description: "Project root to inspect (optional).", minLength: 1 },
+        path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
       },
     },
     rootArg: "path",
@@ -295,7 +300,7 @@ export const TOOLS: readonly ToolDefinition[] = [
       properties: {
         module: { type: "string", pattern: MODULE_ID_PATTERN, description: "Module ID (e.g. M-AUTH); omit to run all modules in graph-index.xml." },
         compact: { type: "boolean", default: true, description: "Print only failures and the summary." },
-        path: { type: "string", description: "Project root to inspect (optional).", minLength: 1 },
+        path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
       },
     },
     rootArg: "path",
@@ -317,7 +322,7 @@ export const TOOLS: readonly ToolDefinition[] = [
       type: "object",
       properties: {
         id: { type: "string", pattern: MODULE_ID_PATTERN, description: "Module ID (e.g. M-AUTH)." },
-        path: { type: "string", description: "Project root to inspect (optional).", minLength: 1 },
+        path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
       },
       required: ["id"],
     },
@@ -336,7 +341,7 @@ export const TOOLS: readonly ToolDefinition[] = [
       type: "object",
       properties: {
         id: { type: "string", pattern: MODULE_ID_PATTERN, description: "Module ID (e.g. M-AUTH)." },
-        path: { type: "string", description: "Project root to inspect (optional).", minLength: 1 },
+        path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
       },
       required: ["id"],
     },
@@ -354,7 +359,7 @@ export const TOOLS: readonly ToolDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        path: { type: "string", description: "Project root to inspect (optional).", minLength: 1 },
+        path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
       },
     },
     rootArg: "path",
@@ -372,7 +377,7 @@ export const TOOLS: readonly ToolDefinition[] = [
       type: "object",
       properties: {
         module: { type: "string", pattern: MODULE_ID_PATTERN, description: "Module ID (e.g. M-AUTH); omit = all modules in graph-index.xml." },
-        path: { type: "string", description: "Project root to inspect (optional).", minLength: 1 },
+        path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
       },
     },
     rootArg: "path",
@@ -391,7 +396,7 @@ export const TOOLS: readonly ToolDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        path: { type: "string", description: "Project root to inspect (optional).", minLength: 1 },
+        path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
         priority: { type: "string", enum: ["high", "medium", "low"], description: "Filter by priority." },
         format: { type: "string", enum: ["text", "json"], default: "text", description: "Output format." },
       },
@@ -414,7 +419,7 @@ export const TOOLS: readonly ToolDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        path: { type: "string", description: "Project root to inspect (optional).", minLength: 1 },
+        path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
         format: { type: "string", enum: ["text", "json"], default: "text", description: "Output format." },
         allowMissingDocs: { type: "boolean", default: false, description: "Treat a missing docs/ tree as an empty project." },
         compact: { type: "boolean", default: true, description: "Drop the report banner; keep counts, findings and the verdict." },
@@ -460,7 +465,7 @@ export const TOOLS: readonly ToolDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        path: { type: "string", description: "Project root to inspect (optional).", minLength: 1 },
+        path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
       },
     },
     rootArg: "path",
@@ -550,7 +555,7 @@ export const TOOLS: readonly ToolDefinition[] = [
           pattern: "^(?:M-|V-M-)[A-Za-z0-9][A-Za-z0-9_-]*$",
           description: "Module id (M-XXX) or verification id (V-M-XXX).",
         },
-        path: { type: "string", description: "Project root to inspect (optional).", minLength: 1 },
+        path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
         format: { type: "string", enum: ["text", "json"], default: "json", description: "Output format." },
       },
       required: ["id"],
@@ -572,7 +577,7 @@ export const TOOLS: readonly ToolDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        path: { type: "string", description: "Project root to inspect (optional).", minLength: 1 },
+        path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
         files: {
           type: "string",
           description: "Comma-separated project-relative changed files (highest precedence; works without git).",
@@ -605,7 +610,7 @@ export const TOOLS: readonly ToolDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        path: { type: "string", description: "Project root to inspect (optional).", minLength: 1 },
+        path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
         format: { type: "string", enum: ["text", "json"], default: "json", description: "Output format." },
       },
     },
@@ -792,7 +797,7 @@ export function formatToolArgError(tool: ToolDefinition, issues: readonly ToolAr
     ...issues.map((issue) => `  • ${issue.field}: ${issue.message}`),
     "",
     `Accepted arguments: ${describeInputSchema(tool.inputSchema)}`,
-    `Project root: explicit ${tool.rootArg} → MYGRACE_PROJECT_ROOT → the MCP server's working directory.`,
+    `Project root: explicit ${tool.rootArg} → MYGRACE_PROJECT_ROOT → remembered project → the MCP server's working directory.`,
     `The mygrace CLI was not called. Fix the argument(s) above and retry ${tool.name}.`,
   ];
   return lines.join("\n");

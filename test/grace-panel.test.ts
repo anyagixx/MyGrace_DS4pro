@@ -172,8 +172,23 @@ describe("resolveProjectRoot", () => {
     const project = makeProject();
     const nested = join(project, "src", "deep", "dir");
     mkdirSync(nested, { recursive: true });
-    const result = resolveProjectRoot({ cwd: nested });
+    const result = resolveProjectRoot({ env: {}, cwd: nested });
     expect(result).toEqual({ ok: true, root: project, source: "cwd" });
+  });
+
+  test("follows the project remembered by the MCP server when the harness starts elsewhere", () => {
+    const project = makeProject();
+    const state = join(tempDir("remembered-"), "active-project");
+    writeFileSync(state, `${project}\n`);
+    const result = resolveProjectRoot({ env: { MYGRACE_ACTIVE_PROJECT_FILE: state }, cwd: "/" });
+    expect(result).toEqual({ ok: true, root: project, source: "remembered" });
+  });
+
+  test("a stale remembered project is ignored", () => {
+    const state = join(tempDir("remembered-stale-"), "active-project");
+    writeFileSync(state, `${join(tempDir("gone-"), "missing")}\n`);
+    const result = resolveProjectRoot({ env: { MYGRACE_ACTIVE_PROJECT_FILE: state }, cwd: "/" });
+    expect(result.ok).toBe(false);
   });
 
   test("reports a clear error when there is no project anywhere", () => {

@@ -40,7 +40,7 @@
 //   PANEL_ROUTE_PATH            — "/api/mygrace.status" (host registration path)
 //   PANEL_BROWSER_ROUTE         — "api/mygrace.status" (document-relative client fetch URL)
 //   PANEL_TIMEOUT_MS            — 5 s subprocess deadline
-//   resolveProjectRoot()        — ?path= → MYGRACE_PROJECT_ROOT → cwd walk-up, validated
+//   resolveProjectRoot()        — ?path= → MYGRACE_PROJECT_ROOT → remembered project → cwd walk-up, validated
 //   resolveCliCommand()         — MYGRACE_BIN → $DSH_HOME launcher → actionable error (never PATH-only)
 //   createCliRunner()           — async execFile runner with timeout/abort/ENOENT classification
 //   parseStatusOutput()         — validate/normalize `mygrace status --format json`
@@ -52,6 +52,9 @@
 //   v1.3 (Wave 4.1): replaced the decorative static card data path with a real
 //   host route backing data layer: project discovery, PATH-free CLI resolution,
 //   timeout/abort classification, trust observation, payload normalization.
+//   v1.3.2: project discovery follows the session — when the harness was launched
+//   outside a project, the card reads the MCP server's remembered
+//   `$HOME/.mygrace/active-project` root before falling back to cwd walking.
 // END_CHANGE_SUMMARY
 
 import { execFile } from "node:child_process";
@@ -125,6 +128,42 @@ function projectMarker(dir) {
  * @param {{queryPath?: string|null, env?: Record<string,string|undefined>, cwd?: string}} options
  * @returns {ProjectResolution}
  */
+
+/** State file the MCP server writes when it resolves an explicit project root. */
+export const ACTIVE_PROJECT_FILE_ENV = "MYGRACE_ACTIVE_PROJECT_FILE";
+
+/**
+ * Path of the remembered-project state file.
+ * `MYGRACE_ACTIVE_PROJECT_FILE` overrides; otherwise `$HOME/.mygrace/active-project`.
+ * Returns undefined when no HOME is available (tests pass an explicit env).
+ * @param {NodeJS.ProcessEnv} env
+ * @returns {string|undefined}
+ */
+function rememberedProjectFile(env) {
+  const override = typeof env?.[ACTIVE_PROJECT_FILE_ENV] === "string" ? env[ACTIVE_PROJECT_FILE_ENV].trim() : "";
+  if (override !== "") return resolve(override);
+  const home = typeof env?.HOME === "string" && env.HOME.trim() !== "" ? env.HOME.trim() : "";
+  return home === "" ? undefined : join(home, ".mygrace", "active-project");
+}
+
+/**
+ * The remembered project root, or undefined when absent/stale/not a MyGRACE project.
+ * @param {NodeJS.ProcessEnv} env
+ * @returns {string|undefined}
+ */
+function readRememberedProject(env) {
+  const file = rememberedProjectFile(env);
+  if (file === undefined) return undefined;
+  try {
+    const value = readFileSync(file, "utf-8").trim();
+    if (value === "") return undefined;
+    const root = resolve(value);
+    return existsSync(projectMarker(root)) ? root : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export function resolveProjectRoot(options) {
   const queryPath = typeof options.queryPath === "string" ? options.queryPath.trim() : "";
   if (queryPath !== "") {
@@ -150,6 +189,11 @@ export function resolveProjectRoot(options) {
     return { ok: true, root, source: "env" };
   }
 
+  // The harness may be launched from any directory: follow the last project the
+  // MCP server resolved (the session workspace) before walking up from cwd.
+  const remembered = readRememberedProject(options.env ?? process.env);
+  if (remembered !== undefined) return { ok: true, root: remembered, source: "remembered" };
+
   let dir = resolve(options.cwd ?? process.cwd());
   for (;;) {
     if (existsSync(projectMarker(dir))) return { ok: true, root: dir, source: "cwd" };
@@ -160,7 +204,7 @@ export function resolveProjectRoot(options) {
   return {
     ok: false,
     error:
-      "No MyGRACE project found: pass ?path=<absolute project root>, set MYGRACE_PROJECT_ROOT, or start the harness inside a project with docs/graph-index.xml.",
+      "No MyGRACE project found: pass ?path=<absolute project root>, set MYGRACE_PROJECT_ROOT, open a session that used a MyGRACE MCP tool, or start the harness inside a project with docs/graph-index.xml.",
   };
 }
 

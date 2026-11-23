@@ -8,6 +8,15 @@ Use `mygrace` as the MyGRACE-aware read/execute layer, and the MCP tools as the
 preferred in-agent access path (21 tools; DSH exposes them as
 `mcp__mygrace__<tool>`).
 
+## Project resolution (harness sessions)
+
+The harness may start the MCP server in its launch directory, which is **not**
+necessarily the workspace you are editing. For every MCP call pass `path` =
+the absolute workspace root (`projectRoot` for `mygrace_show_file`); for CLI
+calls pass `--path <workspace>`. The server remembers the last valid project, so
+an omitted root falls back to it (then `MYGRACE_PROJECT_ROOT`, then server cwd),
+but explicit paths are required for correctness across multiple projects.
+
 ## Contract
 
 - Exit codes: `0` ok · `1` findings/failed tests/drift · `2` usage/config/trust

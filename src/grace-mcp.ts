@@ -33,6 +33,7 @@
 //   resolveTimeoutMs()   — parse MYGRACE_MCP_TIMEOUT_MS with a safe default
 //   runCli()             — execFile the launcher; capture stdout/stderr, timeout, maxBuffer, spawn errors
 //   createMcpServer()    — Server with ListTools/CallTool handlers driven by the catalog
+//   applyProjectMemory() — last-project memory so sessions started outside a project still work
 //   isEntryPoint()       — start the stdio server only when executed, never when imported by tests
 //   main()               — connect the stdio transport
 // END_MODULE_MAP
@@ -45,8 +46,9 @@ import {
   type CallToolResult,
 } from "@modelcontextprotocol/sdk/types.js";
 import { execFile } from "node:child_process";
-import { existsSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { dirname, join, resolve } from "node:path";
 import pkg from "../package.json" with { type: "json" };
 import {
   TOOLS,
@@ -240,6 +242,73 @@ export function runCli(
 }
 // END_BLOCK_PROCESS
 
+
+// START_BLOCK_PROJECT_MEMORY
+/**
+ * Which project do tool calls refer to when launched from outside a project?
+ *
+ * The harness spawns this stdio server with the harness launch directory, not
+ * the session workspace. The instructions therefore require an explicit
+ * `path`; to make later calls and the status panel follow the workspace, the
+ * server remembers the last project root that an explicit call resolved to
+ * (state file, best-effort, never fails a tool call).
+ */
+/** Override for tests/alternate profiles; default `$HOME/.mygrace/active-project`. */
+export const ACTIVE_PROJECT_FILE_ENV = "MYGRACE_ACTIVE_PROJECT_FILE";
+
+/** Path of the remembered-project state file (override via `MYGRACE_ACTIVE_PROJECT_FILE`). */
+export function activeProjectFile(env: NodeJS.ProcessEnv = process.env): string {
+  const override = env[ACTIVE_PROJECT_FILE_ENV];
+  if (typeof override === "string" && override.trim() !== "") return resolve(override.trim());
+  const home = typeof env.HOME === "string" && env.HOME.trim() !== "" ? env.HOME.trim() : homedir();
+  return join(home, ".mygrace", "active-project");
+}
+
+/** The remembered project root, or undefined when absent/stale/not a MyGRACE project. */
+export function readActiveProject(env: NodeJS.ProcessEnv = process.env): string | undefined {
+  try {
+    const value = readFileSync(activeProjectFile(env), "utf-8").trim();
+    if (value === "") return undefined;
+    const root = resolve(value);
+    return existsSync(join(root, "docs", "graph-index.xml")) ? root : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Remember a valid project root (no-op for anything that is not a MyGRACE project). */
+export function rememberActiveProject(root: string, env: NodeJS.ProcessEnv = process.env): void {
+  try {
+    const absolute = resolve(root);
+    if (!existsSync(join(absolute, "docs", "graph-index.xml"))) return;
+    const file = activeProjectFile(env);
+    mkdirSync(dirname(file), { recursive: true });
+    writeFileSync(file, `${absolute}\n`, "utf-8");
+  } catch {
+    // The state file is an optimization; a failure must never fail a tool call.
+  }
+}
+
+/**
+ * Inject the remembered project when the caller omitted the root, and remember
+ * an explicitly supplied valid root. Explicit arguments always win.
+ */
+export function applyProjectMemory(
+  tool: ToolDefinition,
+  args: ToolArgs,
+  env: NodeJS.ProcessEnv = process.env
+): ToolArgs {
+  const explicit = args[tool.rootArg];
+  if (typeof explicit === "string" && explicit.trim() !== "") {
+    const root = resolve(explicit);
+    if (existsSync(join(root, "docs", "graph-index.xml"))) rememberActiveProject(root, env);
+    return args;
+  }
+  const remembered = readActiveProject(env);
+  return remembered === undefined ? args : { ...args, [tool.rootArg]: remembered };
+}
+// END_BLOCK_PROJECT_MEMORY
+
 // START_BLOCK_RESULTS
 /** Join captured streams; keep them distinguishable when both are present. */
 function outputSections(stdout: string, stderr: string): string {
@@ -335,9 +404,13 @@ export function createMcpServer(launcher: CliLauncher = resolveLauncher()): Serv
     {
       capabilities: { tools: {} },
       instructions:
-        "MyGRACE exposes an index-first view of a MyGRACE project. Every tool accepts an optional " +
-        "`path` project root (explicit argument → MYGRACE_PROJECT_ROOT → the server's working directory); " +
-        "tool errors return the full CLI stdout/stderr with isError=true.",
+        "MyGRACE exposes an index-first view of a MyGRACE project. ALWAYS pass the absolute project root " +
+        "of the session workspace you are working in (`path`, or `projectRoot` for mygrace_show_file): the " +
+        "harness starts this server in its launch directory, so an omitted root may point at the wrong " +
+        "place. When omitted, resolution falls back to MYGRACE_PROJECT_ROOT, then the last project " +
+        "remembered from an explicit call, then the server's working directory. The same rule applies to " +
+        "the mygrace CLI: pass `--path <workspace>`. Tool errors return the full CLI stdout/stderr with " +
+        "isError=true.",
     }
   );
 
@@ -391,7 +464,7 @@ async function handleCallTool(
     });
   }
 
-  const args = validation.args;
+  const args = applyProjectMemory(tool, validation.args);
   let argv: string[];
   try {
     argv = buildToolCommand(requestedName, args);

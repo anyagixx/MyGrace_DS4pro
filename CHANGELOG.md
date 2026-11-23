@@ -7,8 +7,16 @@ release time (see `ROADMAP.md` §6, gate G10).
 
 ## [Unreleased]
 
-Nothing yet — the v1.1.0 line below is the first release produced by the
-audited, gate-verified pipeline (see `ROADMAP.md`).
+### Changed
+
+- **MyGRACE follows the session workspace from any launch directory.** The MCP
+  server instructions now require an explicit `path` (the absolute workspace
+  root) because the harness starts the server in its launch directory, not the
+  project; the server also remembers the last valid project root in
+  `~/.mygrace/active-project` (override: `MYGRACE_ACTIVE_PROJECT_FILE`) and falls
+  back to it when `path` is omitted. The LIVE status panel uses the same
+  remembered root before walking up from its own cwd, so `dsh web` no longer has
+  to be started inside the project.
 
 ## [1.3.1] — 2026-11-23
 
