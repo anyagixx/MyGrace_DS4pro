@@ -40,7 +40,7 @@
 //   PANEL_ROUTE_PATH            — "/api/mygrace.status" (host registration path)
 //   PANEL_BROWSER_ROUTE         — "api/mygrace.status" (document-relative client fetch URL)
 //   PANEL_TIMEOUT_MS            — 5 s subprocess deadline
-//   resolveProjectRoot()        — ?path= → MYGRACE_PROJECT_ROOT → remembered project → cwd walk-up, validated
+//   resolveProjectRoot()        — ?path= → MYGRACE_PROJECT_ROOT → remembered project → latest DSH session workspace → cwd walk-up
 //   resolveCliCommand()         — MYGRACE_BIN → $DSH_HOME launcher → actionable error (never PATH-only)
 //   createCliRunner()           — async execFile runner with timeout/abort/ENOENT classification
 //   parseStatusOutput()         — validate/normalize `mygrace status --format json`
@@ -55,6 +55,8 @@
 //   v1.3.2: project discovery follows the session — when the harness was launched
 //   outside a project, the card reads the MCP server's remembered
 //   `$HOME/.mygrace/active-project` root before falling back to cwd walking.
+//   v1.3.3: when no explicit/remembered root exists yet (fresh harness start),
+//   the newest DSH session workspace is used instead of the launch directory.
 // END_CHANGE_SUMMARY
 
 import { execFile } from "node:child_process";
@@ -164,6 +166,60 @@ function readRememberedProject(env) {
   }
 }
 
+
+/**
+ * DSH home for session discovery (`DSH_HOME`, else `$HOME/.dsh`); undefined
+ * when neither is available (tests pass an explicit env).
+ * @param {NodeJS.ProcessEnv} env
+ * @returns {string|undefined}
+ */
+function dshHome(env) {
+  const override = typeof env?.DSH_HOME === "string" ? env.DSH_HOME.trim() : "";
+  if (override !== "") return resolve(override);
+  const home = typeof env?.HOME === "string" && env.HOME.trim() !== "" ? env.HOME.trim() : "";
+  return home === "" ? undefined : join(home, ".dsh");
+}
+
+/**
+ * Workspace of the most recently active DSH session, or undefined.
+ *
+ * A fresh harness start has no remembered project yet; the session cache
+ * (`$DSH_HOME/storages/session_projcache/sessions/*.json`) records each
+ * session's `identity.cwd`, so the card can follow the project the user is
+ * actually looking at instead of the harness launch directory.
+ * @param {NodeJS.ProcessEnv} env
+ * @returns {string|undefined}
+ */
+function readLatestSessionProject(env) {
+  const home = dshHome(env);
+  if (home === undefined) return undefined;
+  const dir = join(home, "storages", "session_projcache", "sessions");
+  /** @type {{file:string, mtimeMs:number}[]} */
+  const candidates = [];
+  try {
+    for (const name of readdirSync(dir)) {
+      if (!name.endsWith(".json")) continue;
+      const file = join(dir, name);
+      candidates.push({ file, mtimeMs: statSync(file).mtimeMs });
+    }
+  } catch {
+    return undefined;
+  }
+  candidates.sort((a, b) => b.mtimeMs - a.mtimeMs);
+  for (const candidate of candidates.slice(0, 25)) {
+    try {
+      const record = JSON.parse(readFileSync(candidate.file, "utf-8"));
+      const cwd = record?.record?.identity?.cwd;
+      if (typeof cwd !== "string" || !isAbsolute(cwd)) continue;
+      const root = resolve(cwd);
+      if (existsSync(projectMarker(root))) return root;
+    } catch {
+      // Malformed/locked session record: try the next newest one.
+    }
+  }
+  return undefined;
+}
+
 export function resolveProjectRoot(options) {
   const queryPath = typeof options.queryPath === "string" ? options.queryPath.trim() : "";
   if (queryPath !== "") {
@@ -193,6 +249,10 @@ export function resolveProjectRoot(options) {
   // MCP server resolved (the session workspace) before walking up from cwd.
   const remembered = readRememberedProject(options.env ?? process.env);
   if (remembered !== undefined) return { ok: true, root: remembered, source: "remembered" };
+
+  // Fresh harness start: follow the workspace of the newest DSH session.
+  const sessionRoot = readLatestSessionProject(options.env ?? process.env);
+  if (sessionRoot !== undefined) return { ok: true, root: sessionRoot, source: "session" };
 
   let dir = resolve(options.cwd ?? process.cwd());
   for (;;) {

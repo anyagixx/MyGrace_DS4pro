@@ -7,7 +7,14 @@ release time (see `ROADMAP.md` §6, gate G10).
 
 ## [Unreleased]
 
-Nothing yet.
+### Fixed
+
+- **The status panel follows the active DSH session on a fresh start.** When no
+  project was remembered yet (no MyGRACE MCP call since the harness started) and
+  the harness was launched outside a project, the card now resolves the workspace
+  from the newest DSH session record
+  (`$DSH_HOME/storages/session_projcache/sessions/*.json`) before falling back to
+  `cwd`, instead of showing "No MyGRACE project found".
 
 ## [1.3.2] — 2026-11-24
 

@@ -184,6 +184,20 @@ describe("resolveProjectRoot", () => {
     expect(result).toEqual({ ok: true, root: project, source: "remembered" });
   });
 
+  test("follows the newest DSH session workspace when nothing is remembered yet", () => {
+    const project = makeProject();
+    const dshHome = tempDir("dsh-session-");
+    const sessions = join(dshHome, "storages", "session_projcache", "sessions");
+    mkdirSync(sessions, { recursive: true });
+    writeFileSync(
+      join(sessions, "session-stale.json"),
+      JSON.stringify({ record: { identity: { cwd: join(tempDir("gone-"), "missing") } } })
+    );
+    writeFileSync(join(sessions, "session-current.json"), JSON.stringify({ record: { identity: { cwd: project } } }));
+    const result = resolveProjectRoot({ env: { DSH_HOME: dshHome }, cwd: "/" });
+    expect(result).toEqual({ ok: true, root: project, source: "session" });
+  });
+
   test("a stale remembered project is ignored", () => {
     const state = join(tempDir("remembered-stale-"), "active-project");
     writeFileSync(state, `${join(tempDir("gone-"), "missing")}\n`);
