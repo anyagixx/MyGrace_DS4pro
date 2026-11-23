@@ -616,8 +616,10 @@ describe("MCP server project memory (session started outside a project)", () => 
       const second = await client.callTool({ name: "mygrace_status", arguments: {} });
       expect(second.isError).toBeFalsy();
       const text = textOf(second as { content?: Array<{ type: string; text?: string }> });
-      expect(text).toContain('"project"');
-      expect(text).toContain(DEMO);
+      // Parse the envelope: JSON escapes Windows backslashes, so a substring
+      // comparison against the native path would fail on Windows.
+      const envelope = JSON.parse(text) as { data?: { project?: string } };
+      expect(envelope.data?.project).toBe(resolve(DEMO));
     } finally {
       await client.close();
       rmSync(outside, { recursive: true, force: true });
