@@ -9,7 +9,7 @@ It is a CLI (`mygrace`, 20 commands) plus an agent methodology (15 skills) and
 an MCP server (21 tools). It does not generate code, call a model, or send telemetry — it
 enforces traceability and context discipline for the agent you already use.
 
-Current version: `1.3.1`
+Current version: `1.3.2`
 
 > The package is **not published to npm yet**: install from a source checkout or
 > a packed tarball (see [Install](#install)). The v2 hardening waves are tracked

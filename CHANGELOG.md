@@ -7,6 +7,10 @@ release time (see `ROADMAP.md` §6, gate G10).
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.3.2] — 2026-11-24
+
 ### Changed
 
 - **MyGRACE follows the session workspace from any launch directory.** The MCP
