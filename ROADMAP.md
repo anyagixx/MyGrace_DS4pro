@@ -155,6 +155,26 @@ Version reset to a truthful `1.1.0` → `2.0.0` line; CHANGELOG automation; npm 
 publish order (single package); DSH bundle release or removal; status panel real or removed;
 Windows CI matrix; docs site optional.
 
+### Wave 5 — Optional integrations (post-1.3) — *planned (v1.4.0 → v1.6.0)*
+
+Three companion integrations, each **optional, opt-in, read-only and degradable**; the core gates
+stay deterministic, offline and dependency-free (ADR-9). Full plan: `INTEGRATION-PLAN.md`.
+
+- **v1.4.0 — Octocode code-truth adapter** *(planned, 4–6 days)*: `mygrace integrations`,
+  `impact --code-graph`, `trace --code`. Graph-only MCP session (no embeddings/index, no network);
+  new findings `CODE_EDGE_UNDECLARED` / `DECLARED_EDGE_UNUSED` / `CONTRACT_SYMBOL_MISSING`;
+  core output contracts unchanged when the tool is absent (info `INTEGRATION_UNAVAILABLE`).
+- **v1.5.0 — Archify diagram exporter** *(planned, 3–5 days)*: deterministic typed IR from
+  `docs/graph-index.xml` → validated standalone HTML + sibling IR + machine receipt
+  (`mygrace diagram`, `--check`); Mermaid fallback when Archify is not installed.
+- **v1.6.0 — SkillCache-style capsules** *(planned, experimental, 2–3 weeks)*: allowlisted
+  `mygrace` command programs with bindings, executor + state + deopt-to-skill, replay qualification,
+  trust-gated hashes, 3 starter capsules, skills fast path; honest A/B metrics with a kill criterion
+  (< 15 % tool-call/turn reduction → keep experimental, no claims).
+
+Release gates added: **G13** core gates pass with `MYGRACE_INTEGRATIONS=off` (no tool installed);
+**G14** adapter contract tests against pinned versions (Octocode 0.29.2, Archify 3.3.0).
+
 ## 6. Release gates checklist (copy into every release PR)
 
 - [ ] G1 pack-smoke on fresh temp dir
