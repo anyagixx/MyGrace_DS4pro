@@ -7,6 +7,10 @@ release time (see `ROADMAP.md` §6, gate G10).
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.3.3] — 2026-11-24
+
 ### Fixed
 
 - **The status panel follows the active DSH session on a fresh start.** When no

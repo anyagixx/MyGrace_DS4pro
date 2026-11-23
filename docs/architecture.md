@@ -6,7 +6,7 @@ Decisions and their rationale live in [`ROADMAP.md`](../ROADMAP.md) §4 (ADR-1 �
 ADR-8); the change workflow lives in [`CONTRIBUTING.md`](../CONTRIBUTING.md); the
 trust boundary lives in [`SECURITY.md`](../SECURITY.md).
 
-> **Snapshot:** v1.3.2 source tree after Waves 0–5 (audit → foundation → safety →
+> **Snapshot:** v1.3.3 source tree after Waves 0–5 (audit → foundation → safety →
 > dogfooding → scale → release engineering): strict XML layer, typed errors/exit
 > codes, safe ids/paths, project config, lint teeth (including incremental
 > `--changed`), trust-gated command execution, hardened MCP runtime, installer
