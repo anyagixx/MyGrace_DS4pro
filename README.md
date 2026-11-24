@@ -9,7 +9,7 @@ It is a CLI (`mygrace`, 23 commands) plus an agent methodology (15 skills) and
 an MCP server (25 tools). It does not generate code, call a model, or send telemetry — it
 enforces traceability and context discipline for the agent you already use.
 
-Current version: `1.6.0`
+Current version: `1.7.0`
 
 > The package is **not published to npm yet**: install from a source checkout or
 > a packed tarball (see [Install](#install)). The v2 hardening waves are tracked
@@ -210,7 +210,7 @@ integration it reports the missing DSH pieces and exits 1, with hints for each.
 | `mygrace projects` | Monorepo discovery: per-project counts, lint and coverage under a tree (`--depth`, `--strict`) |
 | `mygrace doctor` | Environment and DSH-integration health checks (incl. optional integrations) |
 | `mygrace integrations` | Detect optional external tools (`status`), their versions and tested ranges; advisory, never fails the core gates |
-| `mygrace diagram` | Export the docs graph as deterministic Archify architecture IR (`--format json`), Mermaid (`--format mermaid`) or standalone HTML (`--format html`, needs optional Archify); `--check` guards the committed IR |
+| `mygrace diagram` | Export the docs graph as deterministic Archify IR — `--kind architecture\|workflow\|tree` — as JSON, Mermaid (architecture) or standalone HTML (needs optional Archify); `--check` guards every committed IR |
 | `mygrace capsule` | Local allowlisted routines: `list`/`show`/`validate`, `qualify` (replay + hash), `run` with judgment hand-back, `continue`; execution disabled by default (`integrations.capsules.enabled`) |
 | `mygrace init-dsh` | Bootstrap `docs/`, `AGENTS.md`, `mygrace.config.json` |
 | `mygrace install-dsh` | Wire skills + a PATH-free MCP row into DeepSeek Harness |
@@ -310,53 +310,29 @@ markup only. It prints the scope line and adds `data.scope` to the JSON envelope
 ## Diagrams (optional)
 
 `mygrace diagram` renders the machine graph for humans; nothing is hand-drawn.
+Three deterministic kinds:
 
 ```bash
-mygrace diagram                              # text summary
-mygrace diagram --format json                # IR + full dependency list (works offline)
-mygrace diagram --format mermaid             # dependency-free flowchart (full graph)
+mygrace diagram                              # architecture summary
+mygrace diagram --format json                # IR + full dependency list (offline)
+mygrace diagram --format mermaid             # architecture flowchart (full graph)
 mygrace diagram --format html                # Archify validate + deliver (needs Archify)
-mygrace diagram --check                      # fail when the committed IR is stale
+mygrace diagram --kind tree --format html    # capability hierarchy: project → groups → modules
+mygrace diagram --kind workflow --format html # delivery plan: one lane per phase, sequential columns
+mygrace diagram --check                      # fails when any committed IR is stale
 ```
 
-Four things travel together: the committed **IR** (`docs/diagrams/architecture.json`,
-deterministic and `--check`-guarded), the generated **HTML** (standalone, offline),
-our **receipt** (`architecture.receipt.json`: graph sha256, declared/depicted counts,
-Archify validation) and Archify's own delivery receipt. HTML/receipts are local
-(both gitignored); only the IR is committed.
-
-Archify's layout validator requires a clean flow, so the HTML shows a legible
-**primary-dependency backbone** (one edge per module, placed by dependency depth);
-the full declared dependency list is always available in JSON/Mermaid output and
-counted in the diagram cards. Tested against Archify CLI 3.2.0 and 3.3.x; without
-Archify, JSON/Mermaid output keeps working and `--format html` fails with
-`INTEGRATION_UNAVAILABLE`.
-
-## Capsules (experimental)
-
-Capsules compile recurring read-only routines instead of re-deriving them:
-
-```bash
-mygrace capsule list                 # validity + qualification state
-mygrace capsule validate             # schema/allowlist/binding checks
-mygrace capsule qualify daily-check --fixture examples/demo-store
-mygrace capsule run after-change     # stops at the judgment, prints a continue id
-mygrace capsule continue <run-id>    # resume after the judgment
-```
-
-Shipped: `daily-check` (status → lint → ci → next), `after-change`
-(lint --changed → ci → impact → judgment to `mygrace-fix`) and
-`module-onboarding` (status → trace → packet → focus, binding `--module M-XXX`).
-
-Safety and honesty: programs are an **allowlist of read-only `mygrace` commands**
-(no shell, values only from explicit flags); a capsule must be **qualified** by
-replaying it on a fixture and recording its sha256 in `.mygrace/capsules/`; a
-failed program **deopts** to the capsule's source skill instead of hiding the
-error. Execution is opt-in (`"integrations": { "capsules": { "enabled": true } }`;
-generated configs default to `false`, this repository enables it for dogfooding).
-State and qualification records are local (`.mygrace/`, gitignored). No
-token-savings claims: this is an experimental SkillCache-inspired primitive whose
-value is measured, not assumed.
+Mapping rules: **architecture** shows modules with a legible primary-dependency
+backbone (Archify clean-flow requires it; the full declared graph stays in
+JSON/Mermaid and the cards); **tree** is a parent-linked hierarchy
+(project → capability groups by module `TYPE` → modules); **workflow** uses plan
+phases as swimlanes, one node per phase in columns 1–5 (phases beyond five are
+aggregated into the last node with an explicit note), sequential edges routed
+bottom→top. Every IR is committed under `docs/diagrams/<kind>.json`; HTML and
+receipts are local/gitignored. `--check` (and `release:check`) verifies all three
+committed IRs; `--format json --out <path>` refreshes an IR without Archify.
+Tested against Archify CLI 3.2.0 and 3.3.x (fake-CLI contract in `bun test`,
+real-binary smoke manual: `bun run test:integrations:archify`).
 
 ## Skills (15, shared from `skills/mygrace/`)
 

@@ -8,8 +8,11 @@
   <annotations>
     <export-DIAGRAM_FINDING_CODES PURPOSE="Stable codes: DIAGRAM_STALE, DIAGRAM_VALIDATION_FAILED, DIAGRAM_DELIVERY_FAILED (+ INTEGRATION_* reuse for a missing tool)." />
     <export-buildArchitectureDiagram PURPOSE="docs graph → schema_version 1 architecture IR: components (modules), boundaries (module TYPE groups), primary-dependency backbone connections, cards, deterministic pos/size and graph sha256." />
+    <export-buildTreeDiagram PURPOSE="project → capability groups (module TYPE) → modules hierarchy IR (parent-linked nodes, deterministic layout)." />
+    <export-buildWorkflowDiagram PURPOSE="plan phases → workflow IR: one lane per phase, nodes in columns 1–5, sequential bottom→top edges, explicit aggregation beyond five phases." />
+    <export-buildDiagram PURPOSE="Dispatch architecture/workflow/tree builders for the CLI and MCP surfaces." />
     <export-renderMermaid PURPOSE="Dependency-free flowchart over the FULL declared dependency graph (not only the backbone)." />
-    <export-diagramCommand PURPOSE="mygrace diagram [--kind architecture] [--format text|json|html|mermaid] [--out <html>] [--quality standard|showcase] [--check]; JSON/Mermaid need no Archify, HTML requires validated/delivered Archify." />
+    <export-diagramCommand PURPOSE="mygrace diagram [--kind architecture|workflow|tree] [--format text|json|html|mermaid] [--out <html>] [--quality standard|showcase] [--check]; JSON/Mermaid (architecture) need no Archify, HTML requires validated/delivered Archify." />
   </annotations>
 
   <CrossLink to="M-INTEGRATIONS" relation="Archify detection, pinned tested range (>=3.2 <4) and scrubbed child env come from ADR-9 registry" />
@@ -21,6 +24,7 @@
     <inputs>
       <param name="root" type="string" description="Project root resolved from --path." />
       <param name="config" type="MyGraceConfig" description="Provides integrations.archify outputDir/timeout." />
+      <param name="kind" type="architecture|workflow|tree" description="Diagram kind; workflow maps plan phases, tree maps the capability hierarchy." />
       <param name="format" type="text|json|html|mermaid" description="Output mode; html additionally requires a detected Archify CLI." />
       <param name="out" type="string?" description="Project-relative .html path; default <integrations.archify.outputDir>/architecture.html." />
     </inputs>
@@ -42,7 +46,7 @@
     <note-1>Archify validates "clean flow": a dense module graph cannot be auto-routed without edges crossing nodes, so HTML shows a legible primary-dependency backbone (one edge per module, dependency-depth layers). JSON and Mermaid always carry the full declared graph; the receipt records declared vs depicted counts.</note-1>
     <note-2>Determinism: components/connections/boundaries/cards are sorted, layout is computed from labels and dependency depth, and the graph sha256 covers only graph inputs — repeated runs produce byte-identical IR.</note-2>
     <note-3>ADR-9: allowlisted `archify validate/deliver` only, argv-only with scrubbed env, timeout from config, output parsed as untrusted JSON; nothing runs during lint/ci.</note-3>
-    <note-4>Tested against Archify CLI 3.2.0 (bundled in @tt-a1i/archify-dsh@1.1.0) and 3.3.x (1.2.0); full-binary smoke is manual (`bun run test:integrations:archify`).</note-4>
-    <note-5>v1.5.0 ships `--kind architecture`; workflow/tree kinds remain follow-ups.</note-5>
+    <note-4>Tested against Archify CLI 3.2.0 (bundled in @tt-a1i/archify-dsh@1.1.0) and 3.3.x (1.2.0) for all three kinds; full-binary smoke is manual (`bun run test:integrations:archify`), fake-CLI contract is in `bun test`.</note-4>
+    <note-5>v1.7.0 ships all three kinds; mapping rules are validated against real Archify 3.2.0 and 3.3.x.</note-5>
   </notes>
 </M-DIAGRAM>

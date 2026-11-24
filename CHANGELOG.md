@@ -9,6 +9,51 @@ release time (see `ROADMAP.md` §6, gate G10).
 
 Nothing yet.
 
+## [1.7.0] — 2026-11-24
+
+### Added
+
+- **Three diagram kinds (`mygrace diagram --kind architecture|workflow|tree`).**
+  - `architecture` (unchanged): module graph with the legible primary-dependency
+    backbone; full graph in JSON/Mermaid.
+  - `tree` (new): parent-linked capability hierarchy — project → module `TYPE`
+    groups → modules; deterministic layout, no edges.
+  - `workflow` (new): the delivery plan — one swimlane per `docs/plans/Phase-*.xml`,
+    one node per phase in columns 1–5 (phases beyond five are aggregated into the
+    last node and called out in the cards), sequential edges routed
+    `fromSide: bottom` → `toSide: top`. Mapping was validated against the real
+    Archify CLI (3.2.0 and 3.3.x) before implementation; both kinds validate and
+    deliver cleanly.
+- Committed deterministic IRs for all three kinds
+  (`docs/diagrams/architecture.json`, `tree.json`, `workflow.json`); `--check`
+  now verifies **every existing committed kind** (release gate covers all three),
+  and `--check --kind …` limits the check to one.
+- `--format json` carries the kind-specific IR (`data.ir`), dependencies only for
+  architecture; Mermaid stays architecture-only with an explicit usage error for
+  tree/workflow; HTML/receipts are per-kind and route through the same Archify
+  validate/deliver path.
+- MCP `mygrace_diagram` accepts `architecture|workflow|tree`; the fake-Archify
+  contract tests cover validate/deliver/receipt for the new kinds, and
+  `bun run test:integrations:archify` now smokes **all three kinds** against a
+  real binary (manual).
+- 6 new diagram tests (727 tests / 35 files total); docs/README/AGENTS/skills
+  describe the three kinds and their mapping rules.
+
+### Changed
+
+- `docs/diagrams/*.json` now includes `tree.json` and `workflow.json`; HTML and
+  receipts remain gitignored. CLI/MCP counts are unchanged (23 commands, 25 tools).
+
+### Limitations
+
+- Workflow shows at most five phases; later phases are aggregated into the last
+  node with an explicit note (Archify columns are capped at 0–5).
+- Tree groups modules by capability `TYPE`, not by source-directory nesting.
+- Mermaid output is architecture-only; tree/workflow use JSON or HTML.
+- HTML still requires the optional Archify CLI; JSON/IR and `--check` stay
+  offline and deterministic.
+
+
 ## [1.6.0] — 2026-11-24
 
 ### Added

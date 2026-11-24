@@ -108,7 +108,7 @@ When `docs/graph-index.xml` approaches `indexCaps.graph`, shard it: `mygrace mod
 - `mygrace lint --strict --path .` — integrity gate; add `--changed --base <ref>` (or `--files`) for incremental scope
 - `mygrace trace <M-XXX>` / `mygrace impact [--files a,b,c]` — proof chain / change blast radius (both read-only)
 - `mygrace integrations status --path .` — detect optional external tools (Octocode/Archify) and tested versions; advisory only
-- `mygrace diagram [--format json|mermaid|html] [--check]` — render the docs graph (IR/Mermaid always; HTML via optional Archify), check committed IR
+- `mygrace diagram [--kind architecture|workflow|tree] [--format json|mermaid|html] [--check]` — render the docs graph as the module graph, the delivery plan or the capability hierarchy (IR/Mermaid always; HTML via optional Archify); `--check` verifies every committed IR
 - `mygrace capsule list|validate|qualify|run|continue` — experimental allowlisted routines with replay qualification and judgment hand-back (disabled unless `integrations.capsules.enabled`)
 - `mygrace trust --path .` — review + record project commands (before test/verify)
 - `mygrace test --module M-XXX` / `mygrace verify --module M-XXX` — scoped tests

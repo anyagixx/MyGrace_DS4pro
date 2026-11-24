@@ -398,6 +398,15 @@ describe("MCP argument validation", () => {
       "--format",
       "json",
     ]);
+    expect(map("mygrace_diagram", { path: P, kind: "tree", format: "mermaid" })).toEqual([
+      "diagram",
+      "--path",
+      P,
+      "--kind",
+      "tree",
+      "--format",
+      "mermaid",
+    ]);
     expect(map("mygrace_capsule_list", { path: P })).toEqual([
       "capsule",
       "list",

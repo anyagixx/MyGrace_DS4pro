@@ -6,7 +6,7 @@ Decisions and their rationale live in [`ROADMAP.md`](../ROADMAP.md) §4 (ADR-1 �
 ADR-8); the change workflow lives in [`CONTRIBUTING.md`](../CONTRIBUTING.md); the
 trust boundary lives in [`SECURITY.md`](../SECURITY.md).
 
-> **Snapshot:** v1.5.0 source tree after Waves 0–5, the v1.4 integrations layer and the v1.5 diagram exporter (audit → foundation → safety →
+> **Snapshot:** v1.7.0 source tree after Waves 0–6: integrations layer (v1.4), diagram exporter (v1.5, all three kinds in v1.7), capsules (v1.6) (audit → foundation → safety →
 > dogfooding → scale → release engineering): strict XML layer, typed errors/exit
 > codes, safe ids/paths, project config, lint teeth (including incremental
 > `--changed`), trust-gated command execution, hardened MCP runtime, installer
@@ -97,7 +97,7 @@ Dependency rules:
 | `src/grace-mcp-commands.ts` | Single source of truth for MCP tools: `TOOLS` (`name`, `description`, `inputSchema`, `rootArg`, `buildArgs`, optional `digestOutput`), `TOOL_NAMES`, `buildToolCommand()`, `validateToolArgs()`. No SDK imports. | `grace-errors` only (pure) |
 | `src/grace-integrations.ts` | ADR-9 registry: detects optional external tools (Octocode, Archify) via config → env → PATH, probes `--version`, checks pinned tested ranges, prints actionable hints; `mygrace integrations status`; advisory (exit 0) and never required by the core gates. | `grace-config`, `grace-common`, `grace-errors`, `grace-test` |
 | `src/grace-code-graph.ts` | Octocode adapter: one short-lived read-only MCP session (`graphrag`/`view_signatures`), defensive parsers, deduped import edges and per-file symbols; missing/broken/out-of-range tools degrade to notes, never exceptions. | `grace-integrations`, MCP SDK |
-| `src/grace-diagram.ts` | Diagram exporter: deterministic Archify architecture IR from the docs graph (components/boundaries/primary-dependency backbone/cards), Mermaid fallback, optional `archify validate`/`deliver` with a machine receipt, and a `--check` staleness gate. | `grace-integrations`, `grace-shard`, `grace-lint`, `grace-xml` |
+| `src/grace-diagram.ts` | Diagram exporter: deterministic Archify IR from the docs graph — architecture (components/boundaries/primary-dependency backbone), tree (capability hierarchy) and workflow (plan phases → lanes) — plus Mermaid fallback, optional `archify validate`/`deliver` with a machine receipt, and a `--check` staleness gate over every committed IR. | `grace-integrations`, `grace-shard`, `grace-lint`, `grace-xml` |
 
 ## 3. Data flow
 

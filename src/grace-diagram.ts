@@ -138,6 +138,73 @@ export interface DiagramBuildResult {
   graphSha256: string;
 }
 
+/** Minimal meta accepted by both workflow and tree Archify schemas. */
+export interface DiagramMetaLite {
+  title: string;
+  subtitle: string;
+  output: string;
+}
+
+export interface WorkflowLane {
+  id: string;
+  label: string;
+}
+
+export interface WorkflowNode {
+  id: string;
+  lane: string;
+  col: number;
+  type: ArchifyComponentType;
+  label: string;
+  sublabel?: string;
+  width?: number;
+}
+
+export interface WorkflowEdge {
+  id: string;
+  from: string;
+  to: string;
+  fromSide?: "left" | "right" | "top" | "bottom";
+  toSide?: "left" | "right" | "top" | "bottom";
+}
+
+export interface WorkflowIr {
+  schema_version: 1;
+  diagram_type: "workflow";
+  meta: DiagramMetaLite;
+  lanes: WorkflowLane[];
+  nodes: WorkflowNode[];
+  edges: WorkflowEdge[];
+  cards: DiagramCard[];
+}
+
+export interface TreeNode {
+  id: string;
+  label: string;
+  parent?: string;
+  sublabel?: string;
+}
+
+export interface TreeIr {
+  schema_version: 1;
+  diagram_type: "tree";
+  meta: DiagramMetaLite;
+  layout: { direction: "down" | "right"; gapX: number; gapY: number; nodeW: number };
+  nodes: TreeNode[];
+  cards: DiagramCard[];
+}
+
+export type AnyDiagramIr = DiagramIr | WorkflowIr | TreeIr;
+
+export interface AnyDiagramBuildResult {
+  ir: AnyDiagramIr;
+  irText: string;
+  summary: DiagramSummary;
+  /** Every declared module dependency (architecture output only; empty otherwise). */
+  fullConnections: DiagramConnection[];
+  graphSha256: string;
+}
+
 export interface ArchifyRun {
   ok: boolean;
   payload: Record<string, unknown> | null;
@@ -148,8 +215,8 @@ export type DiagramOutputFormat = "text" | "json" | "html" | "mermaid";
 // END_BLOCK_TYPES
 
 // START_BLOCK_MAPPING
-const ACCEPTED_KINDS = ["architecture"] as const;
-type DiagramKind = (typeof ACCEPTED_KINDS)[number];
+export const DIAGRAM_KINDS = ["architecture", "workflow", "tree"] as const;
+export type DiagramKind = (typeof DIAGRAM_KINDS)[number];
 
 const GROUP_LABELS: Record<string, string> = {
   FOUNDATION: "Foundation",
@@ -452,6 +519,250 @@ export function buildArchitectureDiagram(
   return { ir, irText: `${JSON.stringify(ir, null, 2)}\n`, summary, fullConnections, graphSha256 };
 }
 
+interface PhaseStep {
+  n: number;
+  module: string;
+  status: string;
+  description: string;
+}
+
+interface ProjectPhase {
+  id: string;
+  name: string;
+  status: string;
+  steps: PhaseStep[];
+}
+
+/** Read plan-index + phase files into a deterministic phase/step model. */
+function projectPhases(root: string): ProjectPhase[] {
+  const phases: ProjectPhase[] = [];
+  let indexText = "";
+  try {
+    indexText = readFileSync(join(root, "docs", "plan-index.xml"), "utf-8");
+  } catch {
+    return phases;
+  }
+  const parsed = tryParseXml(indexText);
+  if (!parsed.ok) return phases;
+  for (const child of parsed.document.root.children) {
+    if (typeof child === "string" || !/^Phase-[0-9]+[A-Za-z]?$/.test(child.tag)) continue;
+    const file = join(root, "docs", "plans", `${child.tag}.xml`);
+    if (!existsSync(file)) continue;
+    let parsedPhase: ReturnType<typeof tryParseXml>;
+    try {
+      parsedPhase = tryParseXml(readFileSync(file, "utf-8"), file);
+    } catch {
+      continue;
+    }
+    if (!parsedPhase.ok) continue;
+    const steps: PhaseStep[] = [];
+    for (const element of parsedPhase.document.elements) {
+      const match = /^step-([0-9]+)$/.exec(element.tag);
+      if (match === null) continue;
+      steps.push({
+        n: Number(match[1]),
+        module: String(element.attrs.module ?? element.attrs.MODULE ?? "").trim(),
+        status: String(element.attrs.status ?? element.attrs.STATUS ?? "").trim(),
+        description: String(element.attrs.description ?? element.attrs.DESCRIPTION ?? "").trim(),
+      });
+    }
+    steps.sort((left, right) => left.n - right.n);
+    phases.push({
+      id: child.tag,
+      name: String(child.attrs.name ?? child.tag).trim() || child.tag,
+      status: String(child.attrs.status ?? child.attrs.STATUS ?? "").trim(),
+      steps,
+    });
+  }
+  phases.sort((left, right) => left.id.localeCompare(right.id));
+  return phases;
+}
+
+function slug(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "") || "item";
+}
+
+/** Build the hierarchy tree IR: project → capability groups (TYPE) → modules. */
+export function buildTreeDiagram(
+  root: string,
+  config: MyGraceConfig,
+  options: { outputHtml: string; quality?: "standard" | "showcase" }
+): AnyDiagramBuildResult {
+  const modules = graphModules(root, config);
+  const groups = [...new Set(modules.map((module) => module.type))].sort();
+  const nodes: TreeNode[] = [
+    { id: "root", label: projectNameOf(root), sublabel: `${modules.length} modules` },
+    ...groups.map((type) => ({
+      id: `group-${slug(type)}`,
+      label: GROUP_LABELS[type] ?? type,
+      parent: "root",
+      sublabel: `${modules.filter((module) => module.type === type).length} modules`,
+    })),
+    ...modules.map((module) => ({
+      id: module.id,
+      label: module.name,
+      parent: `group-${slug(module.type)}`,
+      sublabel: `${module.id} · ${module.path}`,
+    })),
+  ];
+  const verifications = readIndexFileSafe(join(root, "docs", "verification-index.xml")).entries.length;
+  const testFiles = countTestFiles(root);
+  const verifiedModules = modules.filter((module) => module.verificationRef !== "").length;
+  const summary: DiagramSummary = {
+    modules: modules.length,
+    dependencies: 0,
+    depictedDependencies: 0,
+    boundaries: groups.length,
+    phases: readIndexFileSafe(join(root, "docs", "plan-index.xml")).entries.length,
+    verifications,
+    testFiles,
+    verifiedModules,
+    lintErrors: 0,
+    lintWarnings: 0,
+  };
+  const ir: TreeIr = {
+    schema_version: 1,
+    diagram_type: "tree",
+    meta: {
+      title: `MyGRACE — ${projectNameOf(root)} module tree`,
+      subtitle: `${modules.length} modules · ${groups.length} capability groups`,
+      output: portableOutputName(options.outputHtml),
+    },
+    layout: { direction: "down", gapX: 40, gapY: 28, nodeW: 220 },
+    nodes,
+    cards: [
+      {
+        dot: "cyan",
+        title: "Tree",
+        items: [`${groups.length} capability groups`, `${modules.length} modules`],
+      },
+      {
+        dot: verifiedModules === modules.length ? "emerald" : "amber",
+        title: "Verification",
+        items: [`${verifiedModules}/${modules.length} modules verified`, `${testFiles} declared test files`],
+      },
+    ],
+  };
+  const graphInput = {
+    modules: modules.map((module) => ({ id: module.id, name: module.name, type: module.type, path: module.path })),
+    groups,
+  };
+  const graphSha256 = createHash("sha256").update(JSON.stringify(graphInput)).digest("hex");
+  return { ir, irText: `${JSON.stringify(ir, null, 2)}\n`, summary, fullConnections: [], graphSha256 };
+}
+
+/** Build the delivery workflow IR: one swimlane per plan phase, sequential columns. */
+export function buildWorkflowDiagram(
+  root: string,
+  config: MyGraceConfig,
+  options: { outputHtml: string; quality?: "standard" | "showcase" }
+): AnyDiagramBuildResult {
+  const phases = projectPhases(root);
+  const modules = graphModules(root, config);
+  const display = phases.slice(0, 5);
+  const aggregated = phases.length > display.length ? phases.slice(display.length) : [];
+  const lanes: WorkflowLane[] = display.map((phase) => ({ id: slug(phase.id), label: `${phase.id} · ${phase.name}` }));
+  const nodes: WorkflowNode[] = display.map((phase, index) => {
+    const steps = phase.steps.length;
+    const state = phase.status === "" ? "" : ` · ${phase.status}`;
+    return {
+      id: `node-${slug(phase.id)}`,
+      lane: slug(phase.id),
+      col: index + 1,
+      type: "backend",
+      label: phase.name,
+      sublabel: `${steps} step${steps === 1 ? "" : "s"}${state}`,
+      width: 300,
+    };
+  });
+  if (aggregated.length > 0) {
+    const id = `node-${slug(aggregated[0]?.id ?? "more")}-more`;
+    lanes.push({ id: slug(aggregated[0]?.id ?? "more"), label: `${aggregated.length} more phases` });
+    nodes.push({
+      id,
+      lane: slug(aggregated[0]?.id ?? "more"),
+      col: 5,
+      type: "backend",
+      label: `${aggregated.length} more phase${aggregated.length === 1 ? "" : "s"}`,
+      sublabel: aggregated.map((phase) => phase.id).join(", "),
+      width: 300,
+    });
+  }
+  if (nodes.length === 0) {
+    lanes.push({ id: "project", label: "Project" });
+    nodes.push({ id: "node-project", lane: "project", col: 1, type: "backend", label: projectNameOf(root), sublabel: "no plan phases", width: 300 });
+  }
+  const edges: WorkflowEdge[] = [];
+  for (let index = 0; index + 1 < nodes.length; index += 1) {
+    const from = nodes[index];
+    const to = nodes[index + 1];
+    if (from === undefined || to === undefined) continue;
+    edges.push({ id: `edge-${index + 1}`, from: from.id, to: to.id, fromSide: "bottom", toSide: "top" });
+  }
+  const summary: DiagramSummary = {
+    modules: modules.length,
+    dependencies: 0,
+    depictedDependencies: edges.length,
+    boundaries: lanes.length,
+    phases: phases.length,
+    verifications: readIndexFileSafe(join(root, "docs", "verification-index.xml")).entries.length,
+    testFiles: countTestFiles(root),
+    verifiedModules: modules.filter((module) => module.verificationRef !== "").length,
+    lintErrors: 0,
+    lintWarnings: 0,
+  };
+  const totalSteps = phases.reduce((total, phase) => total + phase.steps.length, 0);
+  const ir: WorkflowIr = {
+    schema_version: 1,
+    diagram_type: "workflow",
+    meta: {
+      title: `MyGRACE — ${projectNameOf(root)} delivery plan`,
+      subtitle: `${phases.length} phases · ${totalSteps} steps`,
+      output: portableOutputName(options.outputHtml),
+    },
+    lanes,
+    nodes,
+    edges,
+    cards: [
+      {
+        dot: "cyan",
+        title: "Plan",
+        items: [
+          `${phases.length} phases · ${totalSteps} steps`,
+          ...(aggregated.length === 0 ? [] : [`${aggregated.length} phases aggregated into the last node`]),
+        ],
+      },
+      {
+        dot: phases.every((phase) => /done|✅/i.test(phase.status)) ? "emerald" : "amber",
+        title: "Status",
+        items: phases.map((phase) => `${phase.id}: ${phase.status === "" ? "unknown" : phase.status}`),
+      },
+    ],
+  };
+  const graphInput = {
+    phases: phases.map((phase) => ({
+      id: phase.id,
+      name: phase.name,
+      status: phase.status,
+      steps: phase.steps.map((step) => ({ n: step.n, module: step.module, status: step.status, description: step.description })),
+    })),
+  };
+  const graphSha256 = createHash("sha256").update(JSON.stringify(graphInput)).digest("hex");
+  return { ir, irText: `${JSON.stringify(ir, null, 2)}\n`, summary, fullConnections: [], graphSha256 };
+}
+
+/** Build the requested diagram kind (architecture default). */
+export function buildDiagram(
+  root: string,
+  config: MyGraceConfig,
+  kind: DiagramKind,
+  options: { outputHtml: string; quality?: "standard" | "showcase" }
+): AnyDiagramBuildResult {
+  if (kind === "tree") return buildTreeDiagram(root, config, options);
+  if (kind === "workflow") return buildWorkflowDiagram(root, config, options);
+  return buildArchitectureDiagram(root, config, options);
+}
+
 /** Dependency-free Mermaid flowchart (used when Archify is not installed). */
 export function renderMermaid(ir: DiagramIr, connections: readonly DiagramConnection[] = ir.connections): string {
   const lines: string[] = ["flowchart LR"];
@@ -583,11 +894,10 @@ function parseDiagramFormat(value: string): DiagramOutputFormat {
 }
 
 function parseDiagramKind(value: string): DiagramKind {
-  if ((ACCEPTED_KINDS as readonly string[]).includes(value)) return value as DiagramKind;
-  throw new UsageError(
-    `Unsupported diagram kind "${value}" — v1.5.0 ships "architecture" (workflow/tree are planned follow-ups).`,
-    { hint: "Use --kind architecture. Mermaid/JSON output also covers the dependency graph for other view types." }
-  );
+  if ((DIAGRAM_KINDS as readonly string[]).includes(value)) return value as DiagramKind;
+  throw new UsageError(`Unsupported diagram kind "${value}" — expected one of: ${DIAGRAM_KINDS.join(", ")}.`, {
+    hint: "architecture renders the module graph, workflow renders the plan phases, tree renders the capability hierarchy.",
+  });
 }
 
 function relativeToRoot(root: string, absolute: string): string {
@@ -595,23 +905,27 @@ function relativeToRoot(root: string, absolute: string): string {
   return rel === "" ? "." : rel;
 }
 
-function resolveOutputPath(root: string, config: MyGraceConfig, requested: string | undefined): string {
-  const defaultPath = join(root, config.integrations.archify.outputDir, "architecture.html");
+function resolveOutputPath(root: string, config: MyGraceConfig, requested: string | undefined, kind: DiagramKind): string {
+  const defaultPath = join(root, config.integrations.archify.outputDir, `${kind}.html`);
   if (requested === undefined || requested.trim() === "") return defaultPath;
   const value = requested.trim();
   if (!/\.html$/i.test(value)) {
     throw new UsageError(`--out must end with .html (got "${value}").`, {
-      hint: "Example: mygrace diagram --format html --out docs/diagrams/architecture.html",
+      hint: `Example: mygrace diagram --kind ${kind} --format html --out docs/diagrams/${kind}.html`,
     });
   }
   const absolute = isAbsolute(value) ? resolve(value) : resolve(root, value);
   const rel = relative(root, absolute);
   if (rel === "" || rel.startsWith("..") || isAbsolute(rel)) {
     throw new UsageError("--out must stay inside the project root.", {
-      hint: "Pass a project-relative path such as docs/diagrams/architecture.html.",
+      hint: `Pass a project-relative path such as docs/diagrams/${kind}.html.`,
     });
   }
   return absolute;
+}
+
+function irPathFor(root: string, config: MyGraceConfig, kind: DiagramKind): string {
+  return join(root, config.integrations.archify.outputDir, `${kind}.json`);
 }
 
 function ensureDirectory(path: string): void {
@@ -627,68 +941,115 @@ interface DiagramData {
   format: DiagramOutputFormat;
   summary: DiagramSummary;
   graphSha256: string;
-  ir?: DiagramIr;
+  ir?: AnyDiagramIr;
   dependencies?: DiagramConnection[];
   mermaid?: string;
   artifacts?: { ir: string; html: string; receipt: string };
   archify?: { bin: string; source: string | null; quality: string; validation: string };
-  check?: { ir: string; stale: boolean; expectedSha256: string; actualSha256: string | null };
+  check?: Array<{ kind: DiagramKind; ir: string; stale: boolean; expectedSha256: string; actualSha256: string | null }>;
 }
 
-/** Compute one diagram request; returns the envelope plus optional human lines. */
+function textSummaryLines(kind: DiagramKind, built: AnyDiagramBuildResult): string[] {
+  const summary = built.summary;
+  if (kind === "tree") {
+    return [
+      `Tree: ${summary.modules} modules · ${summary.boundaries} capability groups`,
+      `  phases:        ${summary.phases}`,
+      `  verifications: ${summary.verifications} (${summary.testFiles} declared test files)`,
+      `  verified:      ${summary.verifiedModules}/${summary.modules} modules`,
+      `  graph sha256:  ${built.graphSha256}`,
+    ];
+  }
+  if (kind === "workflow") {
+    return [
+      `Workflow: ${summary.phases} phases · ${summary.verifiedModules}/${summary.modules} verified modules`,
+      `  lanes:         ${summary.boundaries}`,
+      `  edges:         ${summary.depictedDependencies}`,
+      `  graph sha256:  ${built.graphSha256}`,
+    ];
+  }
+  return [
+    `Diagram (architecture): ${summary.modules} modules · ${summary.dependencies} declared dependencies · ${summary.boundaries} boundaries`,
+    `  primary edges: ${summary.depictedDependencies} drawn (Archify clean-flow backbone)`,
+    `  phases:        ${summary.phases}`,
+    `  verifications: ${summary.verifications} (${summary.testFiles} declared test files)`,
+    `  verified:      ${summary.verifiedModules}/${summary.modules} modules`,
+    `  lint:          ${summary.lintErrors} errors, ${summary.lintWarnings} warnings`,
+    `  graph sha256:  ${built.graphSha256}`,
+  ];
+}
+
 function computeDiagram(rootInput: string, args: Record<string, unknown>): CommandOutcome<DiagramData> | Promise<CommandOutcome<DiagramData>> {
   const root = findProjectRoot(typeof args.path === "string" ? args.path : ".");
   const config = loadConfig(root).config;
-  const kind = parseDiagramKind(typeof args.kind === "string" ? args.kind : "architecture");
+  const explicitKind = typeof args.kind === "string" && args.kind.trim() !== "";
+  const kind: DiagramKind = explicitKind ? parseDiagramKind(String(args.kind)) : "architecture";
   const format = parseDiagramFormat(typeof args.format === "string" ? args.format : "text");
   const quality = args.quality === "showcase" ? "showcase" : "standard";
-  const outHtml = resolveOutputPath(root, config, typeof args.out === "string" ? args.out : undefined);
-  const built = buildArchitectureDiagram(root, config, { outputHtml: outHtml, quality });
-  const irPath = outHtml.replace(/\.html$/i, ".json");
-  const receiptPath = outHtml.replace(/\.html$/i, ".receipt.json");
 
   if (args.check === true) {
-    const expectedSha = createHash("sha256").update(built.irText).digest("hex");
-    const actualText = existsSync(irPath) ? readFileSync(irPath, "utf-8") : null;
-    const actualSha = actualText === null ? null : createHash("sha256").update(actualText).digest("hex");
-    const stale = actualSha !== expectedSha;
-    const findings: Finding[] = stale
-      ? [
-          finding(
-            "error",
-            DIAGRAM_FINDING_CODES.stale,
-            actualText === null ? `Diagram IR is missing at ${relativeToRoot(root, irPath)}.` : `Diagram IR is stale at ${relativeToRoot(root, irPath)}.`,
-            { hint: "Run `mygrace diagram --format html` (or `--format json` to inspect) and commit the refreshed IR." }
-          ),
-        ]
-      : [];
-    const data: DiagramData = {
-      kind,
-      format,
-      summary: built.summary,
-      graphSha256: built.graphSha256,
-      check: { ir: relativeToRoot(root, irPath), stale, expectedSha256: expectedSha, actualSha256: actualSha },
-    };
-    const envelope = createEnvelope({ data, findings, meta: { command: "diagram", root } });
+    const kindsToCheck: DiagramKind[] = explicitKind
+      ? [kind]
+      : DIAGRAM_KINDS.filter((candidate) => existsSync(irPathFor(root, config, candidate)));
+    if (kindsToCheck.length === 0) kindsToCheck.push("architecture");
+    const architecture = buildArchitectureDiagram(root, config, { outputHtml: join(root, config.integrations.archify.outputDir, "architecture.html"), quality });
+    const results = kindsToCheck.map((candidateKind) => {
+      const irPath = irPathFor(root, config, candidateKind);
+      const expected = buildDiagram(root, config, candidateKind, {
+        outputHtml: join(root, config.integrations.archify.outputDir, `${candidateKind}.html`),
+        quality,
+      });
+      const expectedSha256 = createHash("sha256").update(expected.irText).digest("hex");
+      const actualText = existsSync(irPath) ? readFileSync(irPath, "utf-8") : null;
+      const actualSha256 = actualText === null ? null : createHash("sha256").update(actualText).digest("hex");
+      return { kind: candidateKind, ir: relativeToRoot(root, irPath), stale: actualSha256 !== expectedSha256, expectedSha256, actualSha256 };
+    });
+    const findings: Finding[] = results
+      .filter((result) => result.stale)
+      .map((result) =>
+        finding(
+          "error",
+          DIAGRAM_FINDING_CODES.stale,
+          result.actualSha256 === null ? `Diagram IR is missing at ${result.ir}.` : `Diagram IR is stale at ${result.ir}.`,
+          { hint: `Run \`mygrace diagram --kind ${result.kind} --format html\` (or \`--format json --out\`) and commit the refreshed IR.` }
+        )
+      );
+    const envelope = createEnvelope({
+      data: { kind, format, summary: architecture.summary, graphSha256: architecture.graphSha256, check: results },
+      findings,
+      meta: { command: "diagram", root },
+    });
     const lines = [
-      `Diagram check (${kind}): ${stale ? "STALE" : "up to date"}`,
-      `  IR: ${relativeToRoot(root, irPath)}`,
-      ...(stale ? [`  expected sha256: ${expectedSha}`, `  actual sha256:   ${actualSha ?? "(missing)"}`] : []),
+      `Diagram check: ${results.some((result) => result.stale) ? "STALE" : "up to date"} (${results.length} kind(s))`,
+      ...results.map((result) => `  ${result.stale ? "✗" : "✓"} ${result.kind}: ${result.ir}`),
+      ...results.flatMap((result) =>
+        result.stale
+          ? [`      expected sha256: ${result.expectedSha256}`, `      actual sha256:   ${result.actualSha256 ?? "(missing)"}`]
+          : []
+      ),
     ];
     return { envelope, print: () => lines.forEach((line) => console.log(line)) };
   }
 
+  const outHtml = resolveOutputPath(root, config, typeof args.out === "string" ? args.out : undefined, kind);
+  const built = buildDiagram(root, config, kind, { outputHtml: outHtml, quality });
+  const irPath = outHtml.replace(/\.html$/i, ".json");
+  const receiptPath = outHtml.replace(/\.html$/i, ".receipt.json");
+
   if (format === "mermaid") {
-    const mermaid = renderMermaid(built.ir, built.fullConnections);
+    if (kind !== "architecture") {
+      throw new UsageError(`Mermaid output is available for --kind architecture only (got "${kind}").`, {
+        hint: kind === "tree" ? "Use --format json or --format html for the tree." : "Use --format json or --format html for the workflow.",
+      });
+    }
+    const architecture = built as DiagramBuildResult;
+    const mermaid = renderMermaid(architecture.ir, architecture.fullConnections);
     const data: DiagramData = { kind, format, summary: built.summary, graphSha256: built.graphSha256, mermaid };
     const envelope = createEnvelope({ data, findings: [], meta: { command: "diagram", root } });
     return { envelope, print: () => console.log(mermaid.trimEnd()) };
   }
 
   if (format === "json") {
-    // JSON mode is Archify-free. With --out it also refreshes the committed IR
-    // (same sibling path as format=html) so projects without Archify can keep
-    // the `diagram --check` gate current.
     const outRequested = typeof args.out === "string" && args.out.trim() !== "";
     const data: DiagramData = {
       kind,
@@ -696,7 +1057,7 @@ function computeDiagram(rootInput: string, args: Record<string, unknown>): Comma
       summary: built.summary,
       graphSha256: built.graphSha256,
       ir: built.ir,
-      dependencies: built.fullConnections,
+      ...(kind === "architecture" ? { dependencies: built.fullConnections } : {}),
       ...(outRequested ? { artifacts: { ir: relativeToRoot(root, irPath), html: "", receipt: "" } } : {}),
     };
     if (outRequested) {
@@ -707,8 +1068,8 @@ function computeDiagram(rootInput: string, args: Record<string, unknown>): Comma
     return {
       envelope,
       print: () => {
-        console.log(`Diagram (${kind}): ${built.summary.modules} modules · ${built.summary.dependencies} dependencies`);
-        console.log(`Graph sha256: ${built.graphSha256}`);
+        console.log(`Diagram (${kind}) · graph sha256 ${built.graphSha256.slice(0, 12)}…`);
+        for (const line of textSummaryLines(kind, built)) console.log(line);
         if (outRequested) console.log(`IR refreshed: ${relativeToRoot(root, irPath)} (run --check to verify)`);
         else console.log("IR is available under data.ir in `--format json` output.");
       },
@@ -721,18 +1082,21 @@ function computeDiagram(rootInput: string, args: Record<string, unknown>): Comma
       const findings = [
         finding("error", "INTEGRATION_UNAVAILABLE", resolved.error, resolved.hint === undefined ? {} : { hint: resolved.hint }),
       ];
-      const data: DiagramData = { kind, format, summary: built.summary, graphSha256: built.graphSha256 };
-      const envelope = createEnvelope({ data, findings, meta: { command: "diagram", root } });
+      const envelope = createEnvelope({
+        data: { kind, format, summary: built.summary, graphSha256: built.graphSha256 },
+        findings,
+        meta: { command: "diagram", root },
+      });
       return { envelope, print: () => console.error(`✗ ${resolved.error}${resolved.hint === undefined ? "" : `\n  → ${resolved.hint}`}`) };
     }
     ensureDirectory(outHtml);
     const tempDir = mkdtempSync(join(tmpdir(), "mygrace-diagram-"));
-    const tempIr = join(tempDir, "architecture.json");
+    const tempIr = join(tempDir, `${kind}.json`);
     writeFileSync(tempIr, built.irText);
     try {
       const validateRun = spawnArchify(root, config, resolved.bin, resolved.nodeRunner, [
         "validate",
-        "architecture",
+        kind,
         tempIr,
         "--json",
         "--quality",
@@ -741,19 +1105,22 @@ function computeDiagram(rootInput: string, args: Record<string, unknown>): Comma
       if (!payloadOk(validateRun)) {
         const message = payloadError(validateRun);
         const findings = [
-          finding("error", DIAGRAM_FINDING_CODES.validationFailed, `Archify rejected the generated IR: ${message}`, {
+          finding("error", DIAGRAM_FINDING_CODES.validationFailed, `Archify rejected the generated ${kind} IR: ${message}`, {
             hint: "This is a MyGRACE bug or an Archify schema/version mismatch; run `mygrace integrations status` and report it.",
           }),
         ];
-        const data: DiagramData = { kind, format, summary: built.summary, graphSha256: built.graphSha256 };
-        const envelope = createEnvelope({ data, findings, meta: { command: "diagram", root } });
-        return { envelope, print: () => console.error(`✗ Archify rejected the generated IR: ${message}`) };
+        const envelope = createEnvelope({
+          data: { kind, format, summary: built.summary, graphSha256: built.graphSha256 },
+          findings,
+          meta: { command: "diagram", root },
+        });
+        return { envelope, print: () => console.error(`✗ Archify rejected the generated ${kind} IR: ${message}`) };
       }
 
       writeFileSync(irPath, built.irText);
       const deliverRun = spawnArchify(root, config, resolved.bin, resolved.nodeRunner, [
         "deliver",
-        "architecture",
+        kind,
         tempIr,
         outHtml,
         "--json",
@@ -767,14 +1134,21 @@ function computeDiagram(rootInput: string, args: Record<string, unknown>): Comma
             hint: "The IR was refreshed; check the Archify installation/version and re-run.",
           }),
         ];
-        const data: DiagramData = { kind, format, summary: built.summary, graphSha256: built.graphSha256, artifacts: { ir: relativeToRoot(root, irPath), html: relativeToRoot(root, outHtml), receipt: relativeToRoot(root, receiptPath) } };
-        const envelope = createEnvelope({ data, findings, meta: { command: "diagram", root } });
+        const envelope = createEnvelope({
+          data: {
+            kind,
+            format,
+            summary: built.summary,
+            graphSha256: built.graphSha256,
+            artifacts: { ir: relativeToRoot(root, irPath), html: relativeToRoot(root, outHtml), receipt: relativeToRoot(root, receiptPath) },
+          },
+          findings,
+          meta: { command: "diagram", root },
+        });
         return { envelope, print: () => console.error(`✗ Archify delivery failed: ${message}`) };
       }
 
-      const deliverySidecar = readJsonIfExists(
-        outHtml.replace(/\.html$/i, ".delivery.json")
-      );
+      const deliverySidecar = readJsonIfExists(outHtml.replace(/\.html$/i, ".delivery.json"));
       const receipt = {
         schemaVersion: 1,
         kind,
@@ -782,7 +1156,9 @@ function computeDiagram(rootInput: string, args: Record<string, unknown>): Comma
         graph: {
           sha256: built.graphSha256,
           modules: built.summary.modules,
-          dependencies: { declared: built.summary.dependencies, depicted: built.summary.depictedDependencies },
+          dependencies: kind === "architecture"
+            ? { declared: built.summary.dependencies, depicted: built.summary.depictedDependencies }
+            : built.summary.dependencies,
           boundaries: built.summary.boundaries,
           phases: built.summary.phases,
           verifications: built.summary.verifications,
@@ -808,11 +1184,6 @@ function computeDiagram(rootInput: string, args: Record<string, unknown>): Comma
       };
       writeFileSync(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`);
 
-      const delivered: DeliveredArchitecture = {
-        status: resolved.status,
-        validation: validateRun.payload,
-        delivery: deliverRun.payload,
-      };
       const data: DiagramData = {
         kind,
         format,
@@ -829,15 +1200,11 @@ function computeDiagram(rootInput: string, args: Record<string, unknown>): Comma
       const envelope = createEnvelope({ data, findings: [], meta: { command: "diagram", root } });
       const lines = [
         `Diagram delivered (${kind}, ${quality})`,
-        `  modules:      ${built.summary.modules}`,
-        `  dependencies: ${built.summary.dependencies} declared, ${built.summary.depictedDependencies} primary drawn`,
-        `  boundaries:   ${built.summary.boundaries}`,
-        `  graph sha256: ${built.graphSha256}`,
+        ...textSummaryLines(kind, built),
         `  IR:           ${relativeToRoot(root, irPath)}`,
         `  HTML:         ${relativeToRoot(root, outHtml)}`,
         `  receipt:      ${relativeToRoot(root, receiptPath)}`,
       ];
-      void delivered;
       return { envelope, print: () => lines.forEach((line) => console.log(line)) };
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
@@ -847,15 +1214,9 @@ function computeDiagram(rootInput: string, args: Record<string, unknown>): Comma
   const data: DiagramData = { kind, format, summary: built.summary, graphSha256: built.graphSha256 };
   const envelope = createEnvelope({ data, findings: [], meta: { command: "diagram", root } });
   const lines = [
-    `Diagram (${kind}): ${built.summary.modules} modules · ${built.summary.dependencies} declared dependencies · ${built.summary.boundaries} boundaries`,
-    `  primary edges: ${built.summary.depictedDependencies} drawn (Archify clean-flow backbone)`,
-    `  phases:        ${built.summary.phases}`,
-    `  verifications: ${built.summary.verifications} (${built.summary.testFiles} declared test files)`,
-    `  verified:      ${built.summary.verifiedModules}/${built.summary.modules} modules`,
-    `  lint:          ${built.summary.lintErrors} errors, ${built.summary.lintWarnings} warnings`,
-    `  graph sha256:  ${built.graphSha256}`,
+    ...textSummaryLines(kind, built),
     "",
-    "Use --format mermaid (dependency-free), --format html (Archify validate/deliver), or --format json for the IR.",
+    "Use --format mermaid (architecture only), --format html (Archify validate/deliver), or --format json for the IR.",
   ];
   return { envelope, print: () => lines.forEach((line) => console.log(line)) };
 }
@@ -864,15 +1225,15 @@ export const diagramCommand = defineCommand({
   meta: {
     name: "diagram",
     description:
-      "Export the docs graph as deterministic Archify architecture IR: text summary, JSON IR, Mermaid flowchart, or standalone HTML rendered by the optional Archify CLI (ADR-9); --check guards committed IR",
+      "Export the docs graph as deterministic Archify IR (architecture | workflow | tree): text summary, JSON IR, Mermaid (architecture), or standalone HTML rendered by the optional Archify CLI (ADR-9); --check guards the committed IRs",
   },
   args: {
     path: { type: "string", default: ".", description: "Project root" },
-    kind: { type: "string", default: "architecture", description: "Diagram kind (v1.5.0: architecture)" },
+    kind: { type: "string", description: "Diagram kind: architecture, workflow or tree (default architecture; workflow/tree render plan phases and capability hierarchy)" },
     format: { type: "string", default: "text", description: "Output format: text, json, html or mermaid" },
     out: { type: "string", description: "HTML output path (project-relative; defaults to integrations.archify.outputDir/architecture.html)" },
     quality: { type: "string", default: "standard", description: "Archify quality profile: standard or showcase" },
-    check: { type: "boolean", default: false, description: "Only verify that the committed IR matches the current docs graph" },
+    check: { type: "boolean", default: false, description: "Only verify that committed IRs match the current docs graph (all existing kinds, or just --kind)" },
   },
   run: async ({ args }) => {
     const format = parseDiagramFormat(typeof args.format === "string" ? args.format : "text");

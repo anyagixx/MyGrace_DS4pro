@@ -50,7 +50,7 @@ but explicit paths are required for correctness across multiple projects.
 - `mygrace next --path <root> [--format json]` — deterministic nine-code advice (NEXT/WHY/RUN/IDS/CODE); exit 0 for any advice
 - `mygrace projects --path <root> [--depth 4] [--strict] [--format json]` — monorepo discovery with per-project lint/coverage
 - `mygrace integrations status --path <root> [--format json]` — detect optional external tools (Octocode/Archify), versions and tested ranges; advisory (exit 0), never required by the core gates
-- `mygrace diagram [--format text|json|html|mermaid] [--out <html>] [--check] --path <root>` — deterministic architecture IR from the docs graph; json/mermaid always work, html needs optional Archify (validate+deliver); `--check` fails when the committed IR is stale
+- `mygrace diagram [--kind architecture|workflow|tree] [--format text|json|html|mermaid] [--out <html>] [--check] --path <root>` — deterministic IR from the docs graph (architecture module graph; tree capability hierarchy; workflow plan phases); json and mermaid (architecture) always work, html needs optional Archify; `--check` fails when any committed IR is stale
 - `mygrace capsule list [--format json]` — local allowlisted routines with qualification state; `capsule validate` checks schema/allowlist/bindings
 - `mygrace capsule qualify <name> --fixture <project>` — replay every program on the fixture and record the capsule hash (required before run)
 - `mygrace capsule run <name> [--module M-XXX] [--files a,b]` — run a qualified capsule; stops at judgment and prints the continue id; `capsule continue <run-id>` resumes

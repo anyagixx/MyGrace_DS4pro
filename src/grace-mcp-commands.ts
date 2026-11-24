@@ -686,7 +686,7 @@ export const TOOLS: readonly ToolDefinition[] = [
   {
     name: "mygrace_diagram",
     description:
-      "Export the docs graph as deterministic Archify architecture IR: JSON IR (all declared dependencies), Mermaid flowchart, " +
+      "Export the docs graph as deterministic Archify IR (architecture/workflow/tree): JSON IR, Mermaid flowchart (architecture), " +
       "or standalone HTML rendered by the optional Archify CLI (writes IR/HTML/receipt only when format=html). " +
       "`check:true` verifies the committed IR is current without writing. " +
       ROOT_NOTE,
@@ -694,7 +694,7 @@ export const TOOLS: readonly ToolDefinition[] = [
       type: "object",
       properties: {
         path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
-        kind: { type: "string", enum: ["architecture"], default: "architecture", description: "Diagram kind (v1.5: architecture)." },
+        kind: { type: "string", enum: ["architecture", "workflow", "tree"], default: "architecture", description: "Diagram kind: architecture, workflow (plan phases) or tree (capability hierarchy)." },
         format: { type: "string", enum: ["json", "html", "mermaid"], default: "json", description: "Output format." },
         out: { type: "string", description: "Project-relative HTML output path (format=html; default integrations.archify.outputDir/architecture.html).", minLength: 1 },
         quality: { type: "string", enum: ["standard", "showcase"], default: "standard", description: "Archify quality profile." },

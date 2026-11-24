@@ -19,7 +19,7 @@ import { findExecutableOnPath } from "../src/grace-integrations";
 const ROOT = resolve(import.meta.dir, "..");
 const args = process.argv.slice(2);
 const wantsJson = args.includes("--json");
-const SMOKE_BASE = "docs/diagrams/smoke-architecture";
+const KINDS = ["architecture", "tree", "workflow"] as const;
 
 function report(ok: boolean, message: string, data: Record<string, unknown> = {}): never {
   cleanup();
@@ -28,9 +28,15 @@ function report(ok: boolean, message: string, data: Record<string, unknown> = {}
   process.exit(ok ? 0 : 1);
 }
 
+function smokeBase(kind: string): string {
+  return `docs/diagrams/smoke-${kind}`;
+}
+
 function cleanup(): void {
-  for (const suffix of [".json", ".html", ".receipt.json", ".delivery.json"]) {
-    rmSync(join(ROOT, `${SMOKE_BASE}${suffix}`), { force: true });
+  for (const kind of KINDS) {
+    for (const suffix of [".json", ".html", ".receipt.json", ".delivery.json"]) {
+      rmSync(join(ROOT, `${smokeBase(kind)}${suffix}`), { force: true });
+    }
   }
 }
 
@@ -56,29 +62,33 @@ function runCli(argv: string[]): { exit: number; stdout: string; stderr: string 
 
 cleanup();
 try {
-  const render = runCli(["diagram", "--format", "html", "--out", `${SMOKE_BASE}.html`]);
-  if (render.exit !== 0) {
-    report(false, `diagram --format html failed against Archify: ${render.stderr.trim() || render.stdout.trim()}`, { bin });
+  const receipts: Record<string, unknown> = {};
+  for (const kind of KINDS) {
+    const base = smokeBase(kind);
+    const render = runCli(["diagram", "--kind", kind, "--format", "html", "--out", `${base}.html`]);
+    if (render.exit !== 0) {
+      report(false, `diagram --kind ${kind} --format html failed against Archify: ${render.stderr.trim() || render.stdout.trim()}`, { bin, kind });
+    }
+    const missing = [".json", ".html", ".receipt.json"].filter((suffix) => !existsSync(join(ROOT, `${base}${suffix}`)));
+    if (missing.length > 0) report(false, `${kind}: missing artifacts: ${missing.join(", ")}`, { bin, kind });
+    const receipt = JSON.parse(readFileSync(join(ROOT, `${base}.receipt.json`), "utf-8")) as {
+      kind?: string;
+      graph?: { modules?: number };
+      archify?: { validation?: string };
+    };
+    if (receipt.kind !== kind) report(false, `${kind}: receipt kind mismatch (${String(receipt.kind)})`, { bin });
+    if (receipt.archify?.validation !== "passed") report(false, `${kind}: receipt does not record a passed Archify validation`, { bin, kind });
+    receipts[kind] = { kind: receipt.kind, graph: receipt.graph, validation: receipt.archify?.validation };
   }
-  const artifacts = [".json", ".html", ".receipt.json"].map((suffix) => `${SMOKE_BASE}${suffix}`);
-  const missing = artifacts.filter((file) => !existsSync(join(ROOT, file)));
-  if (missing.length > 0) report(false, `missing artifacts: ${missing.join(", ")}`, { bin });
-  const receipt = JSON.parse(readFileSync(join(ROOT, `${SMOKE_BASE}.receipt.json`), "utf-8")) as {
-    graph?: { modules?: number; dependencies?: { declared?: number; depicted?: number } };
-    archify?: { validation?: string };
-  };
-  if (receipt.archify?.validation !== "passed") report(false, "receipt does not record a passed Archify validation", { bin });
 
   const committedCheck = runCli(["diagram", "--check"]);
   if (committedCheck.exit !== 0) {
-    report(false, `committed diagram IR is stale; run \`mygrace diagram --format html\`:\n${committedCheck.stdout}`, { bin });
+    report(false, `committed diagram IRs are stale; run the matching \`mygrace diagram --kind <kind> --format html\`:\n${committedCheck.stdout}`, { bin });
   }
 
-  report(true, "Archify adapter smoke passed (validate → deliver → receipt → committed IR current).", {
+  report(true, "Archify adapter smoke passed for architecture/tree/workflow (validate → deliver → receipts → committed IRs current).", {
     bin,
-    stdout: render.stdout.trim(),
-    graph: receipt.graph,
-    validation: receipt.archify?.validation,
+    receipts,
   });
 } finally {
   cleanup();

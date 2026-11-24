@@ -12,7 +12,7 @@ Four tracks, ordered by dependency and risk:
 | C | `--kind workflow\|tree` diagrams | feature | 4–6 days | v1.7.0 |
 | D | Capsule measurement on real agent sessions | analysis / evidence | 3–5 days | none (report + decision) |
 
-Recommended order: **A bootstrap → C (feature) → A trusted-publisher switch on v1.7.0 → B in parallel → D after v1.7.0**, because
+C shipped in v1.7.0 on 2026-11-24 (architecture/workflow/tree validated against Archify 3.2.0 and 3.3.x). Remaining: **A bootstrap → A trusted-publisher switch → B → D**. Original order was A bootstrap → C → A switch → B → D, because
 D needs a stable CLI and C is the only user-visible feature left; B is independent and must not block releases.
 
 ---

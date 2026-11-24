@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "MyGRACE — MyGRACE delivery plan",
+    "subtitle": "4 phases · 37 steps",
+    "output": "workflow.html"
+  },
+  "lanes": [
+    {
+      "id": "phase-1",
+      "label": "Phase-1 · Foundation and safety"
+    },
+    {
+      "id": "phase-2",
+      "label": "Phase-2 · Documentation and dogfooding"
+    },
+    {
+      "id": "phase-3",
+      "label": "Phase-3 · Scale and agent workflows"
+    },
+    {
+      "id": "phase-4",
+      "label": "Phase-4 · Release engineering and operations"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "node-phase-1",
+      "lane": "phase-1",
+      "col": 1,
+      "type": "backend",
+      "label": "Foundation and safety",
+      "sublabel": "19 steps · done",
+      "width": 300
+    },
+    {
+      "id": "node-phase-2",
+      "lane": "phase-2",
+      "col": 2,
+      "type": "backend",
+      "label": "Documentation and dogfooding",
+      "sublabel": "5 steps · done",
+      "width": 300
+    },
+    {
+      "id": "node-phase-3",
+      "lane": "phase-3",
+      "col": 3,
+      "type": "backend",
+      "label": "Scale and agent workflows",
+      "sublabel": "8 steps · done",
+      "width": 300
+    },
+    {
+      "id": "node-phase-4",
+      "lane": "phase-4",
+      "col": 4,
+      "type": "backend",
+      "label": "Release engineering and operations",
+      "sublabel": "5 steps · wip",
+      "width": 300
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-1",
+      "from": "node-phase-1",
+      "to": "node-phase-2",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "edge-2",
+      "from": "node-phase-2",
+      "to": "node-phase-3",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "edge-3",
+      "from": "node-phase-3",
+      "to": "node-phase-4",
+      "fromSide": "bottom",
+      "toSide": "top"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Plan",
+      "items": [
+        "4 phases · 37 steps"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Status",
+      "items": [
+        "Phase-1: done",
+        "Phase-2: done",
+        "Phase-3: done",
+        "Phase-4: wip"
+      ]
+    }
+  ]
+}

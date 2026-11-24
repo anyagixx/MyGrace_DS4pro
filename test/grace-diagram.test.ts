@@ -59,6 +59,21 @@ function makeProject(): string {
   writeFileSync(join(root, "docs", "graph-index.xml"), GRAPH_INDEX);
   writeFileSync(join(root, "docs", "plan-index.xml"), PLAN_INDEX);
   writeFileSync(
+    join(root, "docs", "plans", "Phase-1.xml"),
+    `<Phase-1 name="Foundation" status="done">
+  <step-1 module="M-A" description="Write the contract" status="done" />
+  <step-2 module="M-B" description="Implement the core" status="done" />
+</Phase-1>
+`
+  );
+  writeFileSync(
+    join(root, "docs", "plans", "Phase-2.xml"),
+    `<Phase-2 name="Delivery" status="wip">
+  <step-1 module="M-C" description="Wire the integration" status="wip" />
+</Phase-2>
+`
+  );
+  writeFileSync(
     join(root, "docs", "verification-index.xml"),
     `<VerificationIndex project="DiagramFixture">
   <V-M-A MODULE="M-A" PRIORITY="high" STATUS="done" />
@@ -295,7 +310,7 @@ describe("diagramCommand", () => {
       writeConfig(root, fake.bin);
       const result = await runDiagram({ path: root, format: "html" });
       expect(result.exit).toBe(1);
-      expect(result.stdout).toContain("Archify rejected the generated IR");
+      expect(result.stdout).toContain("Archify rejected the generated");
       expect(existsSync(join(root, "docs", "diagrams", "architecture.json"))).toBe(false);
       expect(existsSync(join(root, "docs", "diagrams", "architecture.html"))).toBe(false);
     } finally {
@@ -327,7 +342,7 @@ describe("diagramCommand", () => {
       writeConfig(root, fake.bin);
       const result = await runDiagram({ path: root, format: "html" });
       expect(result.exit).toBe(1);
-      expect(result.stdout).toContain("Archify rejected the generated IR");
+      expect(result.stdout).toContain("Archify rejected the generated");
       expect(result.stdout).toContain("fake archify internal error");
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -388,7 +403,122 @@ describe("diagramCommand", () => {
     try {
       writeConfig(root, null);
       expect(await usageError({ path: root, format: "svg" })).toBe(2);
-      expect(await usageError({ path: root, kind: "workflow" })).toBe(2);
+      expect(await usageError({ path: root, kind: "sequence" })).toBe(2);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("--kind tree emits a deterministic hierarchy with parent links", async () => {
+    const root = makeProject();
+    try {
+      writeConfig(root, null);
+      const result = await runDiagram({ path: root, kind: "tree", format: "json" });
+      expect(result.exit).toBe(0);
+      const envelope = JSON.parse(result.stdout) as {
+        data: { kind: string; ir: { schema_version: number; diagram_type: string; nodes: Array<{ id: string; parent?: string }> } };
+      };
+      expect(envelope.data.kind).toBe("tree");
+      expect(envelope.data.ir.schema_version).toBe(1);
+      expect(envelope.data.ir.diagram_type).toBe("tree");
+      const nodes = envelope.data.ir.nodes;
+      expect(nodes[0]?.id).toBe("root");
+      expect(nodes.find((node) => node.id === "group-core-logic")?.parent).toBe("root");
+      expect(nodes.find((node) => node.id === "M-B")?.parent).toBe("group-core-logic");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test.skipIf(!POSIX_ONLY || INTEGRATIONS_DISABLED_BY_ENV)("--kind tree --format html delivers through Archify", async () => {
+    const fake = makeFakeArchify({ mode: "ok" });
+    const root = makeProject();
+    try {
+      writeConfig(root, fake.bin);
+      const result = await runDiagram({ path: root, kind: "tree", format: "html" });
+      expect(result.exit).toBe(0);
+      expect(existsSync(join(root, "docs", "diagrams", "tree.html"))).toBe(true);
+      const receipt = JSON.parse(readFileSync(join(root, "docs", "diagrams", "tree.receipt.json"), "utf-8")) as { kind: string; archify: { validation: string } };
+      expect(receipt.kind).toBe("tree");
+      expect(receipt.archify.validation).toBe("passed");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+      fake.cleanup();
+    }
+  });
+
+  test("--kind workflow maps plan phases to lanes and sequential nodes", async () => {
+    const root = makeProject();
+    try {
+      writeConfig(root, null);
+      const result = await runDiagram({ path: root, kind: "workflow", format: "json" });
+      expect(result.exit).toBe(0);
+      const envelope = JSON.parse(result.stdout) as {
+        data: {
+          kind: string;
+          ir: {
+            title?: string;
+            lanes: Array<{ id: string; label: string }>;
+            nodes: Array<{ id: string; lane: string; col: number }>;
+            edges: Array<{ id: string; from: string; to: string; fromSide?: string; toSide?: string }>;
+          };
+        };
+      };
+      expect(envelope.data.kind).toBe("workflow");
+      expect(envelope.data.ir.lanes.map((lane) => lane.id)).toEqual(["phase-1", "phase-2"]);
+      expect(envelope.data.ir.nodes.map((node) => node.col)).toEqual([1, 2]);
+      expect(envelope.data.ir.edges).toEqual([
+        { id: "edge-1", from: "node-phase-1", to: "node-phase-2", fromSide: "bottom", toSide: "top" },
+      ]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test.skipIf(!POSIX_ONLY || INTEGRATIONS_DISABLED_BY_ENV)("--kind workflow --format html delivers through Archify", async () => {
+    const fake = makeFakeArchify({ mode: "ok" });
+    const root = makeProject();
+    try {
+      writeConfig(root, fake.bin);
+      const result = await runDiagram({ path: root, kind: "workflow", format: "html" });
+      expect(result.exit).toBe(0);
+      expect(existsSync(join(root, "docs", "diagrams", "workflow.html"))).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+      fake.cleanup();
+    }
+  });
+
+  test("--check covers every committed kind and reports the stale one", async () => {
+    const root = makeProject();
+    try {
+      writeConfig(root, null);
+      for (const kind of ["architecture", "tree", "workflow"]) {
+        const refresh = await runDiagram({ path: root, kind, format: "json", out: `docs/diagrams/${kind}.html` });
+        expect(refresh.exit).toBe(0);
+      }
+      const current = await runDiagram({ path: root, check: true });
+      expect(current.exit).toBe(0);
+      expect(current.stdout).toContain("up to date (3 kind(s))");
+
+      const workflowIr = join(root, "docs", "diagrams", "workflow.json");
+      writeFileSync(workflowIr, readFileSync(workflowIr, "utf-8").replace('"title": "MyGRACE — DiagramFixture delivery plan"', '"title": "tampered"'));
+      const stale = await runDiagram({ path: root, check: true });
+      expect(stale.exit).toBe(1);
+      expect(stale.stdout).toContain("STALE");
+      expect(stale.stdout).toContain("workflow");
+      const single = await runDiagram({ path: root, kind: "tree", check: true });
+      expect(single.exit).toBe(0);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("Mermaid output is architecture-only", async () => {
+    const root = makeProject();
+    try {
+      writeConfig(root, null);
+      expect(await usageError({ path: root, kind: "tree", format: "mermaid" })).toBe(2);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

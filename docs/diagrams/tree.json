@@ -1,0 +1,250 @@
+{
+  "schema_version": 1,
+  "diagram_type": "tree",
+  "meta": {
+    "title": "MyGRACE — MyGRACE module tree",
+    "subtitle": "29 modules · 6 capability groups",
+    "output": "tree.html"
+  },
+  "layout": {
+    "direction": "down",
+    "gapX": 40,
+    "gapY": 28,
+    "nodeW": 220
+  },
+  "nodes": [
+    {
+      "id": "root",
+      "label": "MyGRACE",
+      "sublabel": "29 modules"
+    },
+    {
+      "id": "group-core-logic",
+      "label": "Core logic",
+      "parent": "root",
+      "sublabel": "9 modules"
+    },
+    {
+      "id": "group-entry-point",
+      "label": "Entry point",
+      "parent": "root",
+      "sublabel": "1 modules"
+    },
+    {
+      "id": "group-foundation",
+      "label": "Foundation",
+      "parent": "root",
+      "sublabel": "4 modules"
+    },
+    {
+      "id": "group-integration",
+      "label": "Integrations",
+      "parent": "root",
+      "sublabel": "6 modules"
+    },
+    {
+      "id": "group-orchestrator",
+      "label": "Orchestration",
+      "parent": "root",
+      "sublabel": "3 modules"
+    },
+    {
+      "id": "group-utility",
+      "label": "Utilities",
+      "parent": "root",
+      "sublabel": "6 modules"
+    },
+    {
+      "id": "M-CAPSULE",
+      "label": "Capsule routines",
+      "parent": "group-orchestrator",
+      "sublabel": "M-CAPSULE · src/grace-capsule.ts"
+    },
+    {
+      "id": "M-CI",
+      "label": "CI quality gate",
+      "parent": "group-orchestrator",
+      "sublabel": "M-CI · src/grace-ci.ts"
+    },
+    {
+      "id": "M-CLI",
+      "label": "CLI entry point",
+      "parent": "group-entry-point",
+      "sublabel": "M-CLI · src/grace.ts"
+    },
+    {
+      "id": "M-CODE-GRAPH",
+      "label": "Octocode code-graph adapter",
+      "parent": "group-integration",
+      "sublabel": "M-CODE-GRAPH · src/grace-code-graph.ts"
+    },
+    {
+      "id": "M-COMMON",
+      "label": "Filesystem and index helpers",
+      "parent": "group-core-logic",
+      "sublabel": "M-COMMON · src/grace-common.ts"
+    },
+    {
+      "id": "M-CONFIG",
+      "label": "Project configuration",
+      "parent": "group-foundation",
+      "sublabel": "M-CONFIG · src/grace-config.ts"
+    },
+    {
+      "id": "M-CONTEXT",
+      "label": "Context cost model",
+      "parent": "group-utility",
+      "sublabel": "M-CONTEXT · src/grace-context.ts"
+    },
+    {
+      "id": "M-DIAGRAM",
+      "label": "Diagram exporter",
+      "parent": "group-integration",
+      "sublabel": "M-DIAGRAM · src/grace-diagram.ts"
+    },
+    {
+      "id": "M-DOCTOR",
+      "label": "Environment doctor",
+      "parent": "group-utility",
+      "sublabel": "M-DOCTOR · src/grace-doctor.ts"
+    },
+    {
+      "id": "M-ERRORS",
+      "label": "Error and output contract",
+      "parent": "group-foundation",
+      "sublabel": "M-ERRORS · src/grace-errors.ts"
+    },
+    {
+      "id": "M-FILE",
+      "label": "File-local markup view",
+      "parent": "group-core-logic",
+      "sublabel": "M-FILE · src/grace-file.ts"
+    },
+    {
+      "id": "M-IMPACT",
+      "label": "Change impact analysis",
+      "parent": "group-core-logic",
+      "sublabel": "M-IMPACT · src/grace-impact.ts"
+    },
+    {
+      "id": "M-INIT",
+      "label": "Project bootstrap",
+      "parent": "group-utility",
+      "sublabel": "M-INIT · src/grace-init.ts"
+    },
+    {
+      "id": "M-INSTALL",
+      "label": "DeepSeek Harness installer",
+      "parent": "group-integration",
+      "sublabel": "M-INSTALL · src/grace-install.ts"
+    },
+    {
+      "id": "M-INTEGRATIONS",
+      "label": "Optional integrations registry",
+      "parent": "group-integration",
+      "sublabel": "M-INTEGRATIONS · src/grace-integrations.ts"
+    },
+    {
+      "id": "M-LINT",
+      "label": "Enforced invariants (lint)",
+      "parent": "group-core-logic",
+      "sublabel": "M-LINT · src/grace-lint.ts"
+    },
+    {
+      "id": "M-MCP",
+      "label": "MCP stdio server",
+      "parent": "group-integration",
+      "sublabel": "M-MCP · src/grace-mcp.ts"
+    },
+    {
+      "id": "M-MCP-COMMANDS",
+      "label": "MCP tool catalog",
+      "parent": "group-integration",
+      "sublabel": "M-MCP-COMMANDS · src/grace-mcp-commands.ts"
+    },
+    {
+      "id": "M-MODULE",
+      "label": "Index navigation commands",
+      "parent": "group-core-logic",
+      "sublabel": "M-MODULE · src/grace-module.ts"
+    },
+    {
+      "id": "M-NEXT",
+      "label": "Next-step advisor",
+      "parent": "group-orchestrator",
+      "sublabel": "M-NEXT · src/grace-next.ts"
+    },
+    {
+      "id": "M-PACKET",
+      "label": "Worker packet and focus",
+      "parent": "group-utility",
+      "sublabel": "M-PACKET · src/grace-packet.ts"
+    },
+    {
+      "id": "M-PATHS",
+      "label": "Ids and path safety",
+      "parent": "group-foundation",
+      "sublabel": "M-PATHS · src/grace-paths.ts"
+    },
+    {
+      "id": "M-PROJECTS",
+      "label": "Monorepo project discovery",
+      "parent": "group-utility",
+      "sublabel": "M-PROJECTS · src/grace-projects.ts"
+    },
+    {
+      "id": "M-SHARD",
+      "label": "Sharded indexes",
+      "parent": "group-core-logic",
+      "sublabel": "M-SHARD · src/grace-shard.ts"
+    },
+    {
+      "id": "M-STATUS",
+      "label": "Project health status",
+      "parent": "group-utility",
+      "sublabel": "M-STATUS · src/grace-status.ts"
+    },
+    {
+      "id": "M-TEST",
+      "label": "Trusted command execution",
+      "parent": "group-core-logic",
+      "sublabel": "M-TEST · src/grace-test.ts"
+    },
+    {
+      "id": "M-TRACE",
+      "label": "Traceability report",
+      "parent": "group-core-logic",
+      "sublabel": "M-TRACE · src/grace-trace.ts"
+    },
+    {
+      "id": "M-VERIFY",
+      "label": "Verification digest loop",
+      "parent": "group-core-logic",
+      "sublabel": "M-VERIFY · src/grace-verify.ts"
+    },
+    {
+      "id": "M-XML",
+      "label": "Strict XML layer",
+      "parent": "group-foundation",
+      "sublabel": "M-XML · src/grace-xml.ts"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Tree",
+      "items": [
+        "6 capability groups",
+        "29 modules"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Verification",
+      "items": [
+        "29/29 modules verified",
+        "39 declared test files"
+      ]
+    }
+  ]
+}

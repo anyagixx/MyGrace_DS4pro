@@ -1,24 +1,20 @@
 # MyGRACE Roadmap — from audit findings to a professional agent engineering harness
 
-> Status: **v1.6.0 shipped 2026-11-24** (Wave 5 complete: integrations layer, Octocode adapter, Archify exporter, experimental capsules) — publication pending owner credentials; the pipeline is wired and gated. Baseline: v1.0.1 as audited on 2026-11-22
+> Status: **v1.7.0 shipped 2026-11-24** (three diagram kinds: architecture/workflow/tree) — npm publication, Octocode startup diagnosis and capsule measurement remain; the pipeline is wired and gated. Baseline: v1.0.1 as audited on 2026-11-22
 > (see `analysis/00-EXECUTIVE-ASSESSMENT.md` and appendices 01–04).
 > Target: a tool that AI coding agents can use with confidence on software of **any complexity** —
 > from a 3-module script to a 500-module monorepo, on repos you do not fully trust.
-> **v1.6.0 shipped evidence:** `bun run release:check` green (typecheck 0, **720 tests / 35 files**,
-> demo lint, doc-truth gates, pack-smoke, diagram IR freshness, capsule validation),
+> **v1.7.0 shipped evidence:** `bun run release:check` green (typecheck 0, **727 tests / 35 files**,
+> demo lint, doc-truth gates, pack-smoke, **diagram IR freshness for all three kinds**, capsule validation),
 > `mygrace ci --path .` PASS on this repository (**29 modules / 4 phases / 29 verifications /
-> 39 declared test files**), and `bun run publish:dry` proves the publish artifact (68 files, 253 kB, 29 shipped src files, 137 relative + 28 bare imports). G13 green with
+> 39 declared test files**), and `bun run publish:dry` proves the publish artifact (68 files, 256 kB, 29 shipped src files, 137 relative + 28 bare imports). G13 green with
 > `MYGRACE_INTEGRATIONS=off`; G14: recorded-payload + fake-Octocode/fake-Archify contract tests run
-> in `bun test`, real-binary smokes stay manual; G15 diagram IR current; G16 shipped capsules
-> validate and the capsule lifecycle is covered by fake-CLI tests (qualify → run → judgment →
-> continue → deopt/drift).
-> Surface: **23 CLI commands · 25 MCP tools · 15 skills**. Committed deterministic diagram IR;
-> experimental capsules with allowlisted read-only programs, replay qualification, judgment
-> hand-back and deopt-to-skill (no token-savings claims).
-> Scale proven at 150 modules / 3 shards (lint 44 ms); Python/Go fixtures prove the multi-language
-> path; `mygrace trace/impact/next/projects`, `lint --changed`, optional Octocode
-> `impact --code-graph` / `trace --code`, the Archify `diagram` exporter and `capsule` routines
-> close the agent-advisory set.
+> in `bun test`, real-binary smokes stay manual; G15 checks **architecture, tree and workflow** IRs
+> (all validated/delivered against real Archify 3.2.0 and 3.3.x); G16 shipped capsules validate and
+> the capsule lifecycle is covered by fake-CLI tests.
+> Surface: **23 CLI commands · 25 MCP tools · 15 skills**. Committed deterministic diagram IRs for
+> three kinds; experimental capsules with allowlisted read-only programs, replay qualification,
+> judgment hand-back and deopt-to-skill (no token-savings claims).
 
 ## 1. Vision
 
@@ -216,7 +212,7 @@ Release gates added: **G13** core gates pass with `MYGRACE_INTEGRATIONS=off` (no
   0.30.0 both hang before answering MCP `initialize` on this host; reproduce across versions/models/
   env/flags, diagnose (ONNX/models vs startup I/O), open an upstream issue with the repro, harden the
   adapter’s startup-timeout hint/docs; claim “graph verified” only after a real smoke passes.
-- **C. `--kind workflow|tree` diagrams** *(v1.7.0)*: Archify main ships workflow (schema v1/v2: lanes,
+- **C. `--kind workflow|tree` diagrams** *(v1.7.0 ✅ shipped 2026-11-24)*: validated the mapping against real Archify 3.2.0/3.3.x first (tree: parent-linked hierarchy; workflow: plan-phase lanes, columns 1–5, bottom→top edges, >5 aggregation), then shipped `--kind`, per-kind committed IRs, `--check` across all kinds and the all-kind smoke. Remaining details in the bullet below; Archify workflow (schema v1/v2: lanes,
   nodes with `col` 0–5, edges, phases) and tree (parent-linked nodes, layout) schemas; pilot real
   validation first, ship tree (low risk) and the delivery-plan workflow mapping, `--check` per kind,
   commit deterministic IRs, extend the fake/real Archify smoke and MCP `kind` enum.
