@@ -206,6 +206,25 @@ stay deterministic, offline and dependency-free (ADR-9). Full plan: `INTEGRATION
 Release gates added: **G13** core gates pass with `MYGRACE_INTEGRATIONS=off` (no tool installed);
 **G14** adapter contract tests against pinned versions (Octocode 0.29.2, Archify 3.3.0).
 
+### Wave 6 — Post-v1.6 follow-ups — *planned (full plan: `FOLLOWUP-PLAN.md`)*
+
+- **A. npm publication** *(ops, owner-gated)*: `@osovv/mygrace-cli` is still unpublished (registry 404).
+  Bootstrap the first version with a one-time granular token, then switch `release.yml` to GitHub OIDC
+  trusted publishing (provenance, protected `npm-publish` environment, post-publish registry
+  verification, no long-lived token); README install switches to npm once verified.
+- **B. Octocode MCP startup** *(investigation, timeboxed 2–4 days)*: the pinned 0.29.2 and the new
+  0.30.0 both hang before answering MCP `initialize` on this host; reproduce across versions/models/
+  env/flags, diagnose (ONNX/models vs startup I/O), open an upstream issue with the repro, harden the
+  adapter’s startup-timeout hint/docs; claim “graph verified” only after a real smoke passes.
+- **C. `--kind workflow|tree` diagrams** *(v1.7.0)*: Archify main ships workflow (schema v1/v2: lanes,
+  nodes with `col` 0–5, edges, phases) and tree (parent-linked nodes, layout) schemas; pilot real
+  validation first, ship tree (low risk) and the delivery-plan workflow mapping, `--check` per kind,
+  commit deterministic IRs, extend the fake/real Archify smoke and MCP `kind` enum.
+- **D. Capsule measurement** *(analysis, no release)*: harness over DSH session records
+  (`tokenUsage`, `sessionStats`, `contextBreakdown`), pre-registered capsule-vs-skill A/B on 2–3 tasks,
+  N=10 per arm, medians + bootstrap CI; kill criterion < 15 % tool-call/turn reduction or gate
+  regression → keep capsules experimental without token/cost claims.
+
 ## 6. Release gates checklist (copy into every release PR)
 
 - [ ] G1 pack-smoke on fresh temp dir
