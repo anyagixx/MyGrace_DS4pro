@@ -1,11 +1,11 @@
 ---
 name: mygrace-cli
-description: "Reference for the mygrace CLI (20 commands) and MCP server (21 tools): quality gate, trust, index reads, verification and JSON envelopes. Use when you need the exact command/flag/tool for a MyGRACE operation."
+description: "Reference for the mygrace CLI (21 commands) and MCP server (22 tools): quality gate, trust, index reads, verification and JSON envelopes. Use when you need the exact command/flag/tool for a MyGRACE operation."
 whenToUse: "You need a concrete CLI command or MCP tool — flags, exit codes, trust behaviour or JSON output."
 ---
 
 Use `mygrace` as the MyGRACE-aware read/execute layer, and the MCP tools as the
-preferred in-agent access path (21 tools; DSH exposes them as
+preferred in-agent access path (22 tools; DSH exposes them as
 `mcp__mygrace__<tool>`).
 
 ## Project resolution (harness sessions)
@@ -45,13 +45,14 @@ but explicit paths are required for correctness across multiple projects.
 - `mygrace test --module <M-XXX> [--compact] [--allow-commands] --path <root>`
 - `mygrace verify [--module <M-XXX>] [--allow-commands] --path <root>` — digest; `.mygrace/last-failures.md` on failure
 - `mygrace lint --strict --path <root>` — integrity gate; incremental scope with `--changed [--base <ref>]` or `--files a,b,c`
-- `mygrace trace <ID> --path <root> [--format json]` — proof chain (module/verification → tests → command provenance → requirements → phases → dependents); ID is M-XXX or V-M-XXX; exit 1 on broken chain
-- `mygrace impact [--files a,b,c] [--staged] [--since <ref>] --path <root> [--format json]` — changed files → modules, dependents, verification blast radius, phases, suggested commands (`--files` works without git)
+- `mygrace trace <ID> --path <root> [--format json] [--code] [--strict-contracts]` — proof chain (module/verification → tests → command provenance → requirements → phases → dependents); ID is M-XXX or V-M-XXX; exit 1 on broken chain; `--code` adds the optional MODULE_MAP↔symbol check (Octocode, ADR-9), `--strict-contracts` promotes missing symbols to errors
+- `mygrace impact [--files a,b,c] [--staged] [--since <ref>] --path <root> [--format json] [--code-graph]` — changed files → modules, dependents, verification blast radius, phases, suggested commands (`--files` works without git); `--code-graph` adds real code import edges via optional Octocode (info findings only)
 - `mygrace next --path <root> [--format json]` — deterministic nine-code advice (NEXT/WHY/RUN/IDS/CODE); exit 0 for any advice
 - `mygrace projects --path <root> [--depth 4] [--strict] [--format json]` — monorepo discovery with per-project lint/coverage
+- `mygrace integrations status --path <root> [--format json]` — detect optional external tools (Octocode/Archify), versions and tested ranges; advisory (exit 0), never required by the core gates
 - `mygrace packet <M-XXX>` / `mygrace focus <M-XXX>` — worker prompt / minimal set
 
-## MCP tools (21)
+## MCP tools (22)
 
 `mygrace_list_modules`, `mygrace_show_module`, `mygrace_show_phase`,
 `mygrace_find_modules`, `mygrace_phase_index`, `mygrace_doctor`,
@@ -59,7 +60,7 @@ but explicit paths are required for correctness across multiple projects.
 `mygrace_focus`, `mygrace_context_cost`, `mygrace_verify`,
 `mygrace_list_verifications`, `mygrace_lint`, `mygrace_show_file`,
 `mygrace_status`, `mygrace_trace`, `mygrace_impact`, `mygrace_next`,
-`mygrace_projects`.
+`mygrace_projects`, `mygrace_integrations`.
 
 MCP `path` is optional: explicit argument → `MYGRACE_PROJECT_ROOT` → server
 working directory. Prefer MCP for index reads; use the CLI for anything the MCP

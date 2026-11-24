@@ -4,11 +4,15 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   TRACE_FINDING_CODES,
+  enrichTraceWithCodeSymbols,
   formatTraceText,
+  parseModuleMapNames,
   resolveTraceModuleId,
   traceCommand,
   traceModule,
 } from "../src/grace-trace";
+import { cloneDefault } from "../src/grace-config";
+import { makeFakeOctocode } from "./fixtures/octocode/fake-octocode";
 import { buildShardPlan, applyShardPlan } from "../src/grace-shard";
 import { UsageError, XmlError } from "../src/grace-errors";
 
@@ -583,6 +587,160 @@ describe("index resolution (shard-aware, ADR-6)", () => {
       const { thrown } = await runTrace(root, { id: "M-NOPE" });
       expect(thrown).toBeInstanceOf(UsageError);
       expect((thrown as UsageError).exitCode).toBe(2);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+// ─── MODULE_MAP symbol verification (--code, ADR-9) ────────────────────
+
+const INTEGRATIONS_DISABLED_BY_ENV = ["off", "0", "false", "disabled"].includes(
+  (process.env.MYGRACE_INTEGRATIONS ?? "").trim().toLowerCase()
+);
+const runtimeTest = test.skipIf(INTEGRATIONS_DISABLED_BY_ENV);
+
+const MODULE_MAP_SOURCE = `/**
+ * Fixture module.
+ */
+
+// START_MODULE_CONTRACT
+//   PURPOSE: Fixture.
+//   SCOPE: Fixture.
+//   DEPENDS: none.
+//   LINKS: none.
+// END_MODULE_CONTRACT
+
+// START_MODULE_MAP
+//   alpha          — first exported symbol
+//   alphaHelper    — second exported symbol
+//   missingThing   — declared but absent from code
+// END_MODULE_MAP
+
+export function alpha(): number {
+  return 1;
+}
+export function alphaHelper(): number {
+  return alpha() + 1;
+}
+`;
+
+describe("parseModuleMapNames", () => {
+  test("strips comment markers, separators and () suffixes; dedupes", () => {
+    const names = parseModuleMapNames(`
+// START_MODULE_MAP
+//   CONFIG_FILENAME          — "mygrace.config.json"
+//   loadConfig()             — read + validate
+//   DEFAULT_CONFIG: defaults
+//   snake-name - dashes work
+//   CONFIG_FILENAME          — duplicate ignored
+// END_MODULE_MAP
+`);
+    expect(names).toEqual(["CONFIG_FILENAME", "loadConfig", "DEFAULT_CONFIG", "snake-name"]);
+  });
+
+  test("blank input and plain prose produce no names", () => {
+    expect(parseModuleMapNames("")).toEqual([]);
+    expect(parseModuleMapNames("just a sentence without a separator")).toEqual([]);
+  });
+});
+
+function makeTraceProject(): string {
+  return makeProject({
+    modulePath: "src/a/index.ts",
+    createSourceFile: true,
+    testFiles: ["src/a/index.test.ts"],
+    createTestFile: true,
+  });
+}
+
+describe("enrichTraceWithCodeSymbols", () => {
+  test("resolves MODULE_MAP entries and reports missing symbols as warnings", async () => {
+    const fake = makeFakeOctocode({ mode: "ok" });
+    const root = makeTraceProject();
+    try {
+      mkdirSync(join(root, "src", "a"), { recursive: true });
+      writeFileSync(join(root, "src/a/index.ts"), MODULE_MAP_SOURCE);
+      const result = traceModule(root, "M-A");
+      const config = cloneDefault();
+      config.integrations.octocode.bin = fake.bin;
+      config.integrations.octocode.timeoutMs = 5_000;
+      const enrichment = await enrichTraceWithCodeSymbols(result, config, { env: { PATH: "", HOME: root, TMPDIR: tmpdir() } });
+      expect(enrichment.symbols.available).toBe(true);
+      expect(enrichment.symbols.version).toBe("0.29.2");
+      expect(enrichment.symbols.entries).toEqual([
+        { name: "alpha", found: true, kind: "function" },
+        { name: "alphaHelper", found: true, kind: "function" },
+        { name: "missingThing", found: false },
+      ]);
+      expect(enrichment.findings).toHaveLength(1);
+      expect(enrichment.findings[0]?.code).toBe(TRACE_FINDING_CODES.contractSymbolMissing);
+      expect(enrichment.findings[0]?.severity).toBe("warning");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+      fake.cleanup();
+    }
+  });
+
+  test("without Octocode the check degrades to an info finding", async () => {
+    const root = makeTraceProject();
+    try {
+      mkdirSync(join(root, "src", "a"), { recursive: true });
+      writeFileSync(join(root, "src/a/index.ts"), MODULE_MAP_SOURCE);
+      const result = traceModule(root, "M-A");
+      const enrichment = await enrichTraceWithCodeSymbols(result, cloneDefault());
+      expect(enrichment.symbols.available).toBe(false);
+      expect(enrichment.symbols.entries).toHaveLength(3);
+      expect(enrichment.findings.map((item) => item.code)).toEqual([TRACE_FINDING_CODES.integrationUnavailable]);
+      expect(enrichment.findings[0]?.severity).toBe("info");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  runtimeTest("trace --code --strict-contracts promotes missing symbols to errors (exit 1)", async () => {
+    const fake = makeFakeOctocode({ mode: "ok" });
+    const root = makeTraceProject();
+    try {
+      mkdirSync(join(root, "src", "a"), { recursive: true });
+      writeFileSync(join(root, "src/a/index.ts"), MODULE_MAP_SOURCE);
+      writeFileSync(
+        join(root, "mygrace.config.json"),
+        JSON.stringify({ integrations: { octocode: { bin: fake.bin, timeoutMs: 5_000 } } })
+      );
+      const result = await capture(() =>
+        traceCommand.run!({
+          args: { id: "M-A", path: root, code: true, strictContracts: true, format: "json" },
+        } as never)
+      );
+      expect(result.exit).toBe(1);
+      const envelope = JSON.parse(result.stdout) as {
+        ok: boolean;
+        data: { symbols?: { available: boolean; entries: Array<{ name: string; found: boolean }> } };
+        findings: Array<{ code: string; severity: string }>;
+      };
+      expect(envelope.ok).toBe(false);
+      expect(envelope.data.symbols?.available).toBe(true);
+      const missing = envelope.findings.filter((item) => item.code === TRACE_FINDING_CODES.contractSymbolMissing);
+      expect(missing).toHaveLength(1);
+      expect(missing[0]?.severity).toBe("error");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+      fake.cleanup();
+    }
+  });
+
+  test("trace without --code keeps the documented chain and exit code", async () => {
+    const root = makeTraceProject();
+    try {
+      mkdirSync(join(root, "src", "a"), { recursive: true });
+      writeFileSync(join(root, "src/a/index.ts"), MODULE_MAP_SOURCE);
+      const result = await capture(() =>
+        traceCommand.run!({ args: { id: "M-A", path: root, format: "json" } } as never)
+      );
+      expect(result.exit).toBe(0);
+      const envelope = JSON.parse(result.stdout) as { data: { symbols?: unknown } };
+      expect(envelope.data.symbols).toBeUndefined();
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

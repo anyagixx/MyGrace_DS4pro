@@ -23,6 +23,7 @@
 //   tryLoadConfig()          — non-throwing variant
 //   configPath()             — absolute config path for a project root
 //   serializeConfig()        — stable JSON used by `mygrace init-dsh`
+//   IntegrationsConfig       — optional external integrations (ADR-9), validated like every other field
 // END_MODULE_MAP
 
 import { existsSync, readFileSync } from "node:fs";
@@ -41,6 +42,39 @@ export interface SizeBudgets {
   module: readonly [number, number];
   phase: readonly [number, number];
   verification: readonly [number, number];
+}
+
+export type IntegrationEnabled = "auto" | boolean;
+
+/** One external integration entry (ROADMAP ADR-9). */
+export interface IntegrationSettings {
+  /** "auto" uses the tool when detected; true marks it required (warning when missing); false disables it. */
+  enabled: IntegrationEnabled;
+  /** Explicit executable/script path (absolute or project-relative); null means env/PATH detection. */
+  bin: string | null;
+  /** Tested version range, e.g. ">=0.29 <0.30". */
+  versionRange: string;
+  /** Child-process timeout for adapter probes/commands. */
+  timeoutMs: number;
+}
+
+export interface ArchifyIntegrationSettings extends IntegrationSettings {
+  /** Directory for generated diagram artifacts (relative to the project root). */
+  outputDir: string;
+}
+
+export interface CapsuleIntegrationSettings {
+  enabled: IntegrationEnabled;
+  /** Directory holding capsule definitions (relative to the project root). */
+  dir: string;
+  /** Allow capsule programs that mutate project state (off by default). */
+  allowMutatingPrograms: boolean;
+}
+
+export interface IntegrationsConfig {
+  octocode: IntegrationSettings;
+  archify: ArchifyIntegrationSettings;
+  capsules: CapsuleIntegrationSettings;
 }
 
 export interface MyGraceConfig {
@@ -63,6 +97,8 @@ export interface MyGraceConfig {
   allowCommands: boolean;
   /** Free-form project language label, used only in generated docs. */
   language: string;
+  /** Optional external integrations (ADR-9); all default to disabled-by-detection. */
+  integrations: IntegrationsConfig;
 }
 
 /** Defaults reproduce v1 behaviour so existing projects keep working. */
@@ -95,6 +131,17 @@ export const DEFAULT_CONFIG: MyGraceConfig = {
   testRunner: "bun test",
   allowCommands: false,
   language: "typescript",
+  integrations: {
+    octocode: { enabled: "auto", bin: null, versionRange: ">=0.29 <0.30", timeoutMs: 10_000 },
+    archify: {
+      enabled: "auto",
+      bin: null,
+      versionRange: ">=3.3 <4",
+      timeoutMs: 30_000,
+      outputDir: join("docs", "diagrams"),
+    },
+    capsules: { enabled: false, dir: "capsules", allowMutatingPrograms: false },
+  },
 };
 
 /** Absolute path of the config file for a project root. */
@@ -178,6 +225,11 @@ export function cloneDefault(): MyGraceConfig {
       phase: [...DEFAULT_CONFIG.sizeBudgets.phase],
       verification: [...DEFAULT_CONFIG.sizeBudgets.verification],
     },
+    integrations: {
+      octocode: { ...DEFAULT_CONFIG.integrations.octocode },
+      archify: { ...DEFAULT_CONFIG.integrations.archify },
+      capsules: { ...DEFAULT_CONFIG.integrations.capsules },
+    },
   };
 }
 
@@ -191,6 +243,7 @@ const KNOWN_KEYS = new Set<keyof MyGraceConfig>([
   "testRunner",
   "allowCommands",
   "language",
+  "integrations",
 ]);
 
 function applyUserConfig(raw: Record<string, unknown>, issues: string[]): MyGraceConfig {
@@ -240,9 +293,127 @@ function applyUserConfig(raw: Record<string, unknown>, issues: string[]): MyGrac
 
   applyIndexCaps(raw.indexCaps, config, issues);
   applySizeBudgets(raw.sizeBudgets, config, issues);
+  applyIntegrations(raw.integrations, config, issues);
 
   return config;
 }
+
+// START_BLOCK_INTEGRATIONS
+const VERSION_RANGE_RE = /^(\s*(>=|<=|>|<|=)?\s*v?\d+(?:\.\d+){0,2})*\s*$/;
+const INTEGRATION_KEYS = new Set(["octocode", "archify", "capsules"]);
+const OCTOCODE_KEYS = new Set(["enabled", "bin", "versionRange", "timeoutMs"]);
+const ARCHIFY_KEYS = new Set(["enabled", "bin", "versionRange", "timeoutMs", "outputDir"]);
+const CAPSULE_KEYS = new Set(["enabled", "dir", "allowMutatingPrograms"]);
+
+function applyIntegrations(value: unknown, config: MyGraceConfig, issues: string[]): void {
+  if (value === undefined) return;
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    issues.push('"integrations" must be an object with octocode/archify/capsules entries');
+    return;
+  }
+  const sections = value as Record<string, unknown>;
+  for (const key of Object.keys(sections)) {
+    if (!INTEGRATION_KEYS.has(key)) issues.push(`unknown integrations key "${key}"`);
+  }
+  const readSection = (
+    name: "octocode" | "archify" | "capsules",
+    allowed: Set<string>
+  ): Record<string, unknown> | undefined => {
+    const entry = sections[name];
+    if (entry === undefined) return undefined;
+    if (entry === null || typeof entry !== "object" || Array.isArray(entry)) {
+      issues.push(`"integrations.${name}" must be an object`);
+      return undefined;
+    }
+    for (const key of Object.keys(entry as Record<string, unknown>)) {
+      if (!allowed.has(key)) issues.push(`unknown integrations.${name} key "${key}"`);
+    }
+    return entry as Record<string, unknown>;
+  };
+
+  const enabledFor = (section: Record<string, unknown>, label: string): void => {
+    const enabled = section.enabled;
+    if (enabled === undefined) return;
+    if (enabled === true || enabled === false || enabled === "auto") {
+      if (label === "archify") config.integrations.archify.enabled = enabled;
+      else if (label === "octocode") config.integrations.octocode.enabled = enabled;
+      else config.integrations.capsules.enabled = enabled;
+      return;
+    }
+    issues.push(`"integrations.${label}.enabled" must be "auto", true or false`);
+  };
+  const binFor = (section: Record<string, unknown>, target: { bin: string | null }, label: string): void => {
+    const bin = section.bin;
+    if (bin === undefined) return;
+    if (bin === null) {
+      target.bin = null;
+      return;
+    }
+    if (typeof bin !== "string" || bin.trim() === "") {
+      issues.push(`"integrations.${label}.bin" must be a non-empty string or null`);
+      return;
+    }
+    target.bin = bin.trim();
+  };
+  const rangeFor = (section: Record<string, unknown>, target: { versionRange: string }, label: string): void => {
+    const range = section.versionRange;
+    if (range === undefined) return;
+    if (typeof range !== "string" || !VERSION_RANGE_RE.test(range) || !/\d+/.test(range)) {
+      issues.push(`"integrations.${label}.versionRange" must be a range like ">=0.29 <0.30"`);
+      return;
+    }
+    target.versionRange = range.trim();
+  };
+  const timeoutFor = (section: Record<string, unknown>, target: { timeoutMs: number }, label: string): void => {
+    const timeout = section.timeoutMs;
+    if (timeout === undefined) return;
+    if (!positiveInteger(timeout) || timeout < 100 || timeout > 600_000) {
+      issues.push(`"integrations.${label}.timeoutMs" must be an integer between 100 and 600000`);
+      return;
+    }
+    target.timeoutMs = timeout;
+  };
+
+  const octocode = readSection("octocode", OCTOCODE_KEYS);
+  if (octocode !== undefined) {
+    enabledFor(octocode, "octocode");
+    binFor(octocode, config.integrations.octocode, "octocode");
+    rangeFor(octocode, config.integrations.octocode, "octocode");
+    timeoutFor(octocode, config.integrations.octocode, "octocode");
+  }
+
+  const archify = readSection("archify", ARCHIFY_KEYS);
+  if (archify !== undefined) {
+    enabledFor(archify, "archify");
+    binFor(archify, config.integrations.archify, "archify");
+    rangeFor(archify, config.integrations.archify, "archify");
+    timeoutFor(archify, config.integrations.archify, "archify");
+    const outputDir = archify.outputDir;
+    if (outputDir !== undefined) {
+      if (typeof outputDir !== "string" || outputDir.trim() === "") {
+        issues.push('"integrations.archify.outputDir" must be a non-empty string');
+      } else {
+        config.integrations.archify.outputDir = outputDir.trim();
+      }
+    }
+  }
+
+  const capsules = readSection("capsules", CAPSULE_KEYS);
+  if (capsules !== undefined) {
+    enabledFor(capsules, "capsules");
+    const dir = capsules.dir;
+    if (dir !== undefined) {
+      if (typeof dir !== "string" || dir.trim() === "") issues.push('"integrations.capsules.dir" must be a non-empty string');
+      else config.integrations.capsules.dir = dir.trim();
+    }
+    const allow = capsules.allowMutatingPrograms;
+    if (allow !== undefined) {
+      if (typeof allow !== "boolean") issues.push('"integrations.capsules.allowMutatingPrograms" must be a boolean');
+      else config.integrations.capsules.allowMutatingPrograms = allow;
+    }
+  }
+}
+// END_BLOCK_INTEGRATIONS
 
 function positiveInteger(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value) && value > 0;

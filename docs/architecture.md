@@ -6,26 +6,26 @@ Decisions and their rationale live in [`ROADMAP.md`](../ROADMAP.md) §4 (ADR-1 �
 ADR-8); the change workflow lives in [`CONTRIBUTING.md`](../CONTRIBUTING.md); the
 trust boundary lives in [`SECURITY.md`](../SECURITY.md).
 
-> **Snapshot:** v1.3.3 source tree after Waves 0–5 (audit → foundation → safety →
+> **Snapshot:** v1.4.0 source tree after Waves 0–5 and the Wave 5 integrations (audit → foundation → safety →
 > dogfooding → scale → release engineering): strict XML layer, typed errors/exit
 > codes, safe ids/paths, project config, lint teeth (including incremental
 > `--changed`), trust-gated command execution, hardened MCP runtime, installer
 > hardening, validators/CI, sharded indexes (ADR-6), multi-language path
 > (Python/Go fixtures + `language-matrix` CI job), traceability/impact/next-step
 > query surface and monorepo discovery. **The repository governs itself:**
-> `mygrace ci --path .` passes on `docs/` (25 modules, 4 phases, 25 verifications,
+> `mygrace ci --path .` passes on `docs/` (27 modules, 4 phases, 27 verifications,
 > 32 declared test files, lint 0/0) and the suite is 639 tests across 31 files.
 > Since v1.3 the opt-in DSH status panel is **LIVE** (real data over
 > `GET /api/mygrace.status`), and publishing is tag-driven via
 > `.github/workflows/release.yml` (package publish-ready, not published yet). The
 > CLI exposes 20 top-level commands (including `trace`, `impact`, `next`,
-> `projects`); the MCP server exposes 21 tools. The enforcement table in §6 states
+> `projects`, `integrations`); the MCP server exposes 22 tools. The enforcement table in §6 states
 > the current truth for every invariant — update it whenever a wave lands.
 
 ## 1. Layering
 
 ```
-mygrace (bin) ──► src/grace.ts          citty command tree (20 commands) + guard() error boundary
+mygrace (bin) ──► src/grace.ts          citty command tree (21 commands) + guard() error boundary
                      │
         ┌────────────┴─────────────┬───────────────────────┐
         ▼                          ▼                       ▼
@@ -93,8 +93,10 @@ Dependency rules:
 | `src/grace-context.ts` | `context-cost`: per-operation line/byte/token-estimate budget from the real project files (same line/byte model as `scripts/measure-context.ts`); config-aware; JSON envelope. | `grace-common`, `grace-config` |
 | `src/grace-init.ts` | `init-dsh`: creates `docs/{modules,plans,verification,archive}`, writes scaffold files from `templates/` (`graph-index`, `plan-index`, `verification-index`, `operational-packets`, `requirements`, `technology`, `AGENTS.md`) and the default `mygrace.config.json`. Refuses to overwrite without `--force`. | `grace-config`, `node:fs`, `templates/` |
 | `src/grace-install.ts` | `install-dsh`: copies `skills/mygrace/grace-*` → `$DSH_HOME/skills/mygrace-*`, inserts the `mcp-mygrace` row into the profile's `cordis.patch.yml` (launcher = `process.execPath` + absolute `grace-mcp.ts`), and, with `--panel`, installs the **LIVE** status-panel host route + browser card (private package; reads `mygrace status --format json` through the launcher). YAML is parsed and validated before/after each edit, writes are atomic, backups are timestamped, failed components exit non-zero. Flags: `--bundle`, `--source`, `--dryRun`, `--uninstall`, `--profile`, `--panel`, `--dshHome`. | `grace-errors`, `yaml`, `node:fs`, `node:child_process` |
-| `src/grace-mcp.ts` | stdio MCP server (`@modelcontextprotocol/sdk`), 21 tools: derives `ListTools` from the catalog, validates arguments, launches the CLI without a `PATH` dependency (`MYGRACE_BIN` → package-local `src/grace.ts` via `process.execPath` → `mygrace` on `PATH`), preserves stdout/stderr on failure, configurable timeout (`MYGRACE_MCP_TIMEOUT_MS`, default 120 s). | `grace-mcp-commands`, MCP SDK |
+| `src/grace-mcp.ts` | stdio MCP server (`@modelcontextprotocol/sdk`), 22 tools: derives `ListTools` from the catalog, validates arguments, launches the CLI without a `PATH` dependency (`MYGRACE_BIN` → package-local `src/grace.ts` via `process.execPath` → `mygrace` on `PATH`), preserves stdout/stderr on failure, configurable timeout (`MYGRACE_MCP_TIMEOUT_MS`, default 120 s). | `grace-mcp-commands`, MCP SDK |
 | `src/grace-mcp-commands.ts` | Single source of truth for MCP tools: `TOOLS` (`name`, `description`, `inputSchema`, `rootArg`, `buildArgs`, optional `digestOutput`), `TOOL_NAMES`, `buildToolCommand()`, `validateToolArgs()`. No SDK imports. | `grace-errors` only (pure) |
+| `src/grace-integrations.ts` | ADR-9 registry: detects optional external tools (Octocode, Archify) via config → env → PATH, probes `--version`, checks pinned tested ranges, prints actionable hints; `mygrace integrations status`; advisory (exit 0) and never required by the core gates. | `grace-config`, `grace-common`, `grace-errors`, `grace-test` |
+| `src/grace-code-graph.ts` | Octocode adapter: one short-lived read-only MCP session (`graphrag`/`view_signatures`), defensive parsers, deduped import edges and per-file symbols; missing/broken/out-of-range tools degrade to notes, never exceptions. | `grace-integrations`, MCP SDK |
 
 ## 3. Data flow
 
@@ -311,6 +313,7 @@ Full text: [`ROADMAP.md`](../ROADMAP.md) §4.
 | ADR-6 | Scale via sharded indexes: the root index keeps `<Shard href count/>` references, shard files start with `<ModuleShard project group count>`, reads are the union of flat + shard entries, and generation is deterministic, atomic and idempotent. | `grace-shard.ts` (format, union readers, `buildShardPlan`/`applyShardPlan`), `grace-module.ts` (`module shard`, `module index` summary), `grace-lint.ts` (shard findings) |
 | ADR-7 | One npm package with all runtime sources; `pack` + pack-smoke gate releases; Bun-first, Node ≥ 22.6 target. | `package.json` (`files`, `pack:smoke`, `ci`), `scripts/pack-smoke.ts`, `grace-mcp.ts` launcher |
 | ADR-8 | Agent-first output: `--format json` envelope, stable finding codes, documented MCP names with host prefix (`mcp__mygrace__<tool>`). | `grace-errors.ts` (`createEnvelope`), `grace-test.ts` (`runCommandOutcome`), `grace-mcp-commands.ts` (catalog + schemas) |
+| ADR-9 | External tools are optional, read-only and pinned: allowlist only (Octocode read-only MCP tools, Archify validate/deliver), argv-only spawns with scrubbed env, timeouts/output caps, untrusted output parsed as data, tested ranges (`octocode >=0.29 <0.30`, `archify >=3.3 <4`), degradation to `INTEGRATION_*` findings, `MYGRACE_INTEGRATIONS=off` kill switch; no LLM/embeddings/network. | `grace-integrations.ts` (registry, status, env policy), `grace-code-graph.ts` (MCP session), `grace-impact.ts`/`grace-trace.ts` (opt-in flags), `mygrace.config.json` (`integrations.*`) |
 
 ## 6. Invariants and where they are enforced
 
@@ -328,9 +331,10 @@ The tool's credibility depends on this table being true.
 | No shell interpolation | Commands run argv-only; shell-style commands additionally need explicit opt-in | `grace-test.ts` (`tokenizeCommand`, `inspectCheckCommand`, `spawnSync(..., { shell: false })`) | **enforced** |
 | Layout and budgets are configurable | No hardcoded `src/` in new code; caps/budgets/runner from config | `grace-config.ts`; lint caps/budgets detectors; doctor/status/context/test/verify | **enforced** |
 | Index caps and size budgets are enforced | Index line caps = errors (per shard: `indexCaps.graph`), entity size ranges = warnings, both from config | `grace-lint.ts` (`lintIndexCaps`, `lintEntityBudgets`), `grace-shard.ts` | **enforced** |
-| Sharded indexes stay valid and transparent | Root references resolve inside `docs/`, declared counts match actual entries, ids are unique across shards, every shard respects the cap; `list`/`find`/`status`/`ci`/`test`/`verify` read the same union; `module show` reads the entity directly | `grace-shard.ts` (`loadGraphIndex*`, `resolveShardPath`), `grace-lint.ts`, `grace-module.ts`; scale test `test/grace-shard.test.ts` (150 modules / 3 shards) | **enforced** (unit + synthetic-scale test; repo flat 25 modules 0/0) |
+| Sharded indexes stay valid and transparent | Root references resolve inside `docs/`, declared counts match actual entries, ids are unique across shards, every shard respects the cap; `list`/`find`/`status`/`ci`/`test`/`verify` read the same union; `module show` reads the entity directly | `grace-shard.ts` (`loadGraphIndex*`, `resolveShardPath`), `grace-lint.ts`, `grace-module.ts`; scale test `test/grace-shard.test.ts` (150 modules / 3 shards) | **enforced** (unit + synthetic-scale test; repo flat 27 modules 0/0) |
 | Any configured language works | Layout, extensions, ignores and fallback runner come from config; a non-TS module `PATH` resolves; Python `#` / Go `//` dialects are understood | `grace-config.ts`, `grace-lint.ts`, `grace-status.ts`, `grace-ci.ts`, `grace-test.ts`; `test/grace-language.test.ts` + CI `language-matrix` job | **enforced** (Python/Go fixtures) |
-| MCP catalog cannot drift | One catalog for names, schemas and mappings; arguments validated | `grace-mcp-commands.ts` (`TOOLS`, `TOOL_NAMES`, `validateToolArgs`), `grace-mcp.ts` | **enforced**: 21 tools, including `mygrace_trust`, `mygrace_ci`, `mygrace_trace`, `mygrace_impact`, `mygrace_next`, `mygrace_projects` |
+| MCP catalog cannot drift | One catalog for names, schemas and mappings; arguments validated | `grace-mcp-commands.ts` (`TOOLS`, `TOOL_NAMES`, `validateToolArgs`), `grace-mcp.ts` | **enforced**: 22 tools, including `mygrace_trust`, `mygrace_ci`, `mygrace_trace`, `mygrace_impact`, `mygrace_next`, `mygrace_projects`, `mygrace_integrations` |
+| External integrations cannot break the core | Integrations are optional: missing/disabled/unsupported tools yield `INTEGRATION_*` findings and the command keeps its output and exit code; out-of-range versions are never used; the adapter allowlist is read-only | `grace-integrations.ts` (`resolveIntegration`, `integrationFindings`), `grace-code-graph.ts` (allowlist, timeouts), `test/grace-integrations.test.ts`, `test/grace-code-graph.test.ts` | **enforced** (unit + fake-MCP contract; real-binary smoke is manual in v1.4.0) |
 | Traceability is queryable | `mygrace trace <ID>` returns the chain module/verification → tests → command provenance → requirements → phases → dependents, with stable codes: chain breaks are errors (exit 1), optional links are info (exit 0) | `grace-trace.ts` (`traceModule`, `TRACE_FINDING_CODES`, `formatTraceText`); `test/grace-trace.test.ts` | **enforced** (tested gap matrix on a fixture project) |
 | Change impact is computed, not guessed | `mygrace impact` maps changed files to modules/dependents/blast radius; no file source is a usage error, unmapped files are an info finding | `grace-impact.ts` (`resolveChangedFiles`, `computeImpact`); `test/grace-impact.test.ts` | **enforced** (explicit files without git + staged/since paths) |
 | Advice is deterministic | `mygrace next` follows a fixed nine-code ladder over live gates; same tree → same action; any advice exits 0 | `grace-next.ts` (`recommendNext`, `NextActionCode`); `test/grace-next.test.ts` | **enforced** (all nine codes + ordering tests) |
@@ -339,7 +343,7 @@ The tool's credibility depends on this table being true.
 | The LIVE panel reads real data | The host route shells out to `mygrace status --format json` (never parses `docs/` itself), has a 5 s timeout, sets `cache-control: no-store`, and degrades to `{ok:false,error}`/“not connected” instead of throwing | `packages/mygrace-status-panel/lib/index.js`, `status-payload.js`, `client.js`; `test/grace-panel.test.ts` | **enforced** (route/payload/install tests against the real DSH loader; live GUI session is a documented gap) |
 | One-command gate agrees with the individual checks | `mygrace ci` runs the same strict-lint/status/coverage logic (and the same trust-gated test runner) and must return the same verdict as the individual commands | `grace-ci.ts` (`runCiGate`, `collectCoverage`), composed from `grace-lint.ts`, `grace-status.ts`, `grace-test.ts`/`grace-verify.ts` | **enforced** (unit-tested gate + self-check on this repo: `mygrace ci --path .` PASS) |
 | The packaged CLI works | Every runtime file is in the tarball and the packaged CLI starts | `scripts/pack-smoke.ts` via `bun run pack:smoke` (`ci`, `release:check`) | **enforced** |
-| Documented surface matches the code | Counts, commands, flags and MCP names checked against source in CI | `scripts/validate-docs.ts`, `scripts/validate-marketplace.ts`, `.github/workflows/ci.yml` | **enforced** by CI — both validators pass; counted claims come from source (20 commands, 21 MCP tools, 15 skills) |
+| Documented surface matches the code | Counts, commands, flags and MCP names checked against source in CI | `scripts/validate-docs.ts`, `scripts/validate-marketplace.ts`, `.github/workflows/ci.yml` | **enforced** by CI — both validators pass; counted claims come from source (21 commands, 22 MCP tools, 15 skills) |
 
 ## 7. Where to change things
 

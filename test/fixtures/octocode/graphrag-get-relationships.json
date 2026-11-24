@@ -1,0 +1,9 @@
+[
+  { "source": "src/a/index.ts", "target": "src/b/index.ts", "relation_type": "imports" },
+  { "source": "src/a/index.ts", "target": "src/b/index.ts", "relation_type": "imports" },
+  { "source": "src/a/index.ts", "target": "src/b/index.ts::helper", "relation_type": "imports" },
+  { "source": "src/b/index.ts", "target": "src/a/index.ts", "relation_type": "imports" },
+  { "source": "src/c/index.ts", "target": "src/a/index.ts", "relation_type": "imports" },
+  { "source": "src/a/index.ts", "target": "src/c/index.ts", "relation_type": "calls" },
+  { "source": "src/outside/unknown.ts", "target": "src/a/index.ts", "relation_type": "imports" }
+]

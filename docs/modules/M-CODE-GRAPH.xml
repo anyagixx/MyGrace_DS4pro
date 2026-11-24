@@ -1,0 +1,45 @@
+<!-- Module contract for M-CODE-GRAPH. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-CODE-GRAPH NAME="Octocode code-graph adapter" TYPE="INTEGRATION" STATUS="done">
+  <purpose>Read real file-level import edges and per-file symbols from a running Octocode MCP server in a short-lived, read-only session (ADR-9), so impact/trace can be enriched without making the core gates depend on it.</purpose>
+  <path>src/grace-code-graph.ts</path>
+  <depends>M-INTEGRATIONS,M-CONFIG</depends>
+  <verification-ref>V-M-CODE-GRAPH</verification-ref>
+
+  <annotations>
+    <export-READ_ONLY_TOOLS PURPOSE="ADR-9 allowlist of MCP tools this adapter may call: graphrag, view_signatures, structural_search." />
+    <export-CodeGraphEdge PURPOSE="File→file imports edge (project-relative POSIX paths)." />
+    <export-collectImportEdges PURPOSE="One MCP session; graphrag get-relationships per supplied file; deduped, sorted imports edges; missing/broken tools → available:false + notes." />
+    <export-collectFileSymbols PURPOSE="One view_signatures call; per-file deduped symbol names/kinds; requested files always present." />
+    <export-parseGraphRelationships PURPOSE="Defensive parser for recorded payloads: plain file endpoints only, imports only, dedupe/sort; invalid JSON → INTEGRATION_INVALID_OUTPUT note." />
+    <export-parseViewSignatures PURPOSE="Defensive parser for signatures payloads; symbol endpoints with kinds; dedupe per file." />
+  </annotations>
+
+  <CrossLink to="M-INTEGRATIONS" relation="resolution, kill switch, pinned range and scrubbed child env come from ADR-9 registry" />
+  <CrossLink to="M-IMPACT" relation="impact --code-graph maps edges to module DEPENDS and emits CODE_EDGE_UNDECLARED / DECLARED_EDGE_UNUSED" />
+  <CrossLink to="M-TRACE" relation="trace --code compares MODULE_MAP names with real symbols (CONTRACT_SYMBOL_MISSING)" />
+
+  <contract>
+    <purpose>Answer two read-only questions about real code: which module files import which, and which symbols a file exports.</purpose>
+    <inputs>
+      <param name="root" type="string" description="Project root; also the MCP server --path and worker cwd." />
+      <param name="config" type="MyGraceConfig" description="Supplies integrations.octocode bin/timeout and the tested range." />
+      <param name="files" type="string[]" description="Module source files (project-relative or absolute inside root); paths outside the root are rejected." />
+    </inputs>
+    <outputs>
+      <param name="graph" type="CodeGraphResult" description="{ available, version, edges[], notes[] } — notes carry INTEGRATION_* degradation codes." />
+      <param name="symbols" type="CodeSymbolsResult" description="{ available, version, files: Record&lt;path, {name,kind}[]&gt;, notes[] }." />
+    </outputs>
+    <errors>
+      <error code="INTEGRATION_UNAVAILABLE" description="Tool missing/disabled/unsupported or MCP session failed — available:false, command continues with its deterministic output." />
+      <error code="INTEGRATION_TIMEOUT" description="Session or per-call timeout — note only; never a crash." />
+      <error code="INTEGRATION_INVALID_OUTPUT" description="Malformed JSON or unexpected tool payload — note only; never executed as code." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>Read-only MCP tools only; no index, no semantic embeddings, no LLM, no network (graph/structural mode is tree-sitter over current sources).</note-1>
+    <note-2>Session lifecycle: spawn octocode mcp --path &lt;root&gt;, initialize, optional tools/list sanity check, calls, close in finally; one session per command invocation.</note-2>
+    <note-3>Honest limitation (v1.4.0): the pinned Octocode 0.29.2 Linux binary did not answer MCP initialize on our dev host; the contract is proven with recorded payloads and a fake MCP server, and the real-binary smoke is manual (`bun run test:integrations --download`).</note-3>
+    <note-4>External output is untrusted data: parsed defensively, capped (4 MB/tool, 12 notes), never shell-interpolated.</note-4>
+  </notes>
+</M-CODE-GRAPH>

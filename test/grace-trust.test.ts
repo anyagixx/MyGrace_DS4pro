@@ -14,6 +14,7 @@ import {
   writeTrustRecord,
 } from "../src/grace-test";
 import { ConfigError } from "../src/grace-errors";
+import { cloneDefault } from "../src/grace-config";
 
 const GRAPH_INDEX = `<GraphIndex project="T" version="1.0.0">\n  <M-A NAME="A" TYPE="T" STATUS="done" />\n</GraphIndex>\n`;
 const MODULE = `<M-A NAME="A" TYPE="T" STATUS="done"><contract><purpose>Do A</purpose></contract></M-A>`;
@@ -408,16 +409,7 @@ describe("trustCommand", () => {
   });
 });
 
-/** Helper: default config object for authorizeCommands unit tests. */
+/** Helper: config object for authorizeCommands unit tests (defaults + explicit layout). */
 function defaultConfig(): Parameters<typeof authorizeCommands>[1] {
-  return {
-    sourceDirs: ["src"],
-    markupExts: [".ts"],
-    ignoreDirs: ["node_modules"],
-    indexCaps: { graph: 100, plan: 50, verification: 80 },
-    sizeBudgets: { module: [30, 80], phase: [50, 200], verification: [20, 60] },
-    testRunner: "bun test",
-    allowCommands: false,
-    language: "typescript",
-  };
+  return { ...cloneDefault(), sourceDirs: ["src"], markupExts: [".ts"], ignoreDirs: ["node_modules"] };
 }

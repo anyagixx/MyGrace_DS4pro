@@ -20,11 +20,14 @@ import { join } from "node:path";
 import { UsageError } from "../src/grace-errors";
 import {
   computeImpact,
+  enrichImpactWithCodeGraph,
   impactCommand,
   impactData,
   resolveChangedFiles,
   type ImpactResult,
 } from "../src/grace-impact";
+import { cloneDefault } from "../src/grace-config";
+import { makeFakeOctocode } from "./fixtures/octocode/fake-octocode";
 
 // ─── Fixture project ───────────────────────────────────────────────────
 
@@ -457,6 +460,110 @@ describe("impactCommand", () => {
       expect(thrown).toBeInstanceOf(UsageError);
     } finally {
       rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+// ─── Optional Octocode code-graph enrichment (--code-graph, ADR-9) ─────
+
+const INTEGRATIONS_DISABLED_BY_ENV = ["off", "0", "false", "disabled"].includes(
+  (process.env.MYGRACE_INTEGRATIONS ?? "").trim().toLowerCase()
+);
+const runtimeTest = test.skipIf(INTEGRATIONS_DISABLED_BY_ENV);
+
+function fakeConfig(bin: string) {
+  const config = cloneDefault();
+  config.integrations.octocode.bin = bin;
+  config.integrations.octocode.timeoutMs = 5_000;
+  return config;
+}
+
+describe("enrichImpactWithCodeGraph", () => {
+  test("without Octocode the baseline impact is unchanged and an info finding explains the gap", async () => {
+    const root = makeProject();
+    try {
+      const result = computeImpact(root, { files: "src/a/index.ts" });
+      const config = cloneDefault();
+      const enrichment = await enrichImpactWithCodeGraph(result, config, { env: { PATH: "", HOME: root, TMPDIR: tmpdir() } });
+      expect(enrichment.codeGraph.available).toBe(false);
+      expect(enrichment.findings.map((item) => item.code)).toContain("INTEGRATION_UNAVAILABLE");
+      expect(result.directModules).toEqual(["M-A"]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("real import edges become module edges; undeclared imports are info findings", async () => {
+    const fake = makeFakeOctocode({ mode: "ok" });
+    const root = makeProject();
+    try {
+      const result = computeImpact(root, { files: "src/a/index.ts,src/b/index.ts" });
+      const enrichment = await enrichImpactWithCodeGraph(result, fakeConfig(fake.bin), {
+        env: { PATH: "", HOME: root, TMPDIR: tmpdir() },
+      });
+      expect(enrichment.codeGraph.available).toBe(true);
+      expect(enrichment.codeGraph.version).toBe("0.29.2");
+      expect(enrichment.codeGraph.edges).toEqual([
+        { fromModule: "M-A", toModule: "M-B", declared: false },
+        { fromModule: "M-B", toModule: "M-A", declared: true },
+        { fromModule: "M-C", toModule: "M-A", declared: false },
+      ]);
+      const undeclared = enrichment.findings.filter((item) => item.code === "CODE_EDGE_UNDECLARED");
+      expect(undeclared.map((item) => item.message)).toEqual([
+        expect.stringContaining("M-A imports M-B"),
+        expect.stringContaining("M-C imports M-A"),
+      ]);
+      expect(enrichment.findings.every((item) => item.severity === "info")).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+      fake.cleanup();
+    }
+  });
+
+  test("a declared DEPENDS without a direct code edge is an info finding, never an error", async () => {
+    const fake = makeFakeOctocode({ mode: "ok" });
+    const root = makeProject();
+    try {
+      const result = computeImpact(root, { files: "src/c/index.ts" });
+      const enrichment = await enrichImpactWithCodeGraph(result, fakeConfig(fake.bin), {
+        env: { PATH: "", HOME: root, TMPDIR: tmpdir() },
+      });
+      expect(enrichment.codeGraph.edges).toEqual([]);
+      expect(enrichment.findings.map((item) => item.code)).toContain("DECLARED_EDGE_UNUSED");
+      expect(enrichment.findings.every((item) => item.severity === "info")).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+      fake.cleanup();
+    }
+  });
+
+  runtimeTest("impact --code-graph JSON mode exposes the codeGraph payload and keeps exit 0", async () => {
+    const fake = makeFakeOctocode({ mode: "ok" });
+    const root = makeProject();
+    try {
+      writeFileSync(
+        join(root, "mygrace.config.json"),
+        JSON.stringify({ integrations: { octocode: { bin: fake.bin, timeoutMs: 5_000 } } })
+      );
+      const result = await capture(() =>
+        impactCommand.run!({
+          args: { files: "src/a/index.ts,src/b/index.ts", path: root, format: "json", codeGraph: true },
+        } as never)
+      );
+      expect(result.exit).toBe(0);
+      const envelope = JSON.parse(result.stdout) as {
+        ok: boolean;
+        data: { codeGraph?: { available: boolean; edges: unknown[] } };
+        findings: Array<{ code: string; severity: string }>;
+      };
+      expect(envelope.ok).toBe(true);
+      expect(envelope.data.codeGraph?.available).toBe(true);
+      expect(envelope.data.codeGraph?.edges.length).toBe(3);
+      expect(envelope.findings.map((item) => item.code)).toContain("CODE_EDGE_UNDECLARED");
+      for (const finding of envelope.findings) expect(finding.severity).toBe("info");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+      fake.cleanup();
     }
   });
 });

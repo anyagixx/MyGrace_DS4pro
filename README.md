@@ -5,11 +5,11 @@ line-capped XML indexes, one contract file per module, and verification files
 that connect intent → modules → tests. Agents read the index first and only the
 entity they need, instead of re-reading the tree.
 
-It is a CLI (`mygrace`, 20 commands) plus an agent methodology (15 skills) and
-an MCP server (21 tools). It does not generate code, call a model, or send telemetry — it
+It is a CLI (`mygrace`, 21 commands) plus an agent methodology (15 skills) and
+an MCP server (22 tools). It does not generate code, call a model, or send telemetry — it
 enforces traceability and context discipline for the agent you already use.
 
-Current version: `1.3.3`
+Current version: `1.4.0`
 
 > The package is **not published to npm yet**: install from a source checkout or
 > a packed tarball (see [Install](#install)). The v2 hardening waves are tracked
@@ -187,7 +187,7 @@ of this repository (Bun 1.4.5): `init-dsh`, `ci`, `trust`, `verify`,
 is environment-dependent: in a bare checkout without a DeepSeek Harness
 integration it reports the missing DSH pieces and exits 1, with hints for each.
 
-## CLI commands (20)
+## CLI commands (21)
 
 | Command | What it does |
 |---|---|
@@ -204,18 +204,19 @@ integration it reports the missing DSH pieces and exits 1, with hints for each.
 | `mygrace packet` | Self-contained worker prompt for one module |
 | `mygrace focus` | Minimal working set for one module |
 | `mygrace context-cost` | Read budget per operation (lines/bytes/estimate) |
-| `mygrace trace` | Trace one module end-to-end: verification → test files → command → phases → dependents, with coded gaps (`<ID>` = module or verification id) |
-| `mygrace impact` | Map changed files (git, `--staged`, `--since`, or `--files`) to affected modules, dependents, verification blast radius and phases |
+| `mygrace trace` | Trace one module end-to-end: verification → test files → command → phases → dependents, with coded gaps (`<ID>` = module or verification id); `--code` adds the optional MODULE_MAP↔symbol check (`--strict-contracts` fails on gaps) |
+| `mygrace impact` | Map changed files (git, `--staged`, `--since`, or `--files`) to affected modules, dependents, verification blast radius and phases; `--code-graph` adds real import edges via optional Octocode |
 | `mygrace next` | Deterministic nine-code advice ladder: init → index → lint → coverage → trust → verify → warnings → next phase |
 | `mygrace projects` | Monorepo discovery: per-project counts, lint and coverage under a tree (`--depth`, `--strict`) |
-| `mygrace doctor` | Environment and DSH-integration health checks |
+| `mygrace doctor` | Environment and DSH-integration health checks (incl. optional integrations) |
+| `mygrace integrations` | Detect optional external tools (`status`), their versions and tested ranges; advisory, never fails the core gates |
 | `mygrace init-dsh` | Bootstrap `docs/`, `AGENTS.md`, `mygrace.config.json` |
 | `mygrace install-dsh` | Wire skills + a PATH-free MCP row into DeepSeek Harness |
 
 Every command accepts `--help`; `--format json` commands return the envelope
 `{ ok, exitCode, data, findings[], meta }`.
 
-## MCP tools (21)
+## MCP tools (22)
 
 The stdio server is a transport adapter over the CLI: every tool maps to a
 command, arguments are schema-validated, and CLI failures keep their output in
@@ -228,7 +229,27 @@ quality gate is `mcp__mygrace__ci`.
 `mygrace_focus` · `mygrace_context_cost` · `mygrace_verify` ·
 `mygrace_list_verifications` · `mygrace_lint` · `mygrace_show_file` ·
 `mygrace_status` · `mygrace_trace` · `mygrace_impact` · `mygrace_next` ·
-`mygrace_projects`
+`mygrace_projects` · `mygrace_integrations`
+
+### Optional integrations (ADR-9)
+
+The core gates are deterministic, offline and dependency-free. Two external tools
+can add depth when they are installed — never required, always opt-in:
+
+| Tool | Used for | Commands | Tested range |
+|---|---|---|---|
+| [Octocode](https://github.com/Muvon/octocode) | real import edges + MODULE_MAP↔symbol checks (read-only MCP graph; no index, no LLM) | `impact --code-graph`, `trace --code`, `integrations status` | `>=0.29 <0.30` |
+| [Archify](https://github.com/tt-a1i/archify) | deterministic diagram rendering from the docs graph (planned v1.5) | `integrations status` (detection only) | `>=3.3 <4` |
+
+Unavailable, disabled or unsupported tools produce `INTEGRATION_UNAVAILABLE` /
+`INTEGRATION_UNSUPPORTED_VERSION` info/warning findings and the command keeps its
+normal output and exit code. `MYGRACE_INTEGRATIONS=off` disables every adapter for
+reproducible CI. Versions are pinned and checked; nothing is downloaded or sent.
+Known limitation: the Octocode 0.29.2 MCP server did not answer `initialize` on
+our Linux dev host during the v1.4.0 smoke run, so the adapter's MCP contract is
+proven by recorded-payload/fake-server tests and the real-binary smoke
+(`bun run test:integrations --download`) is manual until that upstream issue is
+understood.
 
 ## Traceability, impact and next-step advice
 
@@ -371,7 +392,7 @@ mygrace module shard [--group-by type|status|prefix] [--apply] [--path <root>] [
 
 Measured on the synthetic large-project fixture (150 modules in 3 shards):
 `lint` ≈44 ms in-process, CLI `status` ≈137 ms, `module list` 150/150,
-`runCiGate` 0 findings. This repository stays flat (25 modules) and keeps its
+`runCiGate` 0 findings. This repository stays flat (27 modules) and keeps its
 `0 errors / 0 warnings` result, so sharding is opt-in, not required.
 
 ## Multi-language projects
@@ -468,7 +489,7 @@ bun run release:check           # release:check == ci (what a tag must pass befo
 bun run ci                      # all of the above (release gate)
 
 # repo self-check (dogfooding): the project's own docs/ graph
-# (25 modules, 4 phases, 25 verifications, 32 declared test files; PASS)
+# (27 modules, 4 phases, 27 verifications, 37 declared test files; PASS)
 bun run src/grace.ts ci --path .
 ```
 

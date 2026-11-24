@@ -60,5 +60,25 @@
   },
   "testRunner": "bun test",
   "allowCommands": false,
-  "language": "typescript"
+  "language": "typescript",
+  "integrations": {
+    "octocode": {
+      "enabled": "auto",
+      "bin": null,
+      "versionRange": ">=0.29 <0.30",
+      "timeoutMs": 10000
+    },
+    "archify": {
+      "enabled": "auto",
+      "bin": null,
+      "versionRange": ">=3.3 <4",
+      "timeoutMs": 30000,
+      "outputDir": "docs/diagrams"
+    },
+    "capsules": {
+      "enabled": false,
+      "dir": "capsules",
+      "allowMutatingPrograms": false
+    }
+  }
 }

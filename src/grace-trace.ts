@@ -34,6 +34,8 @@
 //   resolveTraceModuleId()   — positional id or --module; accepts a verification id too (ADR-4 validation)
 //   traceModule()            — pure trace for one module (throws typed errors for usage/config problems)
 //   formatTraceText()        — compact human tree used by the CLI
+//   parseModuleMapNames()    — tolerant MODULE_MAP line parser (exported for tests)
+//   enrichTraceWithCodeSymbols() — optional Octocode symbol check (--code, ADR-9)
 //   traceCommand             — `mygrace trace <id> [--module M-XXX] [--path] [--format text|json]`
 // END_MODULE_MAP
 
@@ -47,6 +49,7 @@ import { loadConfig, tryLoadConfig } from "./grace-config";
 import type { MyGraceConfig } from "./grace-config";
 import { assertEntityId, assertSafeRelativePath, resolveWithin } from "./grace-paths";
 import { loadGraphIndexStrict } from "./grace-shard";
+import { collectFileSymbols } from "./grace-code-graph";
 import type { GraphLoadResult } from "./grace-shard";
 import { childElements, findElements, textOf, tryParseXml } from "./grace-xml";
 import type { IndexEntry, XmlDocument, XmlElement } from "./grace-xml";
@@ -84,6 +87,10 @@ export const TRACE_FINDING_CODES = {
   moduleFileMissing: "MODULE_FILE_MISSING",
   /** One of the traceability inputs is not well-formed XML (never a crash). */
   xmlInvalid: "XML_INVALID",
+  /** MODULE_MAP entry without a matching symbol in the module source file (--code). */
+  contractSymbolMissing: "CONTRACT_SYMBOL_MISSING",
+  /** Optional code-intelligence tool unavailable (--code degrades to info). */
+  integrationUnavailable: "INTEGRATION_UNAVAILABLE",
 } as const;
 
 export const TRACE_REQUIREMENTS_FILE = join("docs", "requirements.xml");
@@ -187,6 +194,22 @@ export interface TraceData {
   requirements: TraceRequirement[];
   phases: TracePhase[];
   dependents: TraceDependents;
+  /** Code-level contract symbol check (only with --code; ADR-9 optional adapter). */
+  symbols?: TraceSymbols;
+}
+
+/** One MODULE_MAP entry resolved against real code symbols. */
+export interface TraceSymbolEntry {
+  name: string;
+  found: boolean;
+  kind?: string;
+}
+
+export interface TraceSymbols {
+  available: boolean;
+  version: string | null;
+  entries: TraceSymbolEntry[];
+  notes: string[];
 }
 
 /** Maximum length of a requirement/step text excerpt. */
@@ -960,6 +983,135 @@ function formatVerification(verification: TraceVerification): string {
 }
 
 /** Compact human tree for `--format text`. */
+// START_BLOCK_CODE_SYMBOLS
+/** Extract the raw MODULE_MAP section of a module contract file (empty when absent). */
+function moduleMapRawOf(contractFile: string): string {
+  try {
+    const content = readFileSync(contractFile, "utf-8");
+    const match = /START_MODULE_MAP([\s\S]*?)END_MODULE_MAP/u.exec(content);
+    return match === null ? "" : match[1];
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Parse `MODULE_MAP` entries (`NAME   — description`, one per line).
+ *
+ * Exported for tests and for other tools that need the contract surface without
+ * reimplementing the (tolerant) line syntax.
+ */
+export function parseModuleMapNames(raw: string): string[] {
+  const names: string[] = [];
+  const seen = new Set<string>();
+  for (const line of raw.split(/\r?\n/u)) {
+    const trimmed = line.replace(/^\s*(?:\/\/|\/\*|\*+|#)\s*/u, "").trim();
+    if (trimmed === "" || trimmed.startsWith("START_") || trimmed.startsWith("END_")) continue;
+    const match = /^([A-Za-z0-9_$#.-]+)(?:\(\))?\s*(?:[—–-]|:)\s*(.*)$/u.exec(trimmed);
+    if (match === null) continue;
+    const name = match[1] ?? "";
+    if (name === "" || seen.has(name)) continue;
+    seen.add(name);
+    names.push(name);
+  }
+  return names;
+}
+
+/**
+ * Verify the module's MODULE_MAP entries exist as code symbols (Octocode, ADR-9).
+ * Advisory: missing symbols are warnings; `--strict-contracts` promotes them in
+ * the command layer. A missing integration is info-level and never fails.
+ */
+export async function enrichTraceWithCodeSymbols(
+  result: TraceResult,
+  config: MyGraceConfig,
+  options: { env?: NodeJS.ProcessEnv } = {}
+): Promise<{ symbols: TraceSymbols; findings: Finding[] }> {
+  if (result.module.path === "") {
+    return {
+      symbols: {
+        available: false,
+        version: null,
+        entries: [],
+        notes: ["Module PATH is missing, so no code symbols can be inspected."],
+      },
+      findings: [],
+    };
+  }
+  const sourceFile = join(result.root, result.module.path);
+  const names = parseModuleMapNames(moduleMapRawOf(sourceFile));
+  if (names.length === 0) {
+    return {
+      symbols: { available: false, version: null, entries: [], notes: [`No MODULE_MAP entries to verify in ${result.module.path}.`] },
+      findings: [],
+    };
+  }
+
+  const collected = await collectFileSymbols({
+    root: result.root,
+    config,
+    files: [result.module.path],
+    ...(options.env === undefined ? {} : { env: options.env }),
+  });
+  if (!collected.available) {
+    const hint = collected.notes[0];
+    return {
+      symbols: {
+        available: false,
+        version: collected.version,
+        entries: names.map((name) => ({ name, found: false })),
+        notes: collected.notes,
+      },
+      findings: [
+        finding(
+          "info",
+          TRACE_FINDING_CODES.integrationUnavailable,
+          "Octocode is not available; contract symbols were not verified.",
+          hint === undefined ? {} : { hint }
+        ),
+      ],
+    };
+  }
+
+  const fileSymbols = collected.files[result.module.path] ?? [];
+  const byName = new Map(fileSymbols.map((symbol) => [symbol.name, symbol]));
+  const entries: TraceSymbolEntry[] = names.map((name) => {
+    const symbol = byName.get(name);
+    return symbol === undefined ? { name, found: false } : { name, found: true, kind: symbol.kind };
+  });
+  const findings: Finding[] = [];
+  for (const entry of entries) {
+    if (entry.found) continue;
+    findings.push(
+      finding(
+        "warning",
+        TRACE_FINDING_CODES.contractSymbolMissing,
+        `${result.module.id}: MODULE_MAP entry "${entry.name}" is not present in ${result.module.path}.`,
+        { file: result.module.file, hint: "Add/rename the symbol in code, or update MODULE_MAP and docs/graph-index.xml." }
+      )
+    );
+  }
+  return {
+    symbols: { available: true, version: collected.version, entries, notes: collected.notes },
+    findings,
+  };
+}
+
+function formatTraceSymbolsSection(symbols: TraceSymbols): string {
+  const found = symbols.entries.filter((entry) => entry.found).length;
+  const lines = [
+    "",
+    `Symbols (Octocode): ${symbols.available ? "available" : "unavailable"} — ${found}/${symbols.entries.length} MODULE_MAP entries resolved`,
+  ];
+  for (const entry of symbols.entries) {
+    if (entry.found) continue;
+    lines.push(`  ✗ ${entry.name} (not found)`);
+  }
+  for (const note of symbols.notes) lines.push(`  - ${note}`);
+  return lines.join("\n");
+}
+// END_BLOCK_CODE_SYMBOLS
+
 export function formatTraceText(result: TraceResult): string {
   const { module, verification, requirements, phases, dependents } = result;
   const lines: string[] = [];
@@ -1013,20 +1165,41 @@ export const traceCommand = defineCommand({
     id: { type: "positional", description: "Module id (M-XXX) or verification id (V-M-XXX)" },
     module: { type: "string", description: "Module id (M-XXX); alternative to the positional id" },
     path: { type: "string", default: ".", description: "Project root" },
+    code: { type: "boolean", default: false, description: "Verify MODULE_MAP symbols in code via Octocode (optional, ADR-9)" },
+    strictContracts: {
+      type: "boolean",
+      default: false,
+      description: "Promote CONTRACT_SYMBOL_MISSING warnings to errors (exit 1)",
+    },
     format: { type: "string", default: "text", description: "Output format: text or json" },
   },
   run: async ({ args }) => {
     const format = parseOutputFormat(args.format);
-    await runCommandOutcome<unknown>(format, { command: "trace" }, (): CommandOutcome<unknown> => {
+    await runCommandOutcome<unknown>(format, { command: "trace" }, async (): Promise<CommandOutcome<unknown>> => {
       const root = findProjectRoot(args.path ?? ".");
       const moduleId = resolveTraceModuleId(args.id, args.module);
       const result = traceModule(root, moduleId);
+      const data = traceData(result);
+      const findings = [...result.findings];
+      let text = formatTraceText(result);
+      if (args.code === true) {
+        const config = loadConfig(root).config;
+        const enrichment = await enrichTraceWithCodeSymbols(result, config);
+        data.symbols = enrichment.symbols;
+        findings.push(...enrichment.findings);
+        text += `\n${formatTraceSymbolsSection(enrichment.symbols)}`;
+      }
+      if (args.strictContracts === true) {
+        for (const item of findings) {
+          if (item.code === TRACE_FINDING_CODES.contractSymbolMissing && item.severity === "warning") item.severity = "error";
+        }
+      }
       const envelope = createEnvelope({
-        data: traceData(result),
-        findings: result.findings,
+        data,
+        findings,
         meta: { command: "trace", root },
       });
-      return { envelope, print: () => console.log(formatTraceText(result)) };
+      return { envelope, print: () => console.log(text) };
     });
   },
 });

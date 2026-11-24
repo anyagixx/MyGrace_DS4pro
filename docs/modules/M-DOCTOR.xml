@@ -2,7 +2,7 @@
 <M-DOCTOR NAME="Environment doctor" TYPE="UTILITY" STATUS="done">
   <purpose>Honest health report for a MyGRACE project and its DSH integration: project docs, config, environment tools, skills, MCP row and panel.</purpose>
   <path>src/grace-doctor.ts</path>
-  <depends>M-COMMON,M-LINT,M-CONFIG,M-INSTALL,M-ERRORS</depends>
+  <depends>M-COMMON,M-LINT,M-CONFIG,M-INSTALL,M-ERRORS,M-INTEGRATIONS</depends>
   <verification-ref>V-M-DOCTOR</verification-ref>
 
   <annotations>

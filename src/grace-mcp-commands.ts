@@ -60,7 +60,8 @@ export type ToolName =
   | "mygrace_trace"
   | "mygrace_impact"
   | "mygrace_next"
-  | "mygrace_projects";
+  | "mygrace_projects"
+  | "mygrace_integrations";
 
 export type ToolArgs = Record<string, unknown>;
 
@@ -556,6 +557,11 @@ export const TOOLS: readonly ToolDefinition[] = [
           description: "Module id (M-XXX) or verification id (V-M-XXX).",
         },
         path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
+        code: {
+          type: "boolean",
+          default: false,
+          description: "Also verify MODULE_MAP symbols exist in code via Octocode (optional, ADR-9).",
+        },
         format: { type: "string", enum: ["text", "json"], default: "json", description: "Output format." },
       },
       required: ["id"],
@@ -563,6 +569,7 @@ export const TOOLS: readonly ToolDefinition[] = [
     rootArg: "path",
     buildArgs(args, root) {
       const cmd = ["trace", requiredStringArg("mygrace_trace", args, "id"), "--path", root];
+      if (booleanFlag(args, "code")) cmd.push("--code");
       if (wantsJson(args)) cmd.push("--format", "json");
       return cmd;
     },
@@ -585,6 +592,11 @@ export const TOOLS: readonly ToolDefinition[] = [
         },
         staged: { type: "boolean", default: false, description: "Use the git index (git diff --cached) as the change source." },
         since: { type: "string", description: "Git revision to diff against (e.g. HEAD~1, origin/main).", minLength: 1 },
+        codeGraph: {
+          type: "boolean",
+          default: false,
+          description: "Also map real code import edges between affected modules via Octocode (optional, ADR-9).",
+        },
         format: { type: "string", enum: ["text", "json"], default: "json", description: "Output format." },
       },
     },
@@ -596,6 +608,7 @@ export const TOOLS: readonly ToolDefinition[] = [
       if (booleanFlag(args, "staged")) cmd.push("--staged");
       const since = stringArg(args, "since");
       if (since !== undefined) cmd.push("--since", since);
+      if (booleanFlag(args, "codeGraph")) cmd.push("--code-graph");
       if (wantsJson(args)) cmd.push("--format", "json");
       return cmd;
     },
@@ -643,6 +656,26 @@ export const TOOLS: readonly ToolDefinition[] = [
       const depth = args.depth;
       if (typeof depth === "number") cmd.push("--depth", String(depth));
       if (booleanFlag(args, "strict")) cmd.push("--strict");
+      if (wantsJson(args)) cmd.push("--format", "json");
+      return cmd;
+    },
+  },
+  {
+    name: "mygrace_integrations",
+    description:
+      "Detect optional external tools (Octocode code graph, Archify diagrams): executable, source, version and tested range. " +
+      "Advisory only: missing or unsupported tools never fail the core gates and produce info findings with install hints. JSON output by default. " +
+      ROOT_NOTE,
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
+        format: { type: "string", enum: ["text", "json"], default: "json", description: "Output format." },
+      },
+    },
+    rootArg: "path",
+    buildArgs(args, root) {
+      const cmd = ["integrations", "status", "--path", root];
       if (wantsJson(args)) cmd.push("--format", "json");
       return cmd;
     },

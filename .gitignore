@@ -10,6 +10,7 @@ node_modules/
 .npm-cache/
 .pack-smoke/
 .release-assets/
+.integration-tools/
 .mygrace/
 dist/
 coverage/

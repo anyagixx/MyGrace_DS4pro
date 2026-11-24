@@ -1,0 +1,29 @@
+<!-- Canonical verification entry. <module-checks> is read by mygrace test/verify; commands are trust-gated (run `mygrace trust` after review). -->
+<V-M-CODE-GRAPH MODULE="M-CODE-GRAPH" PRIORITY="high" STATUS="done">
+  <test-files>
+    <file>test/grace-code-graph.test.ts</file>
+    <file>test/grace-impact.test.ts</file>
+    <file>test/grace-trace.test.ts</file>
+  </test-files>
+
+  <module-checks>
+    <check-1>bun test test/grace-code-graph.test.ts test/grace-impact.test.ts test/grace-trace.test.ts</check-1>
+  </module-checks>
+
+  <scenarios>
+    <scenario-1 kind="success">Recorded graph payloads parse into exactly the expected file-level import edges: symbol endpoints and non-import relations dropped, duplicates collapsed, deterministic sort.</scenario-1>
+    <scenario-2 kind="success">Against a fake MCP server (same stdio protocol) the adapter returns deduped edges and per-file symbols; malformed JSON becomes an INTEGRATION_INVALID_OUTPUT note; a timeout becomes an INTEGRATION_TIMEOUT note.</scenario-2>
+    <scenario-3 kind="success">`impact --code-graph` maps edges to module DEPENDS: undeclared imports are info CODE_EDGE_UNDECLARED, declared-but-unimported edges are info DECLARED_EDGE_UNUSED, exit code unchanged. `trace --code` resolves MODULE_MAP entries and `--strict-contracts` turns a missing symbol into exit 1.</scenario-3>
+    <scenario-4 kind="failure">Without Octocode every path degrades honestly: available:false + INTEGRATION_UNAVAILABLE info, no crash, no changed deterministic output; out-of-range versions never spawn a session.</scenario-4>
+  </scenarios>
+
+  <required-log-markers>
+    <marker-1>No runtime log markers; behavior asserted through returned payloads and CLI JSON envelopes.</marker-1>
+  </required-log-markers>
+
+  <notes>
+    <note-1>Covered by test/grace-code-graph.test.ts (parsers + fake MCP server), plus the enrichment tests in test/grace-impact.test.ts and test/grace-trace.test.ts.</note-1>
+    <note-2>Real-binary contract smoke is manual: `bun run test:integrations --download` (pinned 0.29.2); it is not a CI gate in v1.4.0 because the pinned binary did not answer MCP initialize on the dev host.</note-2>
+    <note-3>ADR-9: read-only tools only, one short-lived session, capped notes/payloads, scrubbed env, external output never executed.</note-3>
+  </notes>
+</V-M-CODE-GRAPH>

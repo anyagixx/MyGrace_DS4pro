@@ -2,7 +2,7 @@
 <M-IMPACT NAME="Change impact analysis" TYPE="CORE_LOGIC" STATUS="done">
   <purpose>Map changed files to affected modules, transitive dependents, verification blast radius and phases, and suggest the proving commands (Wave 3.3).</purpose>
   <path>src/grace-impact.ts</path>
-  <depends>M-COMMON,M-CONFIG,M-ERRORS,M-PATHS,M-SHARD,M-TEST</depends>
+  <depends>M-COMMON,M-CONFIG,M-ERRORS,M-PATHS,M-SHARD,M-TEST,M-CODE-GRAPH</depends>
   <verification-ref>V-M-IMPACT</verification-ref>
 
   <annotations>

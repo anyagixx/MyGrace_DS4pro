@@ -12,22 +12,28 @@
  *   - project counts are read with the non-throwing index reader, so a
  *     malformed index is a doctor error, not a stack trace;
  *   - the effective `mygrace.config.json` is validated and its `sourceDirs`
- *     are reported, so "any layout" projects can see what the tool will scan.
+ *     are reported, so "any layout" projects can see what the tool will scan;
+ *   - optional external tools (Octocode/Archify, ADR-9) get an honest
+ *     "Integrations" section: detected bins/versions/state + hints only when
+ *     the user marked a tool required. Missing optional tools never change the
+ *     exit code and never throw.
  */
 
 // START_MODULE_CONTRACT
 //   PURPOSE: Honest health report for a MyGRACE project + DSH integration: project/docs, config,
-//            environment tools, installed skills, MCP row, status panel; exit code matches findings.
-//   SCOPE: Read-only probes (execFileSync for versions, readFileSync for config files); no writes.
-//   DEPENDS: grace-common (findProjectRoot/readIndexFileSafe), grace-lint, grace-config, grace-install, grace-errors
+//            environment tools, installed skills, MCP row, status panel, optional external integrations (ADR-9);
+//            exit code matches findings.
+//   SCOPE: Read-only probes (execFileSync for versions, `--version` integration probes, readFileSync); no writes.
+//   DEPENDS: grace-common (findProjectRoot/readIndexFileSafe), grace-lint, grace-config, grace-install,
+//            grace-integrations (ADR-9 registry), grace-errors
 //   LINKS: ROADMAP.md (ADR-3 exit codes, ADR-5 config, ADR-8 JSON output)
 // END_MODULE_CONTRACT
 
 // START_MODULE_MAP
-//   DoctorCheck/DoctorReport — typed check rows + error/warning totals + config row
-//   buildDoctorReport()      — safe report construction (never throws for unreadable project files)
-//   doctorFindings()         — map check rows to ADR-3 findings (exit-code source of truth)
-//   printDoctorReport()      — human text rendering
+//   DoctorCheck/DoctorReport — typed check rows + error/warning totals + config and integrations rows
+//   buildDoctorReport()      — safe report construction (never throws for unreadable project files/tools)
+//   doctorFindings()         — map check rows + integration findings to ADR-3 findings (exit-code source)
+//   printDoctorReport()      — human text rendering (incl. Integrations section)
 //   doctorCommand            — `mygrace doctor [--format json]`
 // END_MODULE_MAP
 
@@ -39,7 +45,10 @@ import { join, resolve } from "node:path";
 import { findProjectRoot, readIndexFileSafe } from "./grace-common";
 import { createEnvelope, finding } from "./grace-errors";
 import type { Finding } from "./grace-errors";
-import { tryLoadConfig } from "./grace-config";
+import { cloneDefault, tryLoadConfig } from "./grace-config";
+import type { ConfigLoadResult, MyGraceConfig } from "./grace-config";
+import { buildIntegrationsStatus, integrationFindings } from "./grace-integrations";
+import type { IntegrationsData } from "./grace-integrations";
 import { collectLintIssues } from "./grace-lint";
 import { skillSourceDirs } from "./grace-install";
 import { parseOutputFormat, runCommandOutcome } from "./grace-test";
@@ -67,6 +76,10 @@ export interface DoctorReport {
   project: { ok: boolean; status?: ProjectStatus; error?: string };
   /** Effective project configuration (sourceDirs/language/env/allowCommands). */
   config: DoctorCheck;
+  /** Optional external tools (Octocode/Archify, ADR-9): one honest summary row. */
+  integrations: DoctorCheck;
+  /** Raw detection payload behind the row (JSON consumers / tests). */
+  integrationStatus: IntegrationsData | null;
   dsh: DoctorCheck;
   rtk: DoctorCheck;
   caveman: DoctorCheck;
@@ -133,6 +146,50 @@ function buildConfigCheck(root: string, projectFound: boolean): DoctorCheck {
   };
 }
 
+/** Human detail for one optional integration entry. */
+function describeIntegration(entry: IntegrationsData["octocode"]): string {
+  if (!entry.enabled) return `${entry.id}: disabled`;
+  if (!entry.available) return `${entry.id}: not found (optional)`;
+  const version = entry.version ?? (entry.checked === "exists" ? "detected" : "version unknown");
+  const source = entry.source ?? "unknown";
+  const state = entry.supported ? "" : ` UNSUPPORTED (expected ${entry.expectedRange})`;
+  return `${entry.id}: ${version} (${source})${state}`;
+}
+
+/** One honest integrations row; a probe failure is a warning, never an exception. */
+function buildIntegrationsCheck(
+  root: string,
+  config: MyGraceConfig
+): { check: DoctorCheck; status: IntegrationsData | null } {
+  try {
+    const status = buildIntegrationsStatus(root, config);
+    const entries = [status.octocode, status.archify];
+    const requiredProblems = entries.filter((entry) => entry.enabled && entry.required && (!entry.available || !entry.supported));
+    const hint = requiredProblems
+      .map((entry) => entry.hint)
+      .filter((value): value is string => typeof value === "string" && value !== "")
+      .join(" ");
+    const check: DoctorCheck = {
+      name: "integrations (optional)",
+      ok: requiredProblems.length === 0,
+      detail: entries.map(describeIntegration).join(" · "),
+      ...(hint === "" ? {} : { hint }),
+      ...(requiredProblems.length === 0 ? {} : { warning: true }),
+    };
+    return { check, status };
+  } catch (error) {
+    return {
+      check: {
+        name: "integrations (optional)",
+        ok: false,
+        detail: `probe failed: ${error instanceof Error ? error.message : String(error)}`,
+        warning: true,
+      },
+      status: null,
+    };
+  }
+}
+
 /** Build the doctor report. Read-only; unreadable project files become check details. */
 export function buildDoctorReport(startDir: string): DoctorReport {
   let projectRoot = resolve(startDir);
@@ -170,6 +227,9 @@ export function buildDoctorReport(startDir: string): DoctorReport {
   }
 
   const config = buildConfigCheck(projectRoot, projectFound);
+  const loadedForIntegrations = tryLoadConfig(projectRoot);
+  const integrationsConfig = loadedForIntegrations.ok ? loadedForIntegrations.result.config : cloneDefault();
+  const { check: integrations, status: integrationStatus } = buildIntegrationsCheck(projectRoot, integrationsConfig);
   const dsh = probe("dsh", ["--version"]);
   const rtk = probe("rtk", ["--version"]);
   const caveman = probe("caveman", ["--version"]);
@@ -256,6 +316,8 @@ export function buildDoctorReport(startDir: string): DoctorReport {
   return {
     project,
     config,
+    integrations,
+    integrationStatus,
     dsh: dshCheck,
     rtk: rtkCheck,
     caveman: cavemanCheck,
@@ -321,6 +383,24 @@ export function doctorFindings(report: DoctorReport): Finding[] {
       })
     );
   }
+
+  // Optional external tools: only their actionable (warning/error) findings reach
+  // the exit-code source; info-level "tool not installed" stays out of doctor.
+  if (report.integrationStatus !== null) {
+    for (const item of integrationFindings(report.integrationStatus)) {
+      if (item.severity !== "info") findings.push(item);
+    }
+  } else if (!report.integrations.ok) {
+    findings.push(
+      finding(
+        report.integrations.warning === true ? "warning" : "error",
+        checkCode(report.integrations.name),
+        `${report.integrations.name}: ${report.integrations.detail}`,
+        { ...(report.integrations.hint === undefined ? {} : { hint: report.integrations.hint }) }
+      )
+    );
+  }
+
   return findings;
 }
 
@@ -358,6 +438,9 @@ export function printDoctorReport(report: DoctorReport): void {
   console.log(fmtCheck(report.skills));
   console.log(fmtCheck(report.mcp));
   console.log(fmtCheck(report.panel));
+  console.log("");
+  console.log("Integrations (optional)");
+  console.log(fmtCheck(report.integrations));
   console.log("");
   console.log("Dev tools");
   console.log(fmtCheck(report.devTools));

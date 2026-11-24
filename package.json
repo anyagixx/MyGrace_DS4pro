@@ -1,6 +1,6 @@
 {
   "name": "@osovv/mygrace-cli",
-  "version": "1.3.3",
+  "version": "1.4.0",
   "description": "MyGRACE — index-first engineering harness for AI coding agents: enforced contracts, lazy-loading knowledge graph, verification traceability, MCP/skills integration.",
   "license": "MIT",
   "homepage": "https://github.com/anyagixx/MyGrace_DS4pro#readme",
@@ -69,7 +69,8 @@
     "lint:self": "bun run ./src/grace.ts lint --path . --strict",
     "check": "bun run ./src/grace.ts ci --path .",
     "publish:dry": "bun run ./scripts/publish-dry-run.ts",
-    "release:full": "bun run release:check && bun run publish:dry"
+    "release:full": "bun run release:check && bun run publish:dry",
+    "test:integrations": "bun run ./scripts/integration-octocode-smoke.ts"
   },
   "bin": {
     "mygrace": "src/grace.ts"

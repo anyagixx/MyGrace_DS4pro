@@ -260,3 +260,98 @@ describe("serializeConfig()", () => {
     expect(JSON.parse(text)).toEqual(DEFAULT_CONFIG);
   });
 });
+
+// ─── Optional integrations config (ADR-9, v1.4) ────────────────────────
+
+describe("loadConfig() integrations", () => {
+  test("defaults match the documented tested ranges", () => {
+    expect(DEFAULT_CONFIG.integrations.octocode).toEqual({
+      enabled: "auto",
+      bin: null,
+      versionRange: ">=0.29 <0.30",
+      timeoutMs: 10_000,
+    });
+    expect(DEFAULT_CONFIG.integrations.archify.versionRange).toBe(">=3.3 <4");
+    expect(DEFAULT_CONFIG.integrations.archify.outputDir).toBe(join("docs", "diagrams"));
+    expect(DEFAULT_CONFIG.integrations.capsules).toEqual({
+      enabled: false,
+      dir: "capsules",
+      allowMutatingPrograms: false,
+    });
+  });
+
+  test("a partial override keeps every other default", () => {
+    withProject(JSON.stringify({ integrations: { octocode: { timeoutMs: 5_000 } } }), (root) => {
+      const result = loadConfig(root);
+      expect(result.config.integrations.octocode.timeoutMs).toBe(5_000);
+      expect(result.config.integrations.octocode.versionRange).toBe(DEFAULT_CONFIG.integrations.octocode.versionRange);
+      expect(result.config.integrations.octocode.enabled).toBe("auto");
+      expect(result.config.integrations.archify).toEqual(DEFAULT_CONFIG.integrations.archify);
+      expect(result.config.integrations.capsules).toEqual(DEFAULT_CONFIG.integrations.capsules);
+    });
+  });
+
+  test("every documented field can be overridden", () => {
+    const config = {
+      integrations: {
+        octocode: { enabled: false, bin: "/opt/octocode", versionRange: ">=0.30 <0.31", timeoutMs: 12_000 },
+        archify: { enabled: true, bin: "tools/archify.mjs", versionRange: ">=3.4 <4", timeoutMs: 40_000, outputDir: "artifacts/diagrams" },
+        capsules: { enabled: "auto", dir: "runbooks", allowMutatingPrograms: true },
+      },
+    };
+    withProject(JSON.stringify(config), (root) => {
+      const result = loadConfig(root);
+      expect(result.config.integrations.octocode).toEqual({
+        enabled: false,
+        bin: "/opt/octocode",
+        versionRange: ">=0.30 <0.31",
+        timeoutMs: 12_000,
+      });
+      expect(result.config.integrations.archify).toEqual({
+        enabled: true,
+        bin: "tools/archify.mjs",
+        versionRange: ">=3.4 <4",
+        timeoutMs: 40_000,
+        outputDir: "artifacts/diagrams",
+      });
+      expect(result.config.integrations.capsules).toEqual({ enabled: "auto", dir: "runbooks", allowMutatingPrograms: true });
+    });
+  });
+
+  test("serializeConfig() round-trips the integrations block", () => {
+    const serialized = JSON.parse(serializeConfig(cloneDefault())) as { integrations?: unknown };
+    expect(serialized.integrations).toEqual(DEFAULT_CONFIG.integrations);
+  });
+
+  test("invalid integrations shapes are reported together", () => {
+    expectConfigError(JSON.stringify({ integrations: [] }), [
+      '"integrations" must be an object with octocode/archify/capsules entries',
+    ]);
+    expectConfigError(JSON.stringify({ integrations: { bogus: {} } }), ['unknown integrations key "bogus"']);
+    expectConfigError(JSON.stringify({ integrations: { octocode: "yes" } }), ['"integrations.octocode" must be an object']);
+    expectConfigError(JSON.stringify({ integrations: { octocode: { nope: 1 } } }), [
+      'unknown integrations.octocode key "nope"',
+    ]);
+    expectConfigError(JSON.stringify({ integrations: { octocode: { enabled: "sometimes" } } }), [
+      '"integrations.octocode.enabled" must be "auto", true or false',
+    ]);
+    expectConfigError(JSON.stringify({ integrations: { octocode: { bin: "" } } }), [
+      '"integrations.octocode.bin" must be a non-empty string or null',
+    ]);
+    expectConfigError(JSON.stringify({ integrations: { octocode: { versionRange: "latest" } } }), [
+      '"integrations.octocode.versionRange" must be a range like ">=0.29 <0.30"',
+    ]);
+    expectConfigError(JSON.stringify({ integrations: { octocode: { timeoutMs: 5 } } }), [
+      '"integrations.octocode.timeoutMs" must be an integer between 100 and 600000',
+    ]);
+    expectConfigError(JSON.stringify({ integrations: { archify: { outputDir: " " } } }), [
+      '"integrations.archify.outputDir" must be a non-empty string',
+    ]);
+    expectConfigError(JSON.stringify({ integrations: { capsules: { dir: "" } } }), [
+      '"integrations.capsules.dir" must be a non-empty string',
+    ]);
+    expectConfigError(JSON.stringify({ integrations: { capsules: { allowMutatingPrograms: "yes" } } }), [
+      '"integrations.capsules.allowMutatingPrograms" must be a boolean',
+    ]);
+  });
+});

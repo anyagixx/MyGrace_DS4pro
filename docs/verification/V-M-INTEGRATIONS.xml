@@ -1,0 +1,28 @@
+<!-- Canonical verification entry. <module-checks> is read by mygrace test/verify; commands are trust-gated (run `mygrace trust` after review). -->
+<V-M-INTEGRATIONS MODULE="M-INTEGRATIONS" PRIORITY="high" STATUS="done">
+  <test-files>
+    <file>test/grace-integrations.test.ts</file>
+    <file>test/grace-config.test.ts</file>
+  </test-files>
+
+  <module-checks>
+    <check-1>bun test test/grace-integrations.test.ts test/grace-config.test.ts</check-1>
+  </module-checks>
+
+  <scenarios>
+    <scenario-1 kind="success">Version parsing/ranges are exact: octocode 0.29.2 satisfies &gt;=0.29 &lt;0.30, 0.28.9 and 0.30.0 do not; two- and three-component bounds and integer bounds (&gt;=3.3 &lt;4) parse identically.</scenario-1>
+    <scenario-2 kind="success">Detection order config → env → PATH is proven with fake executables; the kill switch and enabled:false disable tools without findings, while enabled:true turns a missing tool into a warning.</scenario-2>
+    <scenario-3 kind="success">`mygrace integrations status` always exits 0, prints the ADR-8 envelope in JSON mode and an honest table in text mode, including install hints for missing optional tools.</scenario-3>
+    <scenario-4 kind="failure">Invalid integrations.* config is a CONFIG_INVALID ConfigError (exit 2) listing every problem; a broken probe (bad --version output) is reported as unavailable/unsupported, never as an exception in core commands.</scenario-4>
+  </scenarios>
+
+  <required-log-markers>
+    <marker-1>CLI text/JSON output asserted by tests; library paths emit no runtime log markers.</marker-1>
+  </required-log-markers>
+
+  <notes>
+    <note-1>Covered by test/grace-integrations.test.ts (helpers, detection, kill switch, status command) and the integrations block of test/grace-config.test.ts.</note-1>
+    <note-2>ADR-9 invariants checked here: no network in detection, argv-only probes, scrubbed child env, pinned tested range, advisory exit 0.</note-2>
+    <note-3>CLI surface: mygrace integrations status [--path .] [--format text|json]; env: MYGRACE_INTEGRATIONS, MYGRACE_OCTOCODE_BIN, MYGRACE_ARCHIFY_BIN.</note-3>
+  </notes>
+</V-M-INTEGRATIONS>

@@ -1,9 +1,11 @@
 <VerificationIndex project="MyGRACE">
   <!-- One line per module verification entry. CAP 80 lines (indexCaps.verification). Sorted high > medium > low. -->
   <V-M-CLI MODULE="M-CLI" PRIORITY="high" STATUS="done" />
+  <V-M-CODE-GRAPH MODULE="M-CODE-GRAPH" PRIORITY="high" STATUS="done" />
   <V-M-COMMON MODULE="M-COMMON" PRIORITY="high" STATUS="done" />
   <V-M-CONFIG MODULE="M-CONFIG" PRIORITY="high" STATUS="done" />
   <V-M-ERRORS MODULE="M-ERRORS" PRIORITY="high" STATUS="done" />
+  <V-M-INTEGRATIONS MODULE="M-INTEGRATIONS" PRIORITY="high" STATUS="done" />
   <V-M-LINT MODULE="M-LINT" PRIORITY="high" STATUS="done" />
   <V-M-MCP MODULE="M-MCP" PRIORITY="high" STATUS="done" />
   <V-M-MCP-COMMANDS MODULE="M-MCP-COMMANDS" PRIORITY="high" STATUS="done" />

@@ -31,10 +31,12 @@
 //   ImpactResult            — files, directModules, dependents, verificationStatus, phases, commands, notes, findings
 //   resolveChangedFiles()   — --files > --staged > --since > git diff HEAD (UsageError fallback)
 //   computeImpact()         — full read-only impact computation
+//   enrichImpactWithCodeGraph() — optional Octocode import-edge enrichment (--code-graph, ADR-9)
 //   impactCommand           — `mygrace impact [--files] [--since] [--staged] [--path] [--format]`
 // END_MODULE_MAP
 
 // START_CHANGE_SUMMARY
+//   2026-11-24 — v1.4: optional `--code-graph` enrichment (Octocode import edges, ADR-9);
 //   2026-11-22 — v1.3: git/explicit changed-file scope, PATH + dir-prefix + docs-entity mapping,
 //                transitive dependents, verification blast radius, phase mentions, suggested commands.
 // END_CHANGE_SUMMARY
@@ -51,6 +53,7 @@ import { createEnvelope, finding, UsageError } from "./grace-errors";
 import type { Finding } from "./grace-errors";
 import { assertSafeRelativePath } from "./grace-paths";
 import { loadGraphIndexStrict } from "./grace-shard";
+import { collectImportEdges } from "./grace-code-graph";
 import {
   authorizeCommands,
   collectDeclaredCommands,
@@ -507,6 +510,8 @@ export interface ImpactData {
   affectedPhases: AffectedPhase[];
   suggestedCommands: string[];
   notes: string[];
+  /** Code-level enrichment (only with --code-graph; ADR-9 optional Octocode adapter). */
+  codeGraph?: CodeGraphImpact;
 }
 
 export interface ImpactResult extends ImpactData {
@@ -737,6 +742,143 @@ export function computeImpact(rootInput: string, options: ChangedFileOptions = {
   };
 }
 
+// START_BLOCK_CODE_GRAPH
+/** One module→module edge observed in real code imports. */
+export interface CodeGraphImpactEdge {
+  fromModule: string;
+  toModule: string;
+  /** True when the index DEPENDS of fromModule already declares toModule. */
+  declared: boolean;
+}
+
+export interface CodeGraphImpact {
+  available: boolean;
+  version: string | null;
+  edges: CodeGraphImpactEdge[];
+  notes: string[];
+}
+
+export interface CodeGraphEnrichment {
+  findings: Finding[];
+  codeGraph: CodeGraphImpact;
+}
+
+/** Map a project-relative source file back to its module (exact PATH, then module dir). */
+function moduleIdForSourceFile(
+  file: string,
+  modules: readonly ModuleInfo[],
+  sourceRoots: ReadonlySet<string>
+): string | undefined {
+  const normalized = toPosix(file).replace(/^\.\/+/, "");
+  const exact = modules.find((module) => module.path !== "" && module.path === normalized);
+  if (exact !== undefined) return exact.id;
+  return dirPrefixOwner(normalized, modules, sourceRoots);
+}
+
+/**
+ * Enrich a computed impact result with real code import edges (Octocode, ADR-9).
+ *
+ * Read-only and advisory: findings are info-level, exit codes never change, and
+ * a missing/broken integration degrades to `INTEGRATION_UNAVAILABLE`.
+ */
+export async function enrichImpactWithCodeGraph(
+  result: ImpactResult,
+  config: MyGraceConfig,
+  options: { env?: NodeJS.ProcessEnv } = {}
+): Promise<CodeGraphEnrichment> {
+  const sourceRoots = sourceRootsOf(config);
+  const graph = loadGraphIndexStrict(result.root, config);
+  const modules = moduleInfos(graph.entries);
+  const byId = new Map(modules.map((module) => [module.id, module]));
+  const affected = [...result.directModules, ...result.dependents.filter((id) => !result.directModules.includes(id))];
+  const files = affected
+    .map((id) => byId.get(id)?.path ?? "")
+    .filter((file) => file !== "" && existsSync(join(result.root, file)));
+
+  if (files.length === 0) {
+    return {
+      findings: [],
+      codeGraph: { available: false, version: null, edges: [], notes: ["No module source files to inspect."] },
+    };
+  }
+
+  const collected = await collectImportEdges({
+    root: result.root,
+    config,
+    files,
+    ...(options.env === undefined ? {} : { env: options.env }),
+  });
+  if (!collected.available) {
+    const hint = collected.notes[0];
+    return {
+      findings: [
+        finding("info", "INTEGRATION_UNAVAILABLE", "Octocode code graph is not available; `impact` stays declaration-based.", {
+          ...(hint === undefined ? {} : { hint }),
+        }),
+      ],
+      codeGraph: { available: false, version: collected.version, edges: [], notes: collected.notes },
+    };
+  }
+
+  const edgeMap = new Map<string, CodeGraphImpactEdge>();
+  for (const edge of collected.edges) {
+    const fromModule = moduleIdForSourceFile(edge.from, modules, sourceRoots);
+    const toModule = moduleIdForSourceFile(edge.to, modules, sourceRoots);
+    if (fromModule === undefined || toModule === undefined || fromModule === toModule) continue;
+    const key = `${fromModule}->${toModule}`;
+    if (edgeMap.has(key)) continue;
+    const declared = byId.get(fromModule)?.depends.includes(toModule) ?? false;
+    edgeMap.set(key, { fromModule, toModule, declared });
+  }
+  const edges = [...edgeMap.values()].sort((left, right) =>
+    left.fromModule === right.fromModule
+      ? left.toModule.localeCompare(right.toModule)
+      : left.fromModule.localeCompare(right.fromModule)
+  );
+
+  const findings: Finding[] = [];
+  for (const edge of edges) {
+    if (edge.declared) continue;
+    findings.push(
+      finding(
+        "info",
+        "CODE_EDGE_UNDECLARED",
+        `${edge.fromModule} imports ${edge.toModule} in code, but its index DEPENDS does not declare it.`,
+        { hint: "Update the module DEPENDS (and docs/modules file) or confirm the import is incidental." }
+      )
+    );
+  }
+  const codeEdgeKeys = new Set(edges.map((edge) => `${edge.fromModule}->${edge.toModule}`));
+  for (const moduleId of result.directModules) {
+    const info = byId.get(moduleId);
+    if (info === undefined) continue;
+    for (const dependency of info.depends) {
+      if (!byId.has(dependency) || codeEdgeKeys.has(`${moduleId}->${dependency}`)) continue;
+      findings.push(
+        finding(
+          "info",
+          "DECLARED_EDGE_UNUSED",
+          `${moduleId} declares DEPENDS ${dependency}, but no direct code import edge was found (may be indirect or dynamic).`,
+          { hint: "Keep it if the dependency is real; document the indirect path in the module file." }
+        )
+      );
+    }
+  }
+
+  const notes = [...collected.notes, `${edges.length} code import edge(s) between modules.`];
+  return { findings, codeGraph: { available: true, version: collected.version, edges, notes } };
+}
+
+function formatCodeGraphSection(codeGraph: CodeGraphImpact): string[] {
+  const lines = ["", `Code graph (Octocode): ${codeGraph.available ? `available${codeGraph.version === null ? "" : ` ${codeGraph.version}`}` : "unavailable"}`];
+  for (const edge of codeGraph.edges) {
+    lines.push(`  ${edge.fromModule} → ${edge.toModule}${edge.declared ? "" : "  (not declared in DEPENDS)"}`);
+  }
+  for (const note of codeGraph.notes) lines.push(`  - ${note}`);
+  return lines;
+}
+// END_BLOCK_CODE_GRAPH
+
 /** The exact JSON `data` payload documented for `mygrace impact --format json`. */
 export function impactData(result: ImpactResult): ImpactData {
   return {
@@ -806,22 +948,33 @@ export const impactCommand = defineCommand({
     files: { type: "string", description: "Comma-separated changed files (project-relative; works without git)" },
     since: { type: "string", description: "Git revision to diff against (e.g. HEAD~1, origin/main)" },
     staged: { type: "boolean", default: false, description: "Use staged changes (git diff --cached)" },
+    codeGraph: { type: "boolean", default: false, description: "Enrich with real code import edges via Octocode (optional, ADR-9)" },
     format: { type: "string", default: "text", description: "Output format: text or json" },
   },
   run: async ({ args }) => {
     const format = parseOutputFormat(args.format);
-    await runCommandOutcome<ImpactData>(format, { command: "impact" }, (): CommandOutcome<ImpactData> => {
+    await runCommandOutcome<ImpactData>(format, { command: "impact" }, async (): Promise<CommandOutcome<ImpactData>> => {
       const result = computeImpact(typeof args.path === "string" ? args.path : ".", {
         ...(typeof args.files === "string" ? { files: args.files } : {}),
         ...(typeof args.since === "string" ? { since: args.since } : {}),
         ...(args.staged === true ? { staged: true } : {}),
       });
+      const data: ImpactData = impactData(result);
+      const findings = [...result.findings];
+      const lines = formatImpactText(result);
+      if (args.codeGraph === true) {
+        const config = loadConfig(result.root).config;
+        const enrichment = await enrichImpactWithCodeGraph(result, config);
+        data.codeGraph = enrichment.codeGraph;
+        findings.push(...enrichment.findings);
+        lines.push(...formatCodeGraphSection(enrichment.codeGraph));
+      }
       const envelope = createEnvelope({
-        data: impactData(result),
-        findings: result.findings,
+        data,
+        findings,
         meta: { command: "impact", root: result.root },
       });
-      return { envelope, print: () => formatImpactText(result).forEach((line) => console.log(line)) };
+      return { envelope, print: () => lines.forEach((line) => console.log(line)) };
     });
   },
 });

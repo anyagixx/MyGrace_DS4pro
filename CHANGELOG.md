@@ -9,6 +9,54 @@ release time (see `ROADMAP.md` §6, gate G10).
 
 Nothing yet.
 
+## [1.4.0] — 2026-11-24
+
+### Added
+
+- **Optional integrations layer (ADR-9).** Core gates stay deterministic, offline and
+  dependency-free; external tools are detected, version-pinned and read-only. New
+  `mygrace integrations status [--format json]` command, `integrations.*` block in
+  `mygrace.config.json`, `MYGRACE_INTEGRATIONS=off` kill switch, and findings
+  `INTEGRATION_UNAVAILABLE` / `INTEGRATION_UNSUPPORTED_VERSION` (info by default,
+  warning when `enabled: true`). Missing or broken tools never change a core
+  command's output or exit code.
+- **Octocode code-graph adapter (v1.4).** `mygrace impact --code-graph` adds real
+  file-level import edges and flags `CODE_EDGE_UNDECLARED` / `DECLARED_EDGE_UNUSED`
+  (info-only); `mygrace trace <ID> --code [--strict-contracts]` verifies `MODULE_MAP`
+  entries against real symbols and reports `CONTRACT_SYMBOL_MISSING`. The adapter
+  uses one short-lived read-only MCP session (`graphrag`, `view_signatures`), a
+  scrubbed child environment, timeouts and output caps; graph/structural mode needs
+  no index, embeddings or network.
+- **MCP surface:** `mygrace_integrations` tool (22 tools total) plus optional
+  `codeGraph` / `code` arguments on `mygrace_impact` / `mygrace_trace`.
+- **Doctor** reports an "Integrations (optional)" row (versions, source, ranges);
+  only actionable required-tool problems can affect the exit code.
+- **Dogfood modules** `M-INTEGRATIONS` and `M-CODE-GRAPH` with verification
+  files, indexes and 40+ new tests (recorded payloads + fake MCP server; no real
+  Octocode required for the test suite).
+- **Manual contract smoke:** `bun run test:integrations [--download]`
+  (pinned Octocode 0.29.2, graph mode) and `bun run release:check` evidence.
+
+### Changed
+
+- README, AGENTS.md, `mygrace-cli` skill and `docs/architecture.md` document the
+  21-command / 22-tool surface, the integrations contract and its limits.
+- CI gains the fixture/fake-MCP contract coverage by default; the real-binary
+  smoke job is intentionally **not** a CI gate in this release (see Limitations).
+
+### Limitations
+
+- The real-binary contract for Octocode 0.29.2 is **unverified on our dev host**:
+  the pinned Linux binary starts but did not answer MCP `initialize` (CLI
+  `graphrag` likewise), so the adapter's MCP contract is proven by recorded-payload
+  and fake-server tests, and `test:integrations` remains a manual smoke until the
+  upstream issue is understood.
+- Archify is detection-only in v1.4.0; the deterministic diagram exporter is
+  planned for v1.5.0 (`mygrace diagram`).
+- SkillCache-style capsules remain planned/experimental (v1.6.0); nothing is
+  claimed beyond the paper's cited numbers.
+
+
 ## [1.3.3] — 2026-11-24
 
 ### Fixed

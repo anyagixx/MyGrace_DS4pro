@@ -2,7 +2,7 @@
 <M-TRACE NAME="Traceability report" TYPE="CORE_LOGIC" STATUS="done">
   <purpose>Answer "why does this module exist, what proves it and what breaks if I change it?" in one bounded read, with stable gap codes (Wave 3.2).</purpose>
   <path>src/grace-trace.ts</path>
-  <depends>M-COMMON,M-CONFIG,M-ERRORS,M-PATHS,M-SHARD,M-TEST,M-XML</depends>
+  <depends>M-COMMON,M-CONFIG,M-ERRORS,M-PATHS,M-SHARD,M-TEST,M-XML,M-CODE-GRAPH</depends>
   <verification-ref>V-M-TRACE</verification-ref>
 
   <annotations>

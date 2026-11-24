@@ -1,0 +1,13 @@
+[
+  {
+    "path": "src/a/index.ts",
+    "signatures": [
+      { "name": "alpha", "kind": "function" },
+      { "name": "alpha", "kind": "function" },
+      { "name": "alphaHelper", "kind": "function" },
+      { "name": "alphaThing", "kind": "class" }
+    ]
+  },
+  { "path": "src/b/index.ts", "signatures": [{ "name": "beta", "kind": "function" }] },
+  { "path": "src/outside/unknown.ts", "signatures": [{ "name": "ghost", "kind": "function" }] }
+]

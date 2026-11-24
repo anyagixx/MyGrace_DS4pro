@@ -254,3 +254,56 @@ async function withFakeDshHomeAsync(fn: () => Promise<void>): Promise<void> {
 // printDoctorReport is exported for the CLI and MCP; keep a smoke assertion on
 // its shape so it cannot drift from the report type without a failing test.
 void printDoctorReport;
+
+// ─── Optional integrations row (ADR-9, v1.4) ───────────────────────────
+
+const INTEGRATIONS_DISABLED_BY_ENV = ["off", "0", "false", "disabled"].includes(
+  (process.env.MYGRACE_INTEGRATIONS ?? "").trim().toLowerCase()
+);
+const runtimeTest = test.skipIf(INTEGRATIONS_DISABLED_BY_ENV);
+
+describe("doctor integrations row", () => {
+  runtimeTest("optional tools that are missing keep the row green and never fail the check", () => {
+    const root = makeTempProject([], {});
+    try {
+      const report = buildDoctorReport(root);
+      expect(report.integrations.name).toContain("integrations");
+      expect(report.integrations.ok).toBe(true);
+      expect(report.integrations.detail).toContain("octocode: not found (optional)");
+      expect(report.integrationStatus?.killSwitch).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  runtimeTest("a required integration that is missing becomes a warning row", () => {
+    const root = makeTempProject([], {});
+    try {
+      writeFileSync(
+        join(root, "mygrace.config.json"),
+        JSON.stringify({ integrations: { octocode: { enabled: true, bin: null } } })
+      );
+      const report = buildDoctorReport(root);
+      expect(report.integrations.ok).toBe(false);
+      expect(report.integrations.warning).toBe(true);
+      expect(report.integrations.hint ?? "").toContain("Octocode");
+      expect(doctorFindings(report).some((item) => item.code === "INTEGRATION_UNAVAILABLE")).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("JSON mode includes the raw integration payload", async () => {
+    const root = makeTempProject([], {});
+    try {
+      const result = await capture(() => doctorCommand.run!({ args: { path: root, format: "json" } } as never));
+      const envelope = JSON.parse(result.stdout) as {
+        data: { integrations?: { detail: string }; integrationStatus?: { octocode?: { id: string } } };
+      };
+      expect(envelope.data.integrations?.detail).toContain("octocode");
+      expect(envelope.data.integrationStatus?.octocode?.id).toBe("octocode");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});

@@ -1,18 +1,21 @@
 # MyGRACE Roadmap — from audit findings to a professional agent engineering harness
 
-> Status: **v1.3.3 shipped 2026-11-24** — Waves 0–3 complete, Wave 4 ready (publication
-> pending owner credentials; the pipeline is wired and gated). Baseline: v1.0.1 as audited on 2026-11-22
+> Status: **v1.4.0 shipped 2026-11-24** (Wave 5 integration layer, Octocode adapter) — publication
+> pending owner credentials; the pipeline is wired and gated. Baseline: v1.0.1 as audited on 2026-11-22
 > (see `analysis/00-EXECUTIVE-ASSESSMENT.md` and appendices 01–04).
 > Target: a tool that AI coding agents can use with confidence on software of **any complexity** —
 > from a 3-module script to a 500-module monorepo, on repos you do not fully trust.
-> **v1.3.3 shipped evidence:** `bun run release:check` green (typecheck 0, **639 tests / 31 files**,
-> demo lint, doc-truth gates, pack-smoke), `mygrace ci --path . --tests` PASS on this repository
-> (**25 modules / 4 phases / 25 verifications / 32 declared test files / 25-25 module checks**),
-> full-lifecycle `npm publish --dry-run` accepted the artifact (63 files, 208 kB), and
-> `bun run publish:dry` proves the publish artifact (64 files, 25 shipped src files, 114 relative imports).
-> Surface: **20 CLI commands · 21 MCP tools · 15 skills**; DSH status panel reads live data. Scale proven at 150 modules / 3 shards (lint 44 ms);
-> Python/Go fixtures prove the multi-language path; `mygrace trace/impact/next/projects` and
-> `lint --changed` close the agent-advisory set; the DSH status panel now reads live data.
+> **v1.4.0 shipped evidence:** `bun run release:check` green (typecheck 0, **690 tests / 33 files**,
+> demo lint, doc-truth gates, pack-smoke), `mygrace ci --path .` PASS on this repository
+> (**27 modules / 4 phases / 27 verifications / 37 declared test files**), and
+> `bun run publish:dry` proves the publish artifact (66 files, 228 kB, 27 shipped src files,
+> 123 relative + 26 bare imports). G13 green: full suite passes with `MYGRACE_INTEGRATIONS=off`
+> (5 integration-specific tests auto-skip); G14: recorded-payload + fake-MCP contract tests run in
+> `bun test`, real-binary smoke (`bun run test:integrations`) is manual in this release.
+> Surface: **21 CLI commands · 22 MCP tools · 15 skills**; DSH status panel reads live data.
+> Scale proven at 150 modules / 3 shards (lint 44 ms); Python/Go fixtures prove the multi-language
+> path; `mygrace trace/impact/next/projects`, `lint --changed` and the optional Octocode
+> `impact --code-graph` / `trace --code` enrichments close the agent-advisory set.
 
 ## 1. Vision
 
@@ -104,6 +107,25 @@ Every command supports `--format json` with a stable envelope `{ ok, exitCode, d
 text mode stays human-oriented. MCP tools return compact text/JSON and never a raw stack trace.
 Documented MCP names include the DSH prefix (`mcp__mygrace__<tool>`).
 
+### ADR-9 — External tools are optional, read-only and pinned
+Optional capabilities (Octocode code graph in v1.4, Archify diagrams in v1.5) run as **external
+processes behind an explicit flag**, never as a required dependency of the core gates:
+
+- **allowlist only** — `octocode` (read-only MCP tools: `graphrag`, `view_signatures`,
+  `structural_search`) and `node <archify>/bin/archify.mjs` (`validate`/`deliver`); no shell, argv-only,
+  scrubbed env (`PATH`/`HOME`/`TMPDIR` + explicit vars), timeouts and output caps;
+- **read-only** — Octocode is never indexed or run in embedding/LLM modes; Archify only renders from
+  a MyGRACE-generated IR and only from `mygrace diagram` with an explicit output path;
+- **untrusted output** — external stdout/stderr is parsed as data; shape/version mismatches become
+  `INTEGRATION_INVALID_OUTPUT` notes, never crashes;
+- **pinned tested ranges** (`octocode >=0.29 <0.30`, `archify >=3.3 <4`) with `mygrace integrations
+  status` / `doctor` showing detected vs expected versions; unsupported versions degrade with a hint;
+- **degradation** — missing/broken/disabled tools produce info findings (`INTEGRATION_UNAVAILABLE`)
+  and the core command keeps its deterministic output and exit code; `MYGRACE_INTEGRATIONS=off` is the
+  reproducible-CI kill switch;
+- **no LLM, no embeddings, no network** inside adapters (release gate G13: core gates green with
+  integrations off; G14: adapter contract tests against the pinned versions).
+
 ## 5. Waves
 
 ### Wave 0 — Foundation (Lead) — ✅ **done (2026-11-22)**
@@ -155,12 +177,12 @@ Version reset to a truthful `1.1.0` → `2.0.0` line; CHANGELOG automation; npm 
 publish order (single package); DSH bundle release or removal; status panel real or removed;
 Windows CI matrix; docs site optional.
 
-### Wave 5 — Optional integrations (post-1.3) — *planned (v1.4.0 → v1.6.0)*
+### Wave 5 — Optional integrations (post-1.3) — *v1.4.0 ✅ shipped (2026-11-24); v1.5.0/v1.6.0 planned*
 
 Three companion integrations, each **optional, opt-in, read-only and degradable**; the core gates
 stay deterministic, offline and dependency-free (ADR-9). Full plan: `INTEGRATION-PLAN.md`.
 
-- **v1.4.0 — Octocode code-truth adapter** *(planned, 4–6 days)*: `mygrace integrations`,
+- **v1.4.0 — Octocode code-truth adapter** ✅ *(shipped 2026-11-24)*: `mygrace integrations`,
   `impact --code-graph`, `trace --code`. Graph-only MCP session (no embeddings/index, no network);
   new findings `CODE_EDGE_UNDECLARED` / `DECLARED_EDGE_UNUSED` / `CONTRACT_SYMBOL_MISSING`;
   core output contracts unchanged when the tool is absent (info `INTEGRATION_UNAVAILABLE`).
@@ -189,6 +211,8 @@ Release gates added: **G13** core gates pass with `MYGRACE_INTEGRATIONS=off` (no
 - [ ] G10 CHANGELOG + version consistent across files
 - [ ] G11 200-module synthetic: lint < 2 s
 - [ ] G12 language matrix: TS + Python fixtures
+- [ ] G13 core gates green with `MYGRACE_INTEGRATIONS=off` (no external tool installed; integration-specific tests auto-skip)
+- [ ] G14 integration contract tests: recorded-payload/fake-MCP suite in `bun test`; real-binary smoke (`bun run test:integrations --download`) is manual in v1.4.x until the pinned Octocode MCP startup issue is resolved
 
 ## 7. Risk register
 
