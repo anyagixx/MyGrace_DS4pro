@@ -1,0 +1,48 @@
+<!-- Module contract for M-DIAGRAM. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-DIAGRAM NAME="Diagram exporter" TYPE="INTEGRATION" STATUS="done">
+  <purpose>Export the docs graph as deterministic Archify architecture IR, a dependency-free Mermaid flowchart, or standalone HTML rendered by the optional Archify CLI (ADR-9), with a machine receipt and an IR staleness gate.</purpose>
+  <path>src/grace-diagram.ts</path>
+  <depends>M-COMMON,M-CONFIG,M-ERRORS,M-INTEGRATIONS,M-LINT,M-SHARD,M-TEST,M-XML</depends>
+  <verification-ref>V-M-DIAGRAM</verification-ref>
+
+  <annotations>
+    <export-DIAGRAM_FINDING_CODES PURPOSE="Stable codes: DIAGRAM_STALE, DIAGRAM_VALIDATION_FAILED, DIAGRAM_DELIVERY_FAILED (+ INTEGRATION_* reuse for a missing tool)." />
+    <export-buildArchitectureDiagram PURPOSE="docs graph → schema_version 1 architecture IR: components (modules), boundaries (module TYPE groups), primary-dependency backbone connections, cards, deterministic pos/size and graph sha256." />
+    <export-renderMermaid PURPOSE="Dependency-free flowchart over the FULL declared dependency graph (not only the backbone)." />
+    <export-diagramCommand PURPOSE="mygrace diagram [--kind architecture] [--format text|json|html|mermaid] [--out <html>] [--quality standard|showcase] [--check]; JSON/Mermaid need no Archify, HTML requires validated/delivered Archify." />
+  </annotations>
+
+  <CrossLink to="M-INTEGRATIONS" relation="Archify detection, pinned tested range (>=3.2 <4) and scrubbed child env come from ADR-9 registry" />
+  <CrossLink to="M-SHARD" relation="shard-transparent graph reads" />
+  <CrossLink to="M-LINT" relation="lint counts feed the diagram cards; diagram never runs in the lint/ci gate" />
+
+  <contract>
+    <purpose>Render the machine graph for humans without hand-authored diagrams: the docs graph is the single source of truth and the generated IR is committed and checked.</purpose>
+    <inputs>
+      <param name="root" type="string" description="Project root resolved from --path." />
+      <param name="config" type="MyGraceConfig" description="Provides integrations.archify outputDir/timeout." />
+      <param name="format" type="text|json|html|mermaid" description="Output mode; html additionally requires a detected Archify CLI." />
+      <param name="out" type="string?" description="Project-relative .html path; default <integrations.archify.outputDir>/architecture.html." />
+    </inputs>
+    <outputs>
+      <param name="ir" type="DiagramIr" description="Archify architecture IR in JSON mode; the committed artifact for --check." />
+      <param name="dependencies" type="DiagramConnection[]" description="Full declared module dependency list (JSON mode)." />
+      <param name="artifacts" type="object" description="IR, HTML and receipt paths for format=html." />
+    </outputs>
+    <errors>
+      <error code="DIAGRAM_STALE" description="--check: committed IR missing or differs from the current docs graph (exit 1)." />
+      <error code="DIAGRAM_VALIDATION_FAILED" description="Archify rejected the generated IR — no IR/HTML written (exit 1)." />
+      <error code="DIAGRAM_DELIVERY_FAILED" description="Archify accepted the IR but could not deliver HTML; the refreshed IR is kept (exit 1)." />
+      <error code="INTEGRATION_UNAVAILABLE" description="format=html without a usable Archify CLI (exit 1, JSON/Mermaid still work)." />
+      <error code="USAGE" description="Invalid kind/format/out (exit 2)." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>Archify validates "clean flow": a dense module graph cannot be auto-routed without edges crossing nodes, so HTML shows a legible primary-dependency backbone (one edge per module, dependency-depth layers). JSON and Mermaid always carry the full declared graph; the receipt records declared vs depicted counts.</note-1>
+    <note-2>Determinism: components/connections/boundaries/cards are sorted, layout is computed from labels and dependency depth, and the graph sha256 covers only graph inputs — repeated runs produce byte-identical IR.</note-2>
+    <note-3>ADR-9: allowlisted `archify validate/deliver` only, argv-only with scrubbed env, timeout from config, output parsed as untrusted JSON; nothing runs during lint/ci.</note-3>
+    <note-4>Tested against Archify CLI 3.2.0 (bundled in @tt-a1i/archify-dsh@1.1.0) and 3.3.x (1.2.0); full-binary smoke is manual (`bun run test:integrations:archify`).</note-4>
+    <note-5>v1.5.0 ships `--kind architecture`; workflow/tree kinds remain follow-ups.</note-5>
+  </notes>
+</M-DIAGRAM>

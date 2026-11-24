@@ -271,7 +271,7 @@ describe("loadConfig() integrations", () => {
       versionRange: ">=0.29 <0.30",
       timeoutMs: 10_000,
     });
-    expect(DEFAULT_CONFIG.integrations.archify.versionRange).toBe(">=3.3 <4");
+    expect(DEFAULT_CONFIG.integrations.archify.versionRange).toBe(">=3.2 <4");
     expect(DEFAULT_CONFIG.integrations.archify.outputDir).toBe(join("docs", "diagrams"));
     expect(DEFAULT_CONFIG.integrations.capsules).toEqual({
       enabled: false,

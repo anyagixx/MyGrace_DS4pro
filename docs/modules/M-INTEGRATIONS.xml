@@ -10,7 +10,7 @@
     <export-INTEGRATION_FINDING_CODES PURPOSE="Stable codes: INTEGRATION_UNAVAILABLE, INTEGRATION_UNSUPPORTED_VERSION, INTEGRATION_INVALID_OUTPUT, INTEGRATION_TIMEOUT." />
     <export-IntegrationsConfig PURPOSE="Validated integrations.* block (enabled/bin/versionRange/timeoutMs/outputDir/capsules) owned by M-CONFIG." />
     <export-parseVersionText PURPOSE="First semver in a --version banner, or null; no heuristics beyond the first x.y.z." />
-    <export-parseVersionRange PURPOSE="Space-separated comparator list (>=0.29 <0.30, >=3.3 <4) into typed comparators." />
+    <export-parseVersionRange PURPOSE="Space-separated comparator list (>=0.29 <0.30, >=3.2 <4) into typed comparators." />
     <export-versionSatisfies PURPOSE="Range membership; unknown versions never satisfy a range." />
     <export-findExecutableOnPath PURPOSE="PATH scan with POSIX exec-bit and Windows extension rules; no shell." />
     <export-integrationChildEnv PURPOSE="Scrubbed child environment (PATH/HOME/TMPDIR + explicit vars); no secrets, no update checks." />
@@ -42,7 +42,7 @@
 
   <notes>
     <note-1>ADR-9: allowlist only, argv-only, shell:false, timeouts, scrubbed env; external output is untrusted data and is never executed.</note-1>
-    <note-2>Pinned tested ranges: octocode >=0.29 &lt;0.30, archify >=3.3 &lt;4. Out-of-range tools are reported, never used.</note-2>
+    <note-2>Pinned tested ranges: octocode >=0.29 &lt;0.30, archify >=3.2 &lt;4. Out-of-range tools are reported, never used.</note-2>
     <note-3>MYGRACE_INTEGRATIONS=off disables every adapter for reproducible CI (release gate G13); the status command itself always exits 0.</note-3>
     <note-4>No network in detection: only a --version probe; the adapter's MCP session uses the same scrubbed env.</note-4>
   </notes>

@@ -2,6 +2,7 @@
   <!-- One line per module verification entry. CAP 80 lines (indexCaps.verification). Sorted high > medium > low. -->
   <V-M-CLI MODULE="M-CLI" PRIORITY="high" STATUS="done" />
   <V-M-CODE-GRAPH MODULE="M-CODE-GRAPH" PRIORITY="high" STATUS="done" />
+  <V-M-DIAGRAM MODULE="M-DIAGRAM" PRIORITY="high" STATUS="done" />
   <V-M-COMMON MODULE="M-COMMON" PRIORITY="high" STATUS="done" />
   <V-M-CONFIG MODULE="M-CONFIG" PRIORITY="high" STATUS="done" />
   <V-M-ERRORS MODULE="M-ERRORS" PRIORITY="high" STATUS="done" />

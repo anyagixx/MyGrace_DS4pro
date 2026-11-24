@@ -9,7 +9,7 @@
  * Command surface (see `mygrace <cmd> --help`):
  *   ci, lint, module {index,find,shard,show,list}, phase {index,show}, verification {index},
  *   file show, status, install-dsh, init-dsh, doctor, test, trust, verify, packet,
- *   focus, context-cost, trace, impact, next, projects, integrations
+ *   focus, context-cost, trace, impact, next, projects, integrations, diagram
  */
 
 // START_MODULE_CONTRACT
@@ -43,6 +43,7 @@ import { impactCommand } from "./grace-impact";
 import { nextCommand } from "./grace-next";
 import { projectsCommand } from "./grace-projects";
 import { integrationsCommand } from "./grace-integrations";
+import { diagramCommand } from "./grace-diagram";
 import { lintCommand } from "./grace-lint";
 import { moduleCommand, phaseCommand, verificationCommand } from "./grace-module";
 import { fileCommand } from "./grace-file";
@@ -119,6 +120,7 @@ export const main = defineCommand({
     next: guard(nextCommand),
     projects: guard(projectsCommand),
     integrations: guard(integrationsCommand),
+    diagram: guard(diagramCommand),
   },
 });
 

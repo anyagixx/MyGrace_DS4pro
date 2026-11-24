@@ -1,6 +1,6 @@
 {
   "name": "@osovv/mygrace-cli",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "MyGRACE — index-first engineering harness for AI coding agents: enforced contracts, lazy-loading knowledge graph, verification traceability, MCP/skills integration.",
   "license": "MIT",
   "homepage": "https://github.com/anyagixx/MyGrace_DS4pro#readme",
@@ -60,7 +60,7 @@
     "test:scoped": "bun test test/",
     "pack:smoke": "bun run ./scripts/pack-smoke.ts",
     "validate:marketplace": "bun run ./scripts/validate-marketplace.ts",
-    "ci": "bun run typecheck && bun run test:all && bun run lint:demo && bun run check && bun run validate:marketplace && bun run validate:docs && bun run pack:smoke",
+    "ci": "bun run typecheck && bun run test:all && bun run lint:demo && bun run check && bun run diagram:check && bun run validate:marketplace && bun run validate:docs && bun run pack:smoke",
     "release:check": "bun run ci",
     "prepublishOnly": "bun run release:check",
     "validate:docs": "bun run ./scripts/validate-docs.ts",
@@ -70,7 +70,10 @@
     "check": "bun run ./src/grace.ts ci --path .",
     "publish:dry": "bun run ./scripts/publish-dry-run.ts",
     "release:full": "bun run release:check && bun run publish:dry",
-    "test:integrations": "bun run ./scripts/integration-octocode-smoke.ts"
+    "test:integrations": "bun run ./scripts/integration-octocode-smoke.ts",
+    "diagram": "bun run ./src/grace.ts diagram",
+    "diagram:check": "bun run ./src/grace.ts diagram --check",
+    "test:integrations:archify": "bun run ./scripts/integration-archify-smoke.ts"
   },
   "bin": {
     "mygrace": "src/grace.ts"

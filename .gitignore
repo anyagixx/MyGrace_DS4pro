@@ -11,6 +11,11 @@ node_modules/
 .pack-smoke/
 .release-assets/
 .integration-tools/
+
+# generated diagram artifacts (IR is committed; HTML/receipts are local)
+docs/diagrams/*.html
+docs/diagrams/*.receipt.json
+docs/diagrams/*.delivery.json
 .mygrace/
 dist/
 coverage/

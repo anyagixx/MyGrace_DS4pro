@@ -9,6 +9,49 @@ release time (see `ROADMAP.md` §6, gate G10).
 
 Nothing yet.
 
+## [1.5.0] — 2026-11-24
+
+### Added
+
+- **Archify diagram exporter (`mygrace diagram`).** The docs graph renders itself:
+  deterministic architecture IR (`--format json`), a dependency-free Mermaid
+  flowchart (`--format mermaid`, full declared graph), and standalone HTML
+  (`--format html`) through the optional Archify CLI (`validate` → `deliver`),
+  with a machine receipt (graph sha256, declared/depicted counts, Archify
+  validation) and a `--check` staleness gate for the committed IR.
+- **`mygrace_diagram` MCP tool** (23 tools total) and diagram counts in README,
+  AGENTS, skills and architecture docs; new dogfood modules `M-DIAGRAM` with
+  `V-M-DIAGRAM` (13 tests, fake Archify CLI; no real Archify needed for tests).
+- **Diagram artifacts policy:** the deterministic IR is committed at
+  `docs/diagrams/architecture.json` and guarded by `bun run diagram:check`
+  (also part of `release:check`); HTML, Archify delivery receipts and our
+  receipt stay local/gitignored.
+- **Archify integration smoke** (`bun run test:integrations:archify`) and
+  `integrations.archify.versionRange` re-pinned to `>=3.2 <4` after validating
+  the IR against Archify CLI 3.2.0 (bundled in `@tt-a1i/archify-dsh@1.1.0`) and
+  3.3.x (1.2.0).
+- **Layout honesty:** Archify's clean-flow validator cannot route a dense
+  27-module graph without edge/node collisions, so the HTML shows a legible
+  primary-dependency backbone (one edge per module, placed by dependency depth);
+  JSON/Mermaid output and the diagram cards always carry the full declared
+  dependency list (113 edges on this repository: 26 drawn, 113 available).
+
+### Changed
+
+- `mygrace ci` (and therefore `release:check`) now verifies that the committed
+  diagram IR matches the current docs graph.
+- README/AGENTS/skills/architecture document 22 CLI commands and 23 MCP tools.
+
+### Limitations
+
+- Diagram kinds `workflow` and `tree` remain follow-ups (v1.5.x); v1.5.0 ships
+  `--kind architecture`.
+- The Octocode 0.29.2 MCP-startup limitation from v1.4.0 is unchanged; the
+  Octocode adapter contract stays covered by recorded-payload/fake-server tests.
+- Real-binary diagram smoke is manual (`test:integrations:archify`) because it
+  needs an Archify installation; the fake-CLI contract runs in `bun test`.
+
+
 ## [1.4.0] — 2026-11-24
 
 ### Added

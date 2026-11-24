@@ -33,7 +33,7 @@
   </contract>
 
   <notes>
-    <note-1>The server is a transport adapter, not a second implementation: every tool maps to a CLI command (22 tools including mygrace_ci, mygrace_trace, mygrace_impact, mygrace_next, mygrace_projects and mygrace_integrations).</note-1>
+    <note-1>The server is a transport adapter, not a second implementation: every tool maps to a CLI command (23 tools including mygrace_ci, mygrace_trace, mygrace_impact, mygrace_next, mygrace_projects, mygrace_integrations and mygrace_diagram).</note-1>
     <note-2>The launcher works from a plain checkout without a global mygrace binary or PATH entry.</note-2>
     <note-3>Failure details are returned with isError instead of a stack trace.</note-3>
   </notes>

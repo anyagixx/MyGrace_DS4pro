@@ -1,6 +1,6 @@
 # MyGRACE Integration Plan — Octocode · Archify · SkillCache-style capsules
 
-Status: **proposed** (2026-11-24) · Owner: Lead · Target releases: **v1.4.0**, **v1.5.0**, **v1.6.0**
+Status: **v1.4.0 ✅ shipped (integrations layer + Octocode adapter), v1.5.0 ✅ shipped (Archify architecture exporter); v1.6.0 planned** · Owner: Lead
 Companion documents: `ROADMAP.md` (waves), `docs/architecture.md` (invariants), `SECURITY.md`.
 
 ## 0. Executive summary
@@ -355,7 +355,7 @@ Octocode 0.29.2 (x86_64-unknown-linux-musl asset, sha256 from the release page)
   read-only tools: graphrag{overview,get-relationships,find-path}, view_signatures, structural_search
   never used: index, search (embeddings), grep --rewrite, review/diff/explain (LLM)
 
-Archify 3.3.0 (CLI: node archify/bin/archify.mjs; Node >=18; our host Node 26)
+Archify 3.2.0 / 3.3.x (CLI: node archify/bin/archify.mjs; Node >=18; tested with archify-dsh 1.1.0 and 1.2.0)
   commands used: validate --json, deliver --json
   env: ARCHIFY_UPDATE_CHECK_DISABLED=1
   schema: architecture.schema.json (pinned fixture copy, Apache-2.0 notice)

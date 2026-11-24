@@ -136,7 +136,7 @@ export const DEFAULT_CONFIG: MyGraceConfig = {
     archify: {
       enabled: "auto",
       bin: null,
-      versionRange: ">=3.3 <4",
+      versionRange: ">=3.2 <4",
       timeoutMs: 30_000,
       outputDir: join("docs", "diagrams"),
     },

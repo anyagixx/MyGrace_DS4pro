@@ -1,0 +1,28 @@
+<!-- Canonical verification entry. <module-checks> is read by mygrace test/verify; commands are trust-gated (run `mygrace trust` after review). -->
+<V-M-DIAGRAM MODULE="M-DIAGRAM" PRIORITY="high" STATUS="done">
+  <test-files>
+    <file>test/grace-diagram.test.ts</file>
+  </test-files>
+
+  <module-checks>
+    <check-1>bun test test/grace-diagram.test.ts</check-1>
+  </module-checks>
+
+  <scenarios>
+    <scenario-1 kind="success">The IR is deterministic: two builds from the same graph produce identical text and graph sha256; components are sorted modules, boundaries are TYPE groups, and cards report declared vs depicted dependencies and verification coverage.</scenario-1>
+    <scenario-2 kind="success">`--format json` returns the IR plus the full dependency list; `--format mermaid` renders every declared edge; both work with Archify absent (exit 0).</scenario-2>
+    <scenario-3 kind="success">`--format html` with a fake Archify CLI runs validate then deliver, writes IR + HTML + receipt (declared vs depicted counts, validation=passed) and exits 0; the .mjs entry runs through the Node runner when node is available.</scenario-3>
+    <scenario-4 kind="failure">Missing Archify on format=html, schema rejection, delivery failure and non-JSON output all exit 1 with the documented code/text; a rejected IR writes no IR/HTML, a delivery failure keeps the refreshed IR. `&lt;out&gt;` outside the root, non-HTML out, invalid format and unsupported kind exit 2.</scenario-4>
+    <scenario-5 kind="success">`--check` exits 1 with DIAGRAM_STALE for a missing or tampered committed IR and exits 0 when the IR matches the current graph.</scenario-5>
+  </scenarios>
+
+  <required-log-markers>
+    <marker-1>No runtime log markers; behavior is asserted through CLI text/exit codes, artifacts and receipts.</marker-1>
+  </required-log-markers>
+
+  <notes>
+    <note-1>Covered by test/grace-diagram.test.ts (13 tests: deterministic IR, mapping, backbone, Mermaid, fake-Archify validate/deliver, degradation, --check, usage errors).</note-1>
+    <note-2>Real-binary evidence (manual): `mygrace diagram --format html` validated and delivered against Archify 3.2.0 and 3.3.x CLIs; `--check` passed on the committed IR.</note-2>
+    <note-3>No Archify installed → JSON/Mermaid unaffected; only explicit format=html reports INTEGRATION_UNAVAILABLE (exit 1).</note-3>
+  </notes>
+</V-M-DIAGRAM>

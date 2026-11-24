@@ -71,7 +71,7 @@
     "archify": {
       "enabled": "auto",
       "bin": null,
-      "versionRange": ">=3.3 <4",
+      "versionRange": ">=3.2 <4",
       "timeoutMs": 30000,
       "outputDir": "docs/diagrams"
     },

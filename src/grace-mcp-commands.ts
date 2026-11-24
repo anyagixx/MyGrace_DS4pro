@@ -61,7 +61,8 @@ export type ToolName =
   | "mygrace_impact"
   | "mygrace_next"
   | "mygrace_projects"
-  | "mygrace_integrations";
+  | "mygrace_integrations"
+  | "mygrace_diagram";
 
 export type ToolArgs = Record<string, unknown>;
 
@@ -677,6 +678,37 @@ export const TOOLS: readonly ToolDefinition[] = [
     buildArgs(args, root) {
       const cmd = ["integrations", "status", "--path", root];
       if (wantsJson(args)) cmd.push("--format", "json");
+      return cmd;
+    },
+  },
+  {
+    name: "mygrace_diagram",
+    description:
+      "Export the docs graph as deterministic Archify architecture IR: JSON IR (all declared dependencies), Mermaid flowchart, " +
+      "or standalone HTML rendered by the optional Archify CLI (writes IR/HTML/receipt only when format=html). " +
+      "`check:true` verifies the committed IR is current without writing. " +
+      ROOT_NOTE,
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
+        kind: { type: "string", enum: ["architecture"], default: "architecture", description: "Diagram kind (v1.5: architecture)." },
+        format: { type: "string", enum: ["json", "html", "mermaid"], default: "json", description: "Output format." },
+        out: { type: "string", description: "Project-relative HTML output path (format=html; default integrations.archify.outputDir/architecture.html).", minLength: 1 },
+        quality: { type: "string", enum: ["standard", "showcase"], default: "standard", description: "Archify quality profile." },
+        check: { type: "boolean", default: false, description: "Only verify that the committed IR matches the current docs graph." },
+      },
+    },
+    rootArg: "path",
+    buildArgs(args, root) {
+      const kind = stringArg(args, "kind") ?? "architecture";
+      const format = stringArg(args, "format") ?? "json";
+      const cmd = ["diagram", "--path", root, "--kind", kind, "--format", format];
+      const out = stringArg(args, "out");
+      if (out !== undefined) cmd.push("--out", out);
+      const quality = stringArg(args, "quality");
+      if (quality !== undefined && quality !== "standard") cmd.push("--quality", quality);
+      if (booleanFlag(args, "check")) cmd.push("--check");
       return cmd;
     },
   },

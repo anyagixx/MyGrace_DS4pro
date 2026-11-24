@@ -1,0 +1,660 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "MyGRACE — MyGRACE",
+    "subtitle": "28 modules · 122 dependencies · 28 verifications",
+    "output": "architecture.html",
+    "quality_profile": "standard"
+  },
+  "components": [
+    {
+      "id": "M-CI",
+      "type": "backend",
+      "label": "CI quality gate",
+      "sublabel": "ORCHESTRATOR · done",
+      "tag": "V-M-CI",
+      "pos": [
+        2085,
+        180
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-CLI",
+      "type": "backend",
+      "label": "CLI entry point",
+      "sublabel": "ENTRY_POINT · done",
+      "tag": "V-M-CLI",
+      "pos": [
+        2855,
+        180
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-CODE-GRAPH",
+      "type": "external",
+      "label": "Octocode code-graph adapter",
+      "sublabel": "INTEGRATION · done",
+      "tag": "V-M-CODE-GRAPH",
+      "pos": [
+        2085,
+        332
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-COMMON",
+      "type": "backend",
+      "label": "Filesystem and index helpers",
+      "sublabel": "CORE_LOGIC · done",
+      "tag": "V-M-COMMON",
+      "pos": [
+        930,
+        180
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-CONFIG",
+      "type": "backend",
+      "label": "Project configuration",
+      "sublabel": "FOUNDATION · done",
+      "tag": "V-M-CONFIG",
+      "pos": [
+        545,
+        180
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-CONTEXT",
+      "type": "backend",
+      "label": "Context cost model",
+      "sublabel": "UTILITY · done",
+      "tag": "V-M-CONTEXT",
+      "pos": [
+        1315,
+        180
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-DIAGRAM",
+      "type": "external",
+      "label": "Diagram exporter",
+      "sublabel": "INTEGRATION · done",
+      "tag": "V-M-DIAGRAM",
+      "pos": [
+        2085,
+        484
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-DOCTOR",
+      "type": "backend",
+      "label": "Environment doctor",
+      "sublabel": "UTILITY · done",
+      "tag": "V-M-DOCTOR",
+      "pos": [
+        2085,
+        636
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-ERRORS",
+      "type": "backend",
+      "label": "Error and output contract",
+      "sublabel": "FOUNDATION · done",
+      "tag": "V-M-ERRORS",
+      "pos": [
+        160,
+        180
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-FILE",
+      "type": "backend",
+      "label": "File-local markup view",
+      "sublabel": "CORE_LOGIC · done",
+      "tag": "V-M-FILE",
+      "pos": [
+        1700,
+        180
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-IMPACT",
+      "type": "backend",
+      "label": "Change impact analysis",
+      "sublabel": "CORE_LOGIC · done",
+      "tag": "V-M-IMPACT",
+      "pos": [
+        2470,
+        180
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-INIT",
+      "type": "backend",
+      "label": "Project bootstrap",
+      "sublabel": "UTILITY · done",
+      "tag": "V-M-INIT",
+      "pos": [
+        930,
+        332
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-INSTALL",
+      "type": "external",
+      "label": "DeepSeek Harness installer",
+      "sublabel": "INTEGRATION · done",
+      "tag": "V-M-INSTALL",
+      "pos": [
+        545,
+        332
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-INTEGRATIONS",
+      "type": "external",
+      "label": "Optional integrations registry",
+      "sublabel": "INTEGRATION · done",
+      "tag": "V-M-INTEGRATIONS",
+      "pos": [
+        1700,
+        332
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-LINT",
+      "type": "backend",
+      "label": "Enforced invariants (lint)",
+      "sublabel": "CORE_LOGIC · done",
+      "tag": "V-M-LINT",
+      "pos": [
+        1315,
+        332
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-MCP",
+      "type": "external",
+      "label": "MCP stdio server",
+      "sublabel": "INTEGRATION · done",
+      "tag": "V-M-MCP",
+      "pos": [
+        930,
+        484
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-MCP-COMMANDS",
+      "type": "external",
+      "label": "MCP tool catalog",
+      "sublabel": "INTEGRATION · done",
+      "tag": "V-M-MCP-COMMANDS",
+      "pos": [
+        545,
+        484
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-MODULE",
+      "type": "backend",
+      "label": "Index navigation commands",
+      "sublabel": "CORE_LOGIC · done",
+      "tag": "V-M-MODULE",
+      "pos": [
+        1315,
+        484
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-NEXT",
+      "type": "backend",
+      "label": "Next-step advisor",
+      "sublabel": "ORCHESTRATOR · done",
+      "tag": "V-M-NEXT",
+      "pos": [
+        2470,
+        332
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-PACKET",
+      "type": "backend",
+      "label": "Worker packet and focus",
+      "sublabel": "UTILITY · done",
+      "tag": "V-M-PACKET",
+      "pos": [
+        1700,
+        484
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-PATHS",
+      "type": "backend",
+      "label": "Ids and path safety",
+      "sublabel": "FOUNDATION · done",
+      "tag": "V-M-PATHS",
+      "pos": [
+        545,
+        636
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-PROJECTS",
+      "type": "backend",
+      "label": "Monorepo project discovery",
+      "sublabel": "UTILITY · done",
+      "tag": "V-M-PROJECTS",
+      "pos": [
+        2470,
+        484
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-SHARD",
+      "type": "backend",
+      "label": "Sharded indexes",
+      "sublabel": "CORE_LOGIC · done",
+      "tag": "V-M-SHARD",
+      "pos": [
+        930,
+        636
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-STATUS",
+      "type": "backend",
+      "label": "Project health status",
+      "sublabel": "UTILITY · done",
+      "tag": "V-M-STATUS",
+      "pos": [
+        1700,
+        636
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-TEST",
+      "type": "backend",
+      "label": "Trusted command execution",
+      "sublabel": "CORE_LOGIC · done",
+      "tag": "V-M-TEST",
+      "pos": [
+        1315,
+        636
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-TRACE",
+      "type": "backend",
+      "label": "Traceability report",
+      "sublabel": "CORE_LOGIC · done",
+      "tag": "V-M-TRACE",
+      "pos": [
+        2470,
+        636
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-VERIFY",
+      "type": "backend",
+      "label": "Verification digest loop",
+      "sublabel": "CORE_LOGIC · done",
+      "tag": "V-M-VERIFY",
+      "pos": [
+        1700,
+        788
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-XML",
+      "type": "backend",
+      "label": "Strict XML layer",
+      "sublabel": "FOUNDATION · done",
+      "tag": "V-M-XML",
+      "pos": [
+        545,
+        788
+      ],
+      "size": [
+        265,
+        72
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Core logic",
+      "wraps": [
+        "M-COMMON",
+        "M-FILE",
+        "M-IMPACT",
+        "M-LINT",
+        "M-MODULE",
+        "M-SHARD",
+        "M-TEST",
+        "M-TRACE",
+        "M-VERIFY"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Entry point",
+      "wraps": [
+        "M-CLI"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Foundation",
+      "wraps": [
+        "M-CONFIG",
+        "M-ERRORS",
+        "M-PATHS",
+        "M-XML"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Integrations",
+      "wraps": [
+        "M-CODE-GRAPH",
+        "M-DIAGRAM",
+        "M-INSTALL",
+        "M-INTEGRATIONS",
+        "M-MCP",
+        "M-MCP-COMMANDS"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Orchestration",
+      "wraps": [
+        "M-CI",
+        "M-NEXT"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Utilities",
+      "wraps": [
+        "M-CONTEXT",
+        "M-DOCTOR",
+        "M-INIT",
+        "M-PACKET",
+        "M-PROJECTS",
+        "M-STATUS"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "M-CI-to-M-STATUS",
+      "from": "M-CI",
+      "to": "M-STATUS"
+    },
+    {
+      "id": "M-CLI-to-M-IMPACT",
+      "from": "M-CLI",
+      "to": "M-IMPACT"
+    },
+    {
+      "id": "M-CODE-GRAPH-to-M-INTEGRATIONS",
+      "from": "M-CODE-GRAPH",
+      "to": "M-INTEGRATIONS"
+    },
+    {
+      "id": "M-COMMON-to-M-XML",
+      "from": "M-COMMON",
+      "to": "M-XML"
+    },
+    {
+      "id": "M-CONFIG-to-M-ERRORS",
+      "from": "M-CONFIG",
+      "to": "M-ERRORS"
+    },
+    {
+      "id": "M-CONTEXT-to-M-COMMON",
+      "from": "M-CONTEXT",
+      "to": "M-COMMON"
+    },
+    {
+      "id": "M-DIAGRAM-to-M-INTEGRATIONS",
+      "from": "M-DIAGRAM",
+      "to": "M-INTEGRATIONS"
+    },
+    {
+      "id": "M-DOCTOR-to-M-INTEGRATIONS",
+      "from": "M-DOCTOR",
+      "to": "M-INTEGRATIONS"
+    },
+    {
+      "id": "M-FILE-to-M-LINT",
+      "from": "M-FILE",
+      "to": "M-LINT"
+    },
+    {
+      "id": "M-IMPACT-to-M-CODE-GRAPH",
+      "from": "M-IMPACT",
+      "to": "M-CODE-GRAPH"
+    },
+    {
+      "id": "M-INIT-to-M-CONFIG",
+      "from": "M-INIT",
+      "to": "M-CONFIG"
+    },
+    {
+      "id": "M-INSTALL-to-M-ERRORS",
+      "from": "M-INSTALL",
+      "to": "M-ERRORS"
+    },
+    {
+      "id": "M-INTEGRATIONS-to-M-TEST",
+      "from": "M-INTEGRATIONS",
+      "to": "M-TEST"
+    },
+    {
+      "id": "M-LINT-to-M-COMMON",
+      "from": "M-LINT",
+      "to": "M-COMMON"
+    },
+    {
+      "id": "M-MCP-to-M-MCP-COMMANDS",
+      "from": "M-MCP",
+      "to": "M-MCP-COMMANDS"
+    },
+    {
+      "id": "M-MCP-COMMANDS-to-M-ERRORS",
+      "from": "M-MCP-COMMANDS",
+      "to": "M-ERRORS"
+    },
+    {
+      "id": "M-MODULE-to-M-COMMON",
+      "from": "M-MODULE",
+      "to": "M-COMMON"
+    },
+    {
+      "id": "M-NEXT-to-M-CI",
+      "from": "M-NEXT",
+      "to": "M-CI"
+    },
+    {
+      "id": "M-PACKET-to-M-TEST",
+      "from": "M-PACKET",
+      "to": "M-TEST"
+    },
+    {
+      "id": "M-PATHS-to-M-ERRORS",
+      "from": "M-PATHS",
+      "to": "M-ERRORS"
+    },
+    {
+      "id": "M-PROJECTS-to-M-CI",
+      "from": "M-PROJECTS",
+      "to": "M-CI"
+    },
+    {
+      "id": "M-SHARD-to-M-PATHS",
+      "from": "M-SHARD",
+      "to": "M-PATHS"
+    },
+    {
+      "id": "M-STATUS-to-M-LINT",
+      "from": "M-STATUS",
+      "to": "M-LINT"
+    },
+    {
+      "id": "M-TEST-to-M-COMMON",
+      "from": "M-TEST",
+      "to": "M-COMMON"
+    },
+    {
+      "id": "M-TRACE-to-M-CODE-GRAPH",
+      "from": "M-TRACE",
+      "to": "M-CODE-GRAPH"
+    },
+    {
+      "id": "M-VERIFY-to-M-TEST",
+      "from": "M-VERIFY",
+      "to": "M-TEST"
+    },
+    {
+      "id": "M-XML-to-M-ERRORS",
+      "from": "M-XML",
+      "to": "M-ERRORS"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Graph",
+      "items": [
+        "28 modules · 122 declared dependencies",
+        "27 primary edges drawn · 4 phases · 28 verifications"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Verification",
+      "items": [
+        "28/28 modules reference a verification file",
+        "38 declared test files"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Gates",
+      "items": [
+        "lint: 0 errors, 0 warnings"
+      ]
+    }
+  ]
+}

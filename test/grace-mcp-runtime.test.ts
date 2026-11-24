@@ -58,7 +58,7 @@ const P = resolve("/p");
 
 /**
  * The expected MCP surface: the 17 v1.2 tools plus trace/impact/next/projects
- * (W3.4/3.5 = 21, W5.1 = 22). Renaming one is a breaking change; docs updates are owned by
+ * (W3.4/3.5 = 21, W5.1 = 22, W5.2 = 23). Renaming one is a breaking change; docs updates are owned by
  * the docs owner.
  */
 const DOCUMENTED_TOOL_NAMES = [
@@ -84,6 +84,7 @@ const DOCUMENTED_TOOL_NAMES = [
   "mygrace_next",
   "mygrace_projects",
   "mygrace_integrations",
+  "mygrace_diagram",
 ];
 
 /** Minimal valid arguments per tool, used to prove no `undefined` reaches argv. */
@@ -110,6 +111,7 @@ const MINIMAL_CALL_ARGS: Record<string, Record<string, unknown>> = {
   mygrace_next: { path: DEMO },
   mygrace_projects: { path: DEMO },
   mygrace_integrations: { path: DEMO },
+  mygrace_diagram: { path: DEMO },
 };
 
 /**
@@ -153,7 +155,7 @@ function textOf(result: { content?: Array<{ type: string; text?: string }> }): s
 // ─── Catalog invariants (no server process needed) ─────────────────────
 
 describe("MCP catalog", () => {
-  test("exposes exactly the 22 expected tool names, in a stable order", () => {
+  test("exposes exactly the 23 expected tool names, in a stable order", () => {
     expect(TOOL_NAMES.join(",")).toBe(DOCUMENTED_TOOL_NAMES.join(","));
     expect(new Set(TOOL_NAMES).size).toBe(DOCUMENTED_TOOL_NAMES.length);
     expect(TOOLS.length).toBe(DOCUMENTED_TOOL_NAMES.length);
@@ -383,6 +385,29 @@ describe("MCP argument validation", () => {
       "--format",
       "json",
     ]);
+    expect(map("mygrace_diagram", { path: P })).toEqual([
+      "diagram",
+      "--path",
+      P,
+      "--kind",
+      "architecture",
+      "--format",
+      "json",
+    ]);
+    expect(map("mygrace_diagram", { path: P, format: "html", out: "docs/diagrams/architecture.html", quality: "showcase", check: true })).toEqual([
+      "diagram",
+      "--path",
+      P,
+      "--kind",
+      "architecture",
+      "--format",
+      "html",
+      "--out",
+      "docs/diagrams/architecture.html",
+      "--quality",
+      "showcase",
+      "--check",
+    ]);
     expect(map("mygrace_impact", { path: P, files: "src/a.ts,src/b.ts" })).toEqual([
       "impact",
       "--path",
@@ -453,7 +478,7 @@ describe("MCP server over stdio with an empty PATH (C-3 regression)", () => {
     expect(client.getServerCapabilities()?.tools).toBeDefined();
   });
 
-  test("tools/list returns the exact 22 expected tools with non-empty descriptions", async () => {
+  test("tools/list returns the exact 23 expected tools with non-empty descriptions", async () => {
     const { tools } = await client.listTools();
     expect(tools.map((tool) => tool.name)).toEqual(DOCUMENTED_TOOL_NAMES);
     for (const tool of tools) {

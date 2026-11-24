@@ -5,11 +5,11 @@ line-capped XML indexes, one contract file per module, and verification files
 that connect intent → modules → tests. Agents read the index first and only the
 entity they need, instead of re-reading the tree.
 
-It is a CLI (`mygrace`, 21 commands) plus an agent methodology (15 skills) and
-an MCP server (22 tools). It does not generate code, call a model, or send telemetry — it
+It is a CLI (`mygrace`, 22 commands) plus an agent methodology (15 skills) and
+an MCP server (23 tools). It does not generate code, call a model, or send telemetry — it
 enforces traceability and context discipline for the agent you already use.
 
-Current version: `1.4.0`
+Current version: `1.5.0`
 
 > The package is **not published to npm yet**: install from a source checkout or
 > a packed tarball (see [Install](#install)). The v2 hardening waves are tracked
@@ -210,13 +210,14 @@ integration it reports the missing DSH pieces and exits 1, with hints for each.
 | `mygrace projects` | Monorepo discovery: per-project counts, lint and coverage under a tree (`--depth`, `--strict`) |
 | `mygrace doctor` | Environment and DSH-integration health checks (incl. optional integrations) |
 | `mygrace integrations` | Detect optional external tools (`status`), their versions and tested ranges; advisory, never fails the core gates |
+| `mygrace diagram` | Export the docs graph as deterministic Archify architecture IR (`--format json`), Mermaid (`--format mermaid`) or standalone HTML (`--format html`, needs optional Archify); `--check` guards the committed IR |
 | `mygrace init-dsh` | Bootstrap `docs/`, `AGENTS.md`, `mygrace.config.json` |
 | `mygrace install-dsh` | Wire skills + a PATH-free MCP row into DeepSeek Harness |
 
 Every command accepts `--help`; `--format json` commands return the envelope
 `{ ok, exitCode, data, findings[], meta }`.
 
-## MCP tools (22)
+## MCP tools (23)
 
 The stdio server is a transport adapter over the CLI: every tool maps to a
 command, arguments are schema-validated, and CLI failures keep their output in
@@ -229,7 +230,7 @@ quality gate is `mcp__mygrace__ci`.
 `mygrace_focus` · `mygrace_context_cost` · `mygrace_verify` ·
 `mygrace_list_verifications` · `mygrace_lint` · `mygrace_show_file` ·
 `mygrace_status` · `mygrace_trace` · `mygrace_impact` · `mygrace_next` ·
-`mygrace_projects` · `mygrace_integrations`
+`mygrace_projects` · `mygrace_integrations` · `mygrace_diagram`
 
 ### Optional integrations (ADR-9)
 
@@ -239,14 +240,14 @@ can add depth when they are installed — never required, always opt-in:
 | Tool | Used for | Commands | Tested range |
 |---|---|---|---|
 | [Octocode](https://github.com/Muvon/octocode) | real import edges + MODULE_MAP↔symbol checks (read-only MCP graph; no index, no LLM) | `impact --code-graph`, `trace --code`, `integrations status` | `>=0.29 <0.30` |
-| [Archify](https://github.com/tt-a1i/archify) | deterministic diagram rendering from the docs graph (planned v1.5) | `integrations status` (detection only) | `>=3.3 <4` |
+| [Archify](https://github.com/tt-a1i/archify) | deterministic diagram rendering from the docs graph | `mygrace diagram`, `--check` | `>=3.2 <4` |
 
 Unavailable, disabled or unsupported tools produce `INTEGRATION_UNAVAILABLE` /
 `INTEGRATION_UNSUPPORTED_VERSION` info/warning findings and the command keeps its
 normal output and exit code. `MYGRACE_INTEGRATIONS=off` disables every adapter for
 reproducible CI. Versions are pinned and checked; nothing is downloaded or sent.
 Known limitation: the Octocode 0.29.2 MCP server did not answer `initialize` on
-our Linux dev host during the v1.4.0 smoke run, so the adapter's MCP contract is
+our Linux dev host during the v1.4.x smoke runs, so the Octocode adapter's MCP contract is
 proven by recorded-payload/fake-server tests and the real-binary smoke
 (`bun run test:integrations --download`) is manual until that upstream issue is
 understood.
@@ -303,6 +304,31 @@ warnings. On this repository: MyGRACE clean, DemoStore clean, TestProject clean.
 scopes a run to git changes (or explicit files without git): index changes run
 the full index checks, entity changes check that entity, source changes check
 markup only. It prints the scope line and adds `data.scope` to the JSON envelope.
+
+## Diagrams (optional)
+
+`mygrace diagram` renders the machine graph for humans; nothing is hand-drawn.
+
+```bash
+mygrace diagram                              # text summary
+mygrace diagram --format json                # IR + full dependency list (works offline)
+mygrace diagram --format mermaid             # dependency-free flowchart (full graph)
+mygrace diagram --format html                # Archify validate + deliver (needs Archify)
+mygrace diagram --check                      # fail when the committed IR is stale
+```
+
+Four things travel together: the committed **IR** (`docs/diagrams/architecture.json`,
+deterministic and `--check`-guarded), the generated **HTML** (standalone, offline),
+our **receipt** (`architecture.receipt.json`: graph sha256, declared/depicted counts,
+Archify validation) and Archify's own delivery receipt. HTML/receipts are local
+(both gitignored); only the IR is committed.
+
+Archify's layout validator requires a clean flow, so the HTML shows a legible
+**primary-dependency backbone** (one edge per module, placed by dependency depth);
+the full declared dependency list is always available in JSON/Mermaid output and
+counted in the diagram cards. Tested against Archify CLI 3.2.0 and 3.3.x; without
+Archify, JSON/Mermaid output keeps working and `--format html` fails with
+`INTEGRATION_UNAVAILABLE`.
 
 ## Skills (15, shared from `skills/mygrace/`)
 
@@ -392,7 +418,7 @@ mygrace module shard [--group-by type|status|prefix] [--apply] [--path <root>] [
 
 Measured on the synthetic large-project fixture (150 modules in 3 shards):
 `lint` ≈44 ms in-process, CLI `status` ≈137 ms, `module list` 150/150,
-`runCiGate` 0 findings. This repository stays flat (27 modules) and keeps its
+`runCiGate` 0 findings. This repository stays flat (28 modules) and keeps its
 `0 errors / 0 warnings` result, so sharding is opt-in, not required.
 
 ## Multi-language projects
@@ -489,7 +515,7 @@ bun run release:check           # release:check == ci (what a tag must pass befo
 bun run ci                      # all of the above (release gate)
 
 # repo self-check (dogfooding): the project's own docs/ graph
-# (27 modules, 4 phases, 27 verifications, 37 declared test files; PASS)
+# (28 modules, 4 phases, 28 verifications, 38 declared test files; PASS)
 bun run src/grace.ts ci --path .
 ```
 
