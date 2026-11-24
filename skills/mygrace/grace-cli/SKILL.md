@@ -1,11 +1,11 @@
 ---
 name: mygrace-cli
-description: "Reference for the mygrace CLI (22 commands) and MCP server (23 tools): quality gate, trust, index reads, verification and JSON envelopes. Use when you need the exact command/flag/tool for a MyGRACE operation."
+description: "Reference for the mygrace CLI (23 commands) and MCP server (25 tools): quality gate, trust, index reads, verification and JSON envelopes. Use when you need the exact command/flag/tool for a MyGRACE operation."
 whenToUse: "You need a concrete CLI command or MCP tool — flags, exit codes, trust behaviour or JSON output."
 ---
 
 Use `mygrace` as the MyGRACE-aware read/execute layer, and the MCP tools as the
-preferred in-agent access path (23 tools; DSH exposes them as
+preferred in-agent access path (25 tools; DSH exposes them as
 `mcp__mygrace__<tool>`).
 
 ## Project resolution (harness sessions)
@@ -51,9 +51,12 @@ but explicit paths are required for correctness across multiple projects.
 - `mygrace projects --path <root> [--depth 4] [--strict] [--format json]` — monorepo discovery with per-project lint/coverage
 - `mygrace integrations status --path <root> [--format json]` — detect optional external tools (Octocode/Archify), versions and tested ranges; advisory (exit 0), never required by the core gates
 - `mygrace diagram [--format text|json|html|mermaid] [--out <html>] [--check] --path <root>` — deterministic architecture IR from the docs graph; json/mermaid always work, html needs optional Archify (validate+deliver); `--check` fails when the committed IR is stale
+- `mygrace capsule list [--format json]` — local allowlisted routines with qualification state; `capsule validate` checks schema/allowlist/bindings
+- `mygrace capsule qualify <name> --fixture <project>` — replay every program on the fixture and record the capsule hash (required before run)
+- `mygrace capsule run <name> [--module M-XXX] [--files a,b]` — run a qualified capsule; stops at judgment and prints the continue id; `capsule continue <run-id>` resumes
 - `mygrace packet <M-XXX>` / `mygrace focus <M-XXX>` — worker prompt / minimal set
 
-## MCP tools (23)
+## MCP tools (25)
 
 `mygrace_list_modules`, `mygrace_show_module`, `mygrace_show_phase`,
 `mygrace_find_modules`, `mygrace_phase_index`, `mygrace_doctor`,
@@ -61,7 +64,8 @@ but explicit paths are required for correctness across multiple projects.
 `mygrace_focus`, `mygrace_context_cost`, `mygrace_verify`,
 `mygrace_list_verifications`, `mygrace_lint`, `mygrace_show_file`,
 `mygrace_status`, `mygrace_trace`, `mygrace_impact`, `mygrace_next`,
-`mygrace_projects`, `mygrace_integrations`, `mygrace_diagram`.
+`mygrace_projects`, `mygrace_integrations`, `mygrace_diagram`,
+`mygrace_capsule_list`, `mygrace_capsule_run`.
 
 MCP `path` is optional: explicit argument → `MYGRACE_PROJECT_ROOT` → server
 working directory. Prefer MCP for index reads; use the CLI for anything the MCP

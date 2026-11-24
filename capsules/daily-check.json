@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "name": "daily-check",
+  "title": "Daily project health check",
+  "description": "Read-only routine: status \u2192 lint \u2192 ci \u2192 next. Use at the start of a work session.",
+  "source_skill": "mygrace-status",
+  "steps": [
+    {
+      "id": "status",
+      "program": "status"
+    },
+    {
+      "id": "lint",
+      "program": "lint"
+    },
+    {
+      "id": "ci",
+      "program": "ci"
+    },
+    {
+      "id": "next",
+      "program": "next"
+    }
+  ]
+}

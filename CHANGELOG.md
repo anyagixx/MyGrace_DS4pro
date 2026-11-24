@@ -9,6 +9,53 @@ release time (see `ROADMAP.md` §6, gate G10).
 
 Nothing yet.
 
+## [1.6.0] — 2026-11-24
+
+### Added
+
+- **Capsule routines (`mygrace capsule`, ADR-10, experimental).** Typed capsule
+  files compile recurring read-only orchestration into an allowlisted sequence of
+  `mygrace` programs (`status`, `lint`, `lint-changed`, `ci`, `next`, `impact`,
+  `trace`, `packet`, `focus`) plus optional judgment steps:
+  `list`/`show`/`validate`/`qualify`/`run`/`continue`. A failed program **deopts**
+  to the capsule's `source_skill`; a judgment step persists state in
+  `.mygrace/capsules/state/` and hands control back with a continue id.
+- **Replay qualification with hashes:** `capsule qualify --fixture <project>`
+  executes every program through the real child-process path and records the
+  capsule sha256 in `.mygrace/capsules/qualifications.json`; editing a capsule
+  invalidates the record and `run` refuses until re-qualified
+  (`--allow-unqualified` is development-only). Programs and bindings are strict:
+  no shell, no env-sourced values, only explicit `--module`/`--files`.
+- **Three shipped capsules:** `daily-check`, `after-change` (with a judgment to
+  `mygrace-fix`) and `module-onboarding` (binding `--module M-XXX`).
+- **MCP surface:** `mygrace_capsule_list` and `mygrace_capsule_run`
+  (25 tools total); skills `mygrace-status`, `mygrace-reviewer` and
+  `mygrace-execute` gained a capsule fast path with deopt fallback.
+- **Dogfood modules** `M-CAPSULE` + `V-M-CAPSULE`, 17 new tests with a fake
+  `MYGRACE_BIN` (validation, qualification, run/continue, deopt, drift,
+  bindings, disabled config); repo config enables capsules for dogfooding while
+  generated configs keep `integrations.capsules.enabled=false`.
+- **`mygrace diagram --format json --out <html>`** now also refreshes the
+  committed IR without Archify, so the `diagram --check` gate is maintainable on
+  machines without the optional renderer.
+- `release:check` now validates the shipped capsules (`capsule validate`) in
+  addition to the diagram IR check.
+
+### Changed
+
+- README/AGENTS/skills/architecture document 23 CLI commands and 25 MCP tools.
+
+### Limitations
+
+- Capsules are **experimental**: no token-savings claims, read-only programs
+  only. A production quality gate still needs `mygrace ci`; capsules reduce
+  repeated orchestration, they do not replace verification.
+- Qualification is local per project (`.mygrace/`, gitignored); there is no
+  retrieval/invalidation/security layer from the SkillCache paper in v1.6.0.
+- Diagram kinds `workflow`/`tree` and the Octocode 0.29.2 MCP-startup limitation
+  from v1.4.0 remain follow-ups.
+
+
 ## [1.5.0] — 2026-11-24
 
 ### Added

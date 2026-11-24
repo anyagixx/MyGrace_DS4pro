@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "name": "module-onboarding",
+  "title": "Module onboarding briefing",
+  "description": "Read-only routine for one module: project status \u2192 trace chain \u2192 worker packet \u2192 minimal focus set.",
+  "source_skill": "mygrace-execute",
+  "bindings": [
+    {
+      "name": "module",
+      "from": "arg:module",
+      "required": true,
+      "pattern": "^M-[A-Za-z0-9][A-Za-z0-9_-]*$"
+    }
+  ],
+  "steps": [
+    {
+      "id": "status",
+      "program": "status"
+    },
+    {
+      "id": "trace",
+      "program": "trace"
+    },
+    {
+      "id": "packet",
+      "program": "packet"
+    },
+    {
+      "id": "focus",
+      "program": "focus"
+    }
+  ]
+}

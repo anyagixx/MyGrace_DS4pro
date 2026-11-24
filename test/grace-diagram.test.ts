@@ -23,6 +23,11 @@ import { findExecutableOnPath } from "../src/grace-integrations";
 import { makeFakeArchify } from "./fixtures/archify/fake-archify";
 
 const POSIX_ONLY = process.platform !== "win32";
+const INTEGRATIONS_DISABLED_BY_ENV = ["off", "0", "false", "disabled"].includes(
+  (process.env.MYGRACE_INTEGRATIONS ?? "").trim().toLowerCase()
+);
+/** Fake-Archify tests need a POSIX shell wrapper and enabled integrations (G13). */
+const runtimeTest = test.skipIf(!POSIX_ONLY || INTEGRATIONS_DISABLED_BY_ENV);
 
 const GRAPH_INDEX = `<GraphIndex project="DiagramFixture" version="2.0.0">
   <M-A NAME="Alpha module" TYPE="FOUNDATION" STATUS="done" PATH="src/a.ts" DEPENDS="" VERIFICATION_REF="V-M-A" />
@@ -227,6 +232,20 @@ describe("diagramCommand", () => {
     }
   });
 
+  test("--format json with --out refreshes the committed IR without Archify", async () => {
+    const root = makeProject();
+    try {
+      writeConfig(root, null, { enabled: false });
+      const result = await runDiagram({ path: root, format: "json", out: "docs/diagrams/architecture.html" });
+      expect(result.exit).toBe(0);
+      expect(existsSync(join(root, "docs", "diagrams", "architecture.json"))).toBe(true);
+      const check = await runDiagram({ path: root, check: true });
+      expect(check.exit).toBe(0);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("--format html fails honestly when Archify is disabled", async () => {
     const root = makeProject();
     try {
@@ -240,7 +259,7 @@ describe("diagramCommand", () => {
     }
   });
 
-  test.skipIf(!POSIX_ONLY)("--format html delivers IR + HTML + receipt through Archify", async () => {
+  runtimeTest("--format html delivers IR + HTML + receipt through Archify", async () => {
     const fake = makeFakeArchify({ mode: "ok" });
     const root = makeProject();
     try {
@@ -269,7 +288,7 @@ describe("diagramCommand", () => {
     }
   });
 
-  test.skipIf(!POSIX_ONLY)("a schema rejection is an error and writes no artifacts", async () => {
+  runtimeTest("a schema rejection is an error and writes no artifacts", async () => {
     const fake = makeFakeArchify({ mode: "invalid" });
     const root = makeProject();
     try {
@@ -285,7 +304,7 @@ describe("diagramCommand", () => {
     }
   });
 
-  test.skipIf(!POSIX_ONLY)("a delivery failure keeps the refreshed IR but exits 1", async () => {
+  runtimeTest("a delivery failure keeps the refreshed IR but exits 1", async () => {
     const fake = makeFakeArchify({ mode: "deliver-fail" });
     const root = makeProject();
     try {
@@ -301,7 +320,7 @@ describe("diagramCommand", () => {
     }
   });
 
-  test.skipIf(!POSIX_ONLY)("non-JSON Archify output is a validation error, not a crash", async () => {
+  runtimeTest("non-JSON Archify output is a validation error, not a crash", async () => {
     const fake = makeFakeArchify({ mode: "crash" });
     const root = makeProject();
     try {
@@ -316,7 +335,7 @@ describe("diagramCommand", () => {
     }
   });
 
-  test.skipIf(!POSIX_ONLY)("--check fails on missing/stale IR and passes on a current artifact", async () => {
+  runtimeTest("--check fails on missing/stale IR and passes on a current artifact", async () => {
     const fake = makeFakeArchify({ mode: "ok" });
     const root = makeProject();
     try {
@@ -375,8 +394,7 @@ describe("diagramCommand", () => {
     }
   });
 
-  test("a Node-script Archify entry (.mjs) runs through the node runner", async () => {
-    if (!POSIX_ONLY) return;
+  test.skipIf(!POSIX_ONLY || INTEGRATIONS_DISABLED_BY_ENV)("a Node-script Archify entry (.mjs) runs through the node runner", async () => {
     if (findExecutableOnPath("node") === null) return;
     const fake = makeFakeArchify({ mode: "ok" });
     const root = makeProject();

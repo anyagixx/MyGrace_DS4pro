@@ -1,0 +1,28 @@
+<!-- Canonical verification entry. <module-checks> is read by mygrace test/verify; commands are trust-gated (run `mygrace trust` after review). -->
+<V-M-CAPSULE MODULE="M-CAPSULE" PRIORITY="high" STATUS="done">
+  <test-files>
+    <file>test/grace-capsule.test.ts</file>
+  </test-files>
+
+  <module-checks>
+    <check-1>bun test test/grace-capsule.test.ts</check-1>
+  </module-checks>
+
+  <scenarios>
+    <scenario-1 kind="success">Validation accepts minimal/judgment/binding capsules and rejects unknown programs, unknown keys, shell-like steps, duplicate ids, too many steps and bindings sourced from env.</scenario-1>
+    <scenario-2 kind="success">Qualification replays every program through the real child-process path (fake MYGRACE_BIN records argv), records the capsule hash, and `run` then completes with exit 0 and ordered steps.</scenario-2>
+    <scenario-3 kind="success">A judgment step returns status waiting with the continue hint and a state file; `continue` resumes and completes; unqualified runs are refused unless --allow-unqualified (warning finding).</scenario-3>
+    <scenario-4 kind="failure">A failing program deopts with CAPSULE_DEOPT and the source-skill hint (exit 1); a capsule edited between run and continue yields CAPSULE_DRIFT (exit 1); disabled execution or missing required bindings exit 2.</scenario-4>
+    <scenario-5 kind="success">The program allowlist is exactly the read-only set (no verify/test/trust/install/diagram writes); capsule list/show/validate work without enabled execution.</scenario-5>
+  </scenarios>
+
+  <required-log-markers>
+    <marker-1>No runtime log markers; behavior is asserted through CLI envelopes, state files, qualification records and the recorded child argv.</marker-1>
+  </required-log-markers>
+
+  <notes>
+    <note-1>Covered by test/grace-capsule.test.ts (17 tests) with a fake MYGRACE_BIN so the suite needs no real project runs.</note-1>
+    <note-2>Shipped capsules (daily-check, after-change, module-onboarding) are dogfooded manually: qualify on examples/demo-store, run on this repository, judgment/continue and bindings verified.</note-2>
+    <note-3>Trust model: capsule files are repo input, so run requires a local replay record matching the current sha256; no arbitrary command can be smuggled into a capsule.</note-3>
+  </notes>
+</V-M-CAPSULE>

@@ -76,7 +76,7 @@
       "outputDir": "docs/diagrams"
     },
     "capsules": {
-      "enabled": false,
+      "enabled": true,
       "dir": "capsules",
       "allowMutatingPrograms": false
     }

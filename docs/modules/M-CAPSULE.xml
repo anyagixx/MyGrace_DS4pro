@@ -1,0 +1,50 @@
+<!-- Module contract for M-CAPSULE. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-CAPSULE NAME="Capsule routines" TYPE="ORCHESTRATOR" STATUS="done">
+  <purpose>Compile recurring read-only MyGRACE orchestration into typed capsules (SkillCache-style) with an allowlisted program registry, replay qualification, stateful run/continue with judgment hand-back and deopt to the source skill.</purpose>
+  <path>src/grace-capsule.ts</path>
+  <depends>M-COMMON,M-CONFIG,M-ERRORS,M-TEST</depends>
+  <verification-ref>V-M-CAPSULE</verification-ref>
+
+  <annotations>
+    <export-CAPSULE_PROGRAMS PURPOSE="Read-only allowlist: status, lint, lint-changed, ci, next, impact, trace, packet, focus — argv templates only, no shell, no mutating commands." />
+    <export-CAPSULE_FINDING_CODES PURPOSE="CAPSULE_INVALID, CAPSULE_UNQUALIFIED, CAPSULE_DEOPT, CAPSULE_DRIFT, CAPSULE_JUDGMENT_REQUIRED." />
+    <export-validateCapsuleDefinition PURPOSE="Strict schema + allowlist + binding dataflow validation; returns coded issues instead of throwing." />
+    <export-executeCapsulePrograms PURPOSE="Replay/run engine: spawns allowlisted programs, persists state at judgments/deopts, returns bounded step output previews." />
+    <export-capsuleProgramArgv PURPOSE="Expands one program template against --path root and explicit --module/--files bindings (never env)." />
+    <export-capsuleCommand PURPOSE="mygrace capsule list|show|validate|qualify|run|continue; execution gated by integrations.capsules.enabled and by a matching qualification hash." />
+  </annotations>
+
+  <CrossLink to="M-CONFIG" relation="integrations.capsules (enabled/dir) and project root config" />
+  <CrossLink to="M-TEST" relation="runCommandOutcome envelope/exit-code contract; findProjectRoot from M-COMMON" />
+  <CrossLink to="M-STATUS" relation="daily-check capsule composes status/lint/ci/next routines from the skills" />
+
+  <contract>
+    <purpose>Make recurring MyGRACE routines explicit, replayable and cheaper to invoke — while never letting a capsule execute anything beyond the read-only MyGRACE CLI surface.</purpose>
+    <inputs>
+      <param name="root" type="string" description="Project root that owns capsules/ and local .mygrace/capsules/ state." />
+      <param name="capsule" type="CapsuleDefinition" description="schema_version 1: bindings, program steps, optional judgment steps, source_skill." />
+      <param name="bindings" type="Record&lt;string,string&gt;" description="module/files values from explicit CLI flags only." />
+      <param name="fixture" type="string?" description="Replay target for `capsule qualify`; run executes on the project root." />
+    </inputs>
+    <outputs>
+      <param name="validation" type="CapsuleValidation" description="valid + coded issues (schema/allowlist/dataflow)." />
+      <param name="execution" type="CapsuleExecution" description="status waiting|completed|deopted, step records with bounded output previews, judgment/runId." />
+      <param name="records" type="QualificationRecord" description="Per-capsule hash recorded in .mygrace/capsules/qualifications.json after a successful replay." />
+    </outputs>
+    <errors>
+      <error code="CAPSULE_INVALID" description="Schema/allowlist/binding violation (validate exits 1)." />
+      <error code="CAPSULE_UNQUALIFIED" description="run/qualify refuses a capsule without a matching replay record (exit 1); --allow-unqualified is dev-only." />
+      <error code="CAPSULE_DEOPT" description="A program step failed; control returns to the capsule's source_skill (exit 1)." />
+      <error code="CAPSULE_DRIFT" description="Capsule file changed between run and continue (exit 1)." />
+      <error code="CAPSULE_JUDGMENT_REQUIRED" description="Info finding + state file; resume with `capsule continue &lt;run-id&gt;` (exit 0)." />
+      <error code="USAGE" description="Invalid name/format/bindings or execution disabled by config (exit 2)." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>ADR-10 safety: programs are a fixed allowlist of read-only MyGRACE commands; no shell, no arguments from env, values only from explicit CLI flags; capsule files are validated before every run.</note-1>
+    <note-2>Qualification is replay + hash: `qualify --fixture &lt;project&gt;` executes every program on the fixture and records the capsule sha256; editing the capsule invalidates the record and `run` refuses again.</note-2>
+    <note-3>Local-only state: `.mygrace/capsules/qualifications.json` and `state/&lt;run-id&gt;.json` are gitignored; capsules/*.json are committed. Execution is disabled by default in generated configs (`integrations.capsules.enabled=false`); this repository enables it for dogfooding.</note-3>
+    <note-4>Experimental (SkillCache-inspired): no token-savings claims. `mygrace capsule run` removes repeated orchestration steps and hands control back at judgments; a failed program deopts to the source skill instead of hiding errors.</note-4>
+  </notes>
+</M-CAPSULE>

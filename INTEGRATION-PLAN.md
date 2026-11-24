@@ -1,6 +1,6 @@
 # MyGRACE Integration Plan — Octocode · Archify · SkillCache-style capsules
 
-Status: **v1.4.0 ✅ shipped (integrations layer + Octocode adapter), v1.5.0 ✅ shipped (Archify architecture exporter); v1.6.0 planned** · Owner: Lead
+Status: **all waves shipped: v1.4.0 ✅ integrations layer + Octocode adapter, v1.5.0 ✅ Archify architecture exporter, v1.6.0 ✅ experimental capsules** · Owner: Lead
 Companion documents: `ROADMAP.md` (waves), `docs/architecture.md` (invariants), `SECURITY.md`.
 
 ## 0. Executive summary

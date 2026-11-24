@@ -48,3 +48,18 @@ status report; the indexes are the source of truth for counts and status.
 This report is about indexes and lint, not code quality. Do not claim a
 "percentage saved" or estimate tokens; if you need read-budget numbers, run
 `mygrace context-cost --path <root>`.
+
+## Capsule fast path (experimental, v1.6)
+
+If this project ships qualified capsules (`mygrace capsule list --format json` shows
+`qualified: true`), prefer the `daily-check` (status → lint → ci → next) capsule over re-deriving the sequence:
+
+```bash
+mygrace capsule run <name> [--module M-XXX]
+mygrace capsule continue <run-id>   # after a judgment step
+```
+
+If the run reports `CAPSULE_DEOPT`, stop and follow the source skill procedure
+above; capsules never replace this skill and never execute anything beyond the
+read-only MyGRACE CLI allowlist. Qualify first if the capsule is not qualified:
+`mygrace capsule qualify <name> --fixture examples/demo-store`.

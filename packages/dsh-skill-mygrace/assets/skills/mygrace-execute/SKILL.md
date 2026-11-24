@@ -75,3 +75,18 @@ invalidates the trust record: re-run `mygrace trust` before the next run.
 - Update indexes after every change; `mygrace lint --strict` before commit.
 - Never execute project commands without the trust decision above.
 - Do not claim token savings; context cost is bounded by caps and budgets.
+
+## Capsule fast path (experimental, v1.6)
+
+If this project ships qualified capsules (`mygrace capsule list --format json` shows
+`qualified: true`), prefer the `module-onboarding --module M-XXX` (status → trace → packet → focus) capsule over re-deriving the sequence:
+
+```bash
+mygrace capsule run <name> [--module M-XXX]
+mygrace capsule continue <run-id>   # after a judgment step
+```
+
+If the run reports `CAPSULE_DEOPT`, stop and follow the source skill procedure
+above; capsules never replace this skill and never execute anything beyond the
+read-only MyGRACE CLI allowlist. Qualify first if the capsule is not qualified:
+`mygrace capsule qualify <name> --fixture examples/demo-store`.

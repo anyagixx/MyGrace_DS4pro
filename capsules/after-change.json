@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "name": "after-change",
+  "title": "Post-edit gate",
+  "description": "Read-only routine after edits: incremental lint \u2192 CI gate \u2192 impact summary; then hand control back for a judgment.",
+  "source_skill": "mygrace-reviewer",
+  "steps": [
+    {
+      "id": "lint-changed",
+      "program": "lint-changed"
+    },
+    {
+      "id": "ci",
+      "program": "ci"
+    },
+    {
+      "id": "impact",
+      "program": "impact"
+    },
+    {
+      "id": "review",
+      "judge": "Read the impact and findings, decide whether to fix or proceed.",
+      "skill": "mygrace-fix"
+    }
+  ]
+}

@@ -54,13 +54,14 @@ Prefer the matching skill (via the `skill` tool) over re-deriving the process:
 | `mygrace-setup-subagents` | DSH subagent role prompts |
 | `mygrace-token-budget` | Output-side token policy |
 
-## MCP tools (23, when the mygrace MCP server is connected)
+## MCP tools (25, when the mygrace MCP server is connected)
 
 `mygrace_list_modules` · `mygrace_show_module` · `mygrace_show_phase` ·
 `mygrace_find_modules` · `mygrace_phase_index` · `mygrace_doctor` ·
 `mygrace_test` · `mygrace_trust` · `mygrace_ci` · `mygrace_packet` ·
 `mygrace_focus` · `mygrace_context_cost` · `mygrace_verify` ·
-`mygrace_list_verifications` · `mygrace_lint` · `mygrace_show_file` · `mygrace_status` · `mygrace_trace` · `mygrace_impact` · `mygrace_next` · `mygrace_projects` · `mygrace_integrations` · `mygrace_diagram`
+`mygrace_list_verifications` · `mygrace_lint` · `mygrace_show_file` · `mygrace_status` · `mygrace_trace` · `mygrace_impact` · `mygrace_next` · `mygrace_projects` · `mygrace_integrations` · `mygrace_diagram` ·
+`mygrace_capsule_list` · `mygrace_capsule_run`
 DSH exposes them as `mcp__mygrace__<tool>` (e.g. `mcp__mygrace__lint`). `install-dsh --panel` also wires the optional LIVE sidebar card that reads `mygrace status`.
 
 ## Six Principles
@@ -101,13 +102,14 @@ AGENTS.md                  # this file
 
 When `docs/graph-index.xml` approaches `indexCaps.graph`, shard it: `mygrace module shard` is a dry run, `--apply` writes `docs/modules/shard-<slug>.xml` + `<Shard href=.../>` refs and a backup; reads are shard-transparent except `module show`. `sourceDirs`/`markupExts` replace defaults, `testRunner` is only the no-`<module-checks>` fallback; `mygrace projects` covers monorepos.
 
-## Commands (22 CLI)
+## Commands (23 CLI)
 
 - `mygrace status --path .` / `mygrace ci --path .` / `mygrace next --path .` — snapshot / one-command gate / deterministic next action
 - `mygrace lint --strict --path .` — integrity gate; add `--changed --base <ref>` (or `--files`) for incremental scope
 - `mygrace trace <M-XXX>` / `mygrace impact [--files a,b,c]` — proof chain / change blast radius (both read-only)
 - `mygrace integrations status --path .` — detect optional external tools (Octocode/Archify) and tested versions; advisory only
 - `mygrace diagram [--format json|mermaid|html] [--check]` — render the docs graph (IR/Mermaid always; HTML via optional Archify), check committed IR
+- `mygrace capsule list|validate|qualify|run|continue` — experimental allowlisted routines with replay qualification and judgment hand-back (disabled unless `integrations.capsules.enabled`)
 - `mygrace trust --path .` — review + record project commands (before test/verify)
 - `mygrace test --module M-XXX` / `mygrace verify --module M-XXX` — scoped tests
 - `mygrace projects --path .` — monorepo health; `mygrace module index|find|show|list`, `mygrace phase index|show`, `mygrace verification index`

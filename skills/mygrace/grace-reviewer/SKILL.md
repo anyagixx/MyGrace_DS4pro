@@ -64,3 +64,18 @@ Summary: PASS / FAIL
 Rules: smallest useful scope; index consistency is critical; never auto-fix
 contracts or architecture — propose the change; escalate when a scoped check
 reveals wider drift.
+
+## Capsule fast path (experimental, v1.6)
+
+If this project ships qualified capsules (`mygrace capsule list --format json` shows
+`qualified: true`), prefer the `after-change` (lint --changed → ci → impact, then a judgment to `mygrace-fix`) capsule over re-deriving the sequence:
+
+```bash
+mygrace capsule run <name> [--module M-XXX]
+mygrace capsule continue <run-id>   # after a judgment step
+```
+
+If the run reports `CAPSULE_DEOPT`, stop and follow the source skill procedure
+above; capsules never replace this skill and never execute anything beyond the
+read-only MyGRACE CLI allowlist. Qualify first if the capsule is not qualified:
+`mygrace capsule qualify <name> --fixture examples/demo-store`.

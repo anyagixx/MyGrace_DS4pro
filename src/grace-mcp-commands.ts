@@ -62,7 +62,9 @@ export type ToolName =
   | "mygrace_next"
   | "mygrace_projects"
   | "mygrace_integrations"
-  | "mygrace_diagram";
+  | "mygrace_diagram"
+  | "mygrace_capsule_list"
+  | "mygrace_capsule_run";
 
 export type ToolArgs = Record<string, unknown>;
 
@@ -709,6 +711,56 @@ export const TOOLS: readonly ToolDefinition[] = [
       const quality = stringArg(args, "quality");
       if (quality !== undefined && quality !== "standard") cmd.push("--quality", quality);
       if (booleanFlag(args, "check")) cmd.push("--check");
+      return cmd;
+    },
+  },
+  {
+    name: "mygrace_capsule_list",
+    description:
+      "List local MyGRACE capsules (allowlisted read-only routines): validity, step count and qualification state. " +
+      "Capsule execution is opt-in via integrations.capsules.enabled=true. " +
+      ROOT_NOTE,
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
+        format: { type: "string", enum: ["text", "json"], default: "json", description: "Output format." },
+      },
+    },
+    rootArg: "path",
+    buildArgs(args, root) {
+      const cmd = ["capsule", "list", "--path", root];
+      if (wantsJson(args)) cmd.push("--format", "json");
+      return cmd;
+    },
+  },
+  {
+    name: "mygrace_capsule_run",
+    description:
+      "Run a qualified capsule of allowlisted read-only mygrace programs; stops at a judgment step and prints the `capsule continue` run id. " +
+      "Fails with CAPSULE_UNQUALIFIED until `mygrace capsule qualify <name> --fixture <project>` recorded the current capsule hash. " +
+      ROOT_NOTE,
+    inputSchema: {
+      type: "object",
+      properties: {
+        name: { type: "string", pattern: "^[a-z][a-z0-9-]{1,39}$", description: "Capsule name (see mygrace_capsule_list)." },
+        module: { type: "string", pattern: "^M-[A-Za-z0-9][A-Za-z0-9_-]*$", description: "Value for the $module binding." },
+        files: { type: "string", minLength: 1, description: "Comma-separated value for the $files binding." },
+        allowUnqualified: { type: "boolean", default: false, description: "Development only: run without a qualification record." },
+        path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
+        format: { type: "string", enum: ["text", "json"], default: "json", description: "Output format." },
+      },
+      required: ["name"],
+    },
+    rootArg: "path",
+    buildArgs(args, root) {
+      const cmd = ["capsule", "run", requiredStringArg("mygrace_capsule_run", args, "name"), "--path", root];
+      const module = stringArg(args, "module");
+      if (module !== undefined) cmd.push("--module", module);
+      const files = stringArg(args, "files");
+      if (files !== undefined) cmd.push("--files", files);
+      if (booleanFlag(args, "allowUnqualified")) cmd.push("--allow-unqualified");
+      if (wantsJson(args)) cmd.push("--format", "json");
       return cmd;
     },
   },

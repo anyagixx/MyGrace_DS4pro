@@ -2,7 +2,7 @@
 <M-CLI NAME="CLI entry point" TYPE="ENTRY_POINT" STATUS="done">
   <purpose>Compose the mygrace command tree and report failures through the ADR-3 error boundary.</purpose>
   <path>src/grace.ts</path>
-  <depends>M-ERRORS,M-LINT,M-MODULE,M-FILE,M-INSTALL,M-INIT,M-STATUS,M-DOCTOR,M-TEST,M-VERIFY,M-PACKET,M-CONTEXT,M-CI,M-TRACE,M-IMPACT,M-NEXT,M-PROJECTS,M-INTEGRATIONS,M-DIAGRAM</depends>
+  <depends>M-ERRORS,M-LINT,M-MODULE,M-FILE,M-INSTALL,M-INIT,M-STATUS,M-DOCTOR,M-TEST,M-VERIFY,M-PACKET,M-CONTEXT,M-CI,M-TRACE,M-IMPACT,M-NEXT,M-PROJECTS,M-INTEGRATIONS,M-DIAGRAM,M-CAPSULE</depends>
   <verification-ref>V-M-CLI</verification-ref>
 
   <annotations>

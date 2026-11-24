@@ -686,6 +686,10 @@ function computeDiagram(rootInput: string, args: Record<string, unknown>): Comma
   }
 
   if (format === "json") {
+    // JSON mode is Archify-free. With --out it also refreshes the committed IR
+    // (same sibling path as format=html) so projects without Archify can keep
+    // the `diagram --check` gate current.
+    const outRequested = typeof args.out === "string" && args.out.trim() !== "";
     const data: DiagramData = {
       kind,
       format,
@@ -693,14 +697,20 @@ function computeDiagram(rootInput: string, args: Record<string, unknown>): Comma
       graphSha256: built.graphSha256,
       ir: built.ir,
       dependencies: built.fullConnections,
+      ...(outRequested ? { artifacts: { ir: relativeToRoot(root, irPath), html: "", receipt: "" } } : {}),
     };
+    if (outRequested) {
+      ensureDirectory(irPath);
+      writeFileSync(irPath, built.irText);
+    }
     const envelope = createEnvelope({ data, findings: [], meta: { command: "diagram", root } });
     return {
       envelope,
       print: () => {
         console.log(`Diagram (${kind}): ${built.summary.modules} modules · ${built.summary.dependencies} dependencies`);
         console.log(`Graph sha256: ${built.graphSha256}`);
-        console.log("IR is available under data.ir in `--format json` output.");
+        if (outRequested) console.log(`IR refreshed: ${relativeToRoot(root, irPath)} (run --check to verify)`);
+        else console.log("IR is available under data.ir in `--format json` output.");
       },
     };
   }

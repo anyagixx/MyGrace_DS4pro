@@ -5,11 +5,11 @@ line-capped XML indexes, one contract file per module, and verification files
 that connect intent → modules → tests. Agents read the index first and only the
 entity they need, instead of re-reading the tree.
 
-It is a CLI (`mygrace`, 22 commands) plus an agent methodology (15 skills) and
-an MCP server (23 tools). It does not generate code, call a model, or send telemetry — it
+It is a CLI (`mygrace`, 23 commands) plus an agent methodology (15 skills) and
+an MCP server (25 tools). It does not generate code, call a model, or send telemetry — it
 enforces traceability and context discipline for the agent you already use.
 
-Current version: `1.5.0`
+Current version: `1.6.0`
 
 > The package is **not published to npm yet**: install from a source checkout or
 > a packed tarball (see [Install](#install)). The v2 hardening waves are tracked
@@ -211,13 +211,14 @@ integration it reports the missing DSH pieces and exits 1, with hints for each.
 | `mygrace doctor` | Environment and DSH-integration health checks (incl. optional integrations) |
 | `mygrace integrations` | Detect optional external tools (`status`), their versions and tested ranges; advisory, never fails the core gates |
 | `mygrace diagram` | Export the docs graph as deterministic Archify architecture IR (`--format json`), Mermaid (`--format mermaid`) or standalone HTML (`--format html`, needs optional Archify); `--check` guards the committed IR |
+| `mygrace capsule` | Local allowlisted routines: `list`/`show`/`validate`, `qualify` (replay + hash), `run` with judgment hand-back, `continue`; execution disabled by default (`integrations.capsules.enabled`) |
 | `mygrace init-dsh` | Bootstrap `docs/`, `AGENTS.md`, `mygrace.config.json` |
 | `mygrace install-dsh` | Wire skills + a PATH-free MCP row into DeepSeek Harness |
 
 Every command accepts `--help`; `--format json` commands return the envelope
 `{ ok, exitCode, data, findings[], meta }`.
 
-## MCP tools (23)
+## MCP tools (25)
 
 The stdio server is a transport adapter over the CLI: every tool maps to a
 command, arguments are schema-validated, and CLI failures keep their output in
@@ -230,7 +231,8 @@ quality gate is `mcp__mygrace__ci`.
 `mygrace_focus` · `mygrace_context_cost` · `mygrace_verify` ·
 `mygrace_list_verifications` · `mygrace_lint` · `mygrace_show_file` ·
 `mygrace_status` · `mygrace_trace` · `mygrace_impact` · `mygrace_next` ·
-`mygrace_projects` · `mygrace_integrations` · `mygrace_diagram`
+`mygrace_projects` · `mygrace_integrations` · `mygrace_diagram` ·
+`mygrace_capsule_list` · `mygrace_capsule_run`
 
 ### Optional integrations (ADR-9)
 
@@ -330,6 +332,32 @@ counted in the diagram cards. Tested against Archify CLI 3.2.0 and 3.3.x; withou
 Archify, JSON/Mermaid output keeps working and `--format html` fails with
 `INTEGRATION_UNAVAILABLE`.
 
+## Capsules (experimental)
+
+Capsules compile recurring read-only routines instead of re-deriving them:
+
+```bash
+mygrace capsule list                 # validity + qualification state
+mygrace capsule validate             # schema/allowlist/binding checks
+mygrace capsule qualify daily-check --fixture examples/demo-store
+mygrace capsule run after-change     # stops at the judgment, prints a continue id
+mygrace capsule continue <run-id>    # resume after the judgment
+```
+
+Shipped: `daily-check` (status → lint → ci → next), `after-change`
+(lint --changed → ci → impact → judgment to `mygrace-fix`) and
+`module-onboarding` (status → trace → packet → focus, binding `--module M-XXX`).
+
+Safety and honesty: programs are an **allowlist of read-only `mygrace` commands**
+(no shell, values only from explicit flags); a capsule must be **qualified** by
+replaying it on a fixture and recording its sha256 in `.mygrace/capsules/`; a
+failed program **deopts** to the capsule's source skill instead of hiding the
+error. Execution is opt-in (`"integrations": { "capsules": { "enabled": true } }`;
+generated configs default to `false`, this repository enables it for dogfooding).
+State and qualification records are local (`.mygrace/`, gitignored). No
+token-savings claims: this is an experimental SkillCache-inspired primitive whose
+value is measured, not assumed.
+
 ## Skills (15, shared from `skills/mygrace/`)
 
 | Skill | Purpose |
@@ -418,7 +446,7 @@ mygrace module shard [--group-by type|status|prefix] [--apply] [--path <root>] [
 
 Measured on the synthetic large-project fixture (150 modules in 3 shards):
 `lint` ≈44 ms in-process, CLI `status` ≈137 ms, `module list` 150/150,
-`runCiGate` 0 findings. This repository stays flat (28 modules) and keeps its
+`runCiGate` 0 findings. This repository stays flat (29 modules) and keeps its
 `0 errors / 0 warnings` result, so sharding is opt-in, not required.
 
 ## Multi-language projects
@@ -515,7 +543,7 @@ bun run release:check           # release:check == ci (what a tag must pass befo
 bun run ci                      # all of the above (release gate)
 
 # repo self-check (dogfooding): the project's own docs/ graph
-# (28 modules, 4 phases, 28 verifications, 38 declared test files; PASS)
+# (29 modules, 4 phases, 29 verifications, 39 declared test files; PASS)
 bun run src/grace.ts ci --path .
 ```
 

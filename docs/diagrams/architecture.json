@@ -3,11 +3,26 @@
   "diagram_type": "architecture",
   "meta": {
     "title": "MyGRACE — MyGRACE",
-    "subtitle": "28 modules · 122 dependencies · 28 verifications",
+    "subtitle": "29 modules · 127 dependencies · 29 verifications",
     "output": "architecture.html",
     "quality_profile": "standard"
   },
   "components": [
+    {
+      "id": "M-CAPSULE",
+      "type": "backend",
+      "label": "Capsule routines",
+      "sublabel": "ORCHESTRATOR · done",
+      "tag": "V-M-CAPSULE",
+      "pos": [
+        1700,
+        180
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
     {
       "id": "M-CI",
       "type": "backend",
@@ -151,7 +166,7 @@
       "tag": "V-M-FILE",
       "pos": [
         1700,
-        180
+        332
       ],
       "size": [
         265,
@@ -211,7 +226,7 @@
       "tag": "V-M-INTEGRATIONS",
       "pos": [
         1700,
-        332
+        484
       ],
       "size": [
         265,
@@ -301,7 +316,7 @@
       "tag": "V-M-PACKET",
       "pos": [
         1700,
-        484
+        636
       ],
       "size": [
         265,
@@ -361,7 +376,7 @@
       "tag": "V-M-STATUS",
       "pos": [
         1700,
-        636
+        788
       ],
       "size": [
         265,
@@ -406,7 +421,7 @@
       "tag": "V-M-VERIFY",
       "pos": [
         1700,
-        788
+        940
       ],
       "size": [
         265,
@@ -478,6 +493,7 @@
       "kind": "region",
       "label": "Orchestration",
       "wraps": [
+        "M-CAPSULE",
         "M-CI",
         "M-NEXT"
       ]
@@ -496,6 +512,11 @@
     }
   ],
   "connections": [
+    {
+      "id": "M-CAPSULE-to-M-TEST",
+      "from": "M-CAPSULE",
+      "to": "M-TEST"
+    },
     {
       "id": "M-CI-to-M-STATUS",
       "from": "M-CI",
@@ -637,16 +658,16 @@
       "dot": "cyan",
       "title": "Graph",
       "items": [
-        "28 modules · 122 declared dependencies",
-        "27 primary edges drawn · 4 phases · 28 verifications"
+        "29 modules · 127 declared dependencies",
+        "28 primary edges drawn · 4 phases · 29 verifications"
       ]
     },
     {
       "dot": "emerald",
       "title": "Verification",
       "items": [
-        "28/28 modules reference a verification file",
-        "38 declared test files"
+        "29/29 modules reference a verification file",
+        "39 declared test files"
       ]
     },
     {

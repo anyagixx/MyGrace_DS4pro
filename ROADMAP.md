@@ -1,22 +1,24 @@
 # MyGRACE Roadmap — from audit findings to a professional agent engineering harness
 
-> Status: **v1.5.0 shipped 2026-11-24** (Wave 5: integrations layer + Octocode adapter + Archify diagram exporter) — publication pending owner credentials; the pipeline is wired and gated. Baseline: v1.0.1 as audited on 2026-11-22
+> Status: **v1.6.0 shipped 2026-11-24** (Wave 5 complete: integrations layer, Octocode adapter, Archify exporter, experimental capsules) — publication pending owner credentials; the pipeline is wired and gated. Baseline: v1.0.1 as audited on 2026-11-22
 > (see `analysis/00-EXECUTIVE-ASSESSMENT.md` and appendices 01–04).
 > Target: a tool that AI coding agents can use with confidence on software of **any complexity** —
 > from a 3-module script to a 500-module monorepo, on repos you do not fully trust.
-> **v1.5.0 shipped evidence:** `bun run release:check` green (typecheck 0, **703 tests / 34 files**,
-> demo lint, doc-truth gates, pack-smoke, diagram IR freshness), `mygrace ci --path .` PASS on this
-> repository (**28 modules / 4 phases / 28 verifications / 38 declared test files**), and
-> `bun run publish:dry` proves the publish artifact (67 files, 240 kB, 28 shipped src files, 132 relative + 27 bare imports). G13 green with `MYGRACE_INTEGRATIONS=off`;
-> G14: recorded-payload + fake-Octocode/fake-Archify contract tests run in `bun test`, real-binary
-> smokes stay manual (Octocode MCP startup; Archify 3.2.0/3.3.x verified manually).
-> Surface: **22 CLI commands · 23 MCP tools · 15 skills**. Committed deterministic diagram IR
-> (`docs/diagrams/architecture.json`, `--check`-guarded); full dependency graph in JSON/Mermaid,
-> legible primary-dependency backbone in HTML.
+> **v1.6.0 shipped evidence:** `bun run release:check` green (typecheck 0, **720 tests / 35 files**,
+> demo lint, doc-truth gates, pack-smoke, diagram IR freshness, capsule validation),
+> `mygrace ci --path .` PASS on this repository (**29 modules / 4 phases / 29 verifications /
+> 39 declared test files**), and `bun run publish:dry` proves the publish artifact (68 files, 253 kB, 29 shipped src files, 137 relative + 28 bare imports). G13 green with
+> `MYGRACE_INTEGRATIONS=off`; G14: recorded-payload + fake-Octocode/fake-Archify contract tests run
+> in `bun test`, real-binary smokes stay manual; G15 diagram IR current; G16 shipped capsules
+> validate and the capsule lifecycle is covered by fake-CLI tests (qualify → run → judgment →
+> continue → deopt/drift).
+> Surface: **23 CLI commands · 25 MCP tools · 15 skills**. Committed deterministic diagram IR;
+> experimental capsules with allowlisted read-only programs, replay qualification, judgment
+> hand-back and deopt-to-skill (no token-savings claims).
 > Scale proven at 150 modules / 3 shards (lint 44 ms); Python/Go fixtures prove the multi-language
 > path; `mygrace trace/impact/next/projects`, `lint --changed`, optional Octocode
-> `impact --code-graph` / `trace --code` and the Archify `diagram` exporter close the
-> agent-advisory set.
+> `impact --code-graph` / `trace --code`, the Archify `diagram` exporter and `capsule` routines
+> close the agent-advisory set.
 
 ## 1. Vision
 
@@ -192,10 +194,14 @@ stay deterministic, offline and dependency-free (ADR-9). Full plan: `INTEGRATION
   (`mygrace diagram`, `--check`); Mermaid fallback when Archify is not installed; HTML shows a
   primary-dependency backbone (Archify clean-flow), full graph in JSON/Mermaid; workflow/tree kinds
   remain v1.5.x follow-ups.
-- **v1.6.0 — SkillCache-style capsules** *(planned, experimental, 2–3 weeks)*: allowlisted
+- **v1.6.0 — SkillCache-style capsules** ✅ *(shipped 2026-11-24, experimental; read-only v1)*: allowlisted
   `mygrace` command programs with bindings, executor + state + deopt-to-skill, replay qualification,
   trust-gated hashes, 3 starter capsules, skills fast path; honest A/B metrics with a kill criterion
-  (< 15 % tool-call/turn reduction → keep experimental, no claims).
+  (< 15 % tool-call/turn reduction → keep experimental, no claims). Shipped: capsule format +
+  allowlisted program registry, replay qualification with hashes, stateful run/continue with
+  judgment hand-back, deopt to the source skill, 3 capsules (`daily-check`, `after-change`,
+  `module-onboarding`), MCP tools, skills fast path. Honest limitation: no token/call measurements
+  are claimed yet; production gating stays `mygrace ci`.
 
 Release gates added: **G13** core gates pass with `MYGRACE_INTEGRATIONS=off` (no tool installed);
 **G14** adapter contract tests against pinned versions (Octocode 0.29.2, Archify 3.3.0).
@@ -217,6 +223,7 @@ Release gates added: **G13** core gates pass with `MYGRACE_INTEGRATIONS=off` (no
 - [ ] G13 core gates green with `MYGRACE_INTEGRATIONS=off` (no external tool installed; integration-specific tests auto-skip)
 - [ ] G14 integration contract tests: recorded-payload/fake-MCP + fake-Archify suites in `bun test`; real-binary smokes (`bun run test:integrations --download`, `bun run test:integrations:archify`) stay manual (Octocode MCP startup issue; Archify needs an installation)
 - [ ] G15 committed diagram IR is current (`bun run diagram:check`, part of `release:check`)
+- [ ] G16 shipped capsules validate (`bun run capsule:validate`) and the capsule lifecycle (qualify → run → judgment → continue → deopt/drift) is covered by fake-CLI tests (part of `release:check`)
 
 ## 7. Risk register
 
