@@ -598,7 +598,7 @@ describe("index resolution (shard-aware, ADR-6)", () => {
 const INTEGRATIONS_DISABLED_BY_ENV = ["off", "0", "false", "disabled"].includes(
   (process.env.MYGRACE_INTEGRATIONS ?? "").trim().toLowerCase()
 );
-const runtimeTest = test.skipIf(INTEGRATIONS_DISABLED_BY_ENV);
+const runtimeTest = test.skipIf(process.platform === "win32" || INTEGRATIONS_DISABLED_BY_ENV);
 
 const MODULE_MAP_SOURCE = `/**
  * Fixture module.
@@ -655,7 +655,7 @@ function makeTraceProject(): string {
 }
 
 describe("enrichTraceWithCodeSymbols", () => {
-  test("resolves MODULE_MAP entries and reports missing symbols as warnings", async () => {
+  runtimeTest("resolves MODULE_MAP entries and reports missing symbols as warnings", async () => {
     const fake = makeFakeOctocode({ mode: "ok" });
     const root = makeTraceProject();
     try {

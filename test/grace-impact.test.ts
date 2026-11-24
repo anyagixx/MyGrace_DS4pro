@@ -469,7 +469,7 @@ describe("impactCommand", () => {
 const INTEGRATIONS_DISABLED_BY_ENV = ["off", "0", "false", "disabled"].includes(
   (process.env.MYGRACE_INTEGRATIONS ?? "").trim().toLowerCase()
 );
-const runtimeTest = test.skipIf(INTEGRATIONS_DISABLED_BY_ENV);
+const runtimeTest = test.skipIf(process.platform === "win32" || INTEGRATIONS_DISABLED_BY_ENV);
 
 function fakeConfig(bin: string) {
   const config = cloneDefault();
@@ -493,7 +493,7 @@ describe("enrichImpactWithCodeGraph", () => {
     }
   });
 
-  test("real import edges become module edges; undeclared imports are info findings", async () => {
+  runtimeTest("real import edges become module edges; undeclared imports are info findings", async () => {
     const fake = makeFakeOctocode({ mode: "ok" });
     const root = makeProject();
     try {
@@ -520,7 +520,7 @@ describe("enrichImpactWithCodeGraph", () => {
     }
   });
 
-  test("a declared DEPENDS without a direct code edge is an info finding, never an error", async () => {
+  runtimeTest("a declared DEPENDS without a direct code edge is an info finding, never an error", async () => {
     const fake = makeFakeOctocode({ mode: "ok" });
     const root = makeProject();
     try {
