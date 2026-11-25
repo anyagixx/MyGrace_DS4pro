@@ -53,7 +53,7 @@
   </Observability>
 
   <DeliveryShape>
-    <shape>One npm package (@osovv/mygrace-cli) with all runtime sources and a bun shebang; optional DeepSeek Harness bundle, skills and status panel are published separately.</shape>
+    <shape>One npm package (mygrace-cli) with all runtime sources and a bun shebang; optional DeepSeek Harness bundle, skills and status panel are published separately.</shape>
     <shape>MCP server runs over stdio and launches the CLI through the absolute runtime path (no PATH dependency).</shape>
     <shape>Release gate: pack-smoke on a fresh temp dir plus the full CI suite; semver policy and honest CHANGELOG.</shape>
   </DeliveryShape>

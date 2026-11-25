@@ -6,13 +6,13 @@
 # a future release decision (ROADMAP Wave 4); see README.md.
 - insert:
     - id: mygrace-host
-      name: '@osovv/mygrace-dsh'
+      name: 'mygrace-dsh'
 - insert:
     - id: mygrace-skills
-      name: '@osovv/dsh-skill-mygrace'
+      name: 'dsh-skill-mygrace'
 - insert:
     - id: mygrace-rtk
-      name: '@osovv/dsh-mygrace-rtk'
+      name: 'dsh-mygrace-rtk'
 - insert:
     - id: mygrace-panel
       name: 'mygrace-status-panel'

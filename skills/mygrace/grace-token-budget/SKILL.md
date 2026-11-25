@@ -27,7 +27,7 @@ noisy dev commands (`git status`, `bun test`, builds, linters):
 unfiltered. rtk is a third-party tool — if it is not installed, skip this
 section; never depend on it.
 
-The `@osovv/dsh-mygrace-rtk` DSH middleware that rewrites commands automatically
+The `dsh-mygrace-rtk` DSH middleware that rewrites commands automatically
 ships only inside the unpublished preview bundle; do not assume it is active.
 
 ## 3. Large memory files (Caveman, optional)

@@ -27,7 +27,7 @@
  *      `--help` must list the commands parsed from the packaged `src/grace.ts`.
  *
  * What this does NOT validate (CI/registry steps): npm authentication, the
- * @osovv namespace ownership, 2FA/trusted-publisher configuration, provenance
+ * npm account/package ownership, 2FA/trusted-publisher configuration, provenance
  * signature generation (needs GitHub OIDC + npm registry), network install,
  * postinstall script behaviour, and platform-specific runtime behavior
  * (Linux/Windows/macOS coverage lives in the CI matrix). Those are documented in
@@ -323,7 +323,7 @@ function verifyTarballManifest(packageDir: string, tarballPackage: PackageJsonSh
     typeof tarballPackage.bin === "string"
       ? [["mygrace", tarballPackage.bin]]
       : Object.entries(tarballPackage.bin ?? {});
-  check(binEntries.length > 0, "tarball package.json has no `bin` entry — `npx @osovv/mygrace-cli` would not work");
+  check(binEntries.length > 0, "tarball package.json has no `bin` entry — `npx mygrace-cli` would not work");
   for (const [binName, binPath] of binEntries) {
     check(existsSync(join(packageDir, binPath)), `bin "${binName}" points to "${binPath}" which is missing from the tarball`);
   }
@@ -538,7 +538,7 @@ interface RunSummary {
 
 function execute(workDir: string): RunSummary {
   const rootPkg = readJsonFile(join(ROOT, "package.json")) as unknown as PackageJsonShape;
-  check(rootPkg.name === "@osovv/mygrace-cli", `unexpected package name "${rootPkg.name}"`);
+  check(rootPkg.name === "mygrace-cli", `unexpected package name "${rootPkg.name}"`);
   check(typeof rootPkg.version === "string" && /^\d+\.\d+\.\d+/.test(rootPkg.version), "package.json version is not semver");
 
   const tarball = packAndExtract(workDir, rootPkg);
@@ -582,7 +582,7 @@ function printSummary(summary: RunSummary, workDir: string): void {
     "Validated: tarball contents vs package.json files/bin, version/name, no file: deps, static import",
     "  completeness, offline dependency install (or clearly-marked degraded closure), packaged CLI",
     "  --version/--help with the documented command table.",
-    "NOT validated here: npm auth/2FA/trusted publisher, @osovv namespace ownership, provenance",
+    "NOT validated here: npm auth/2FA/trusted publisher, npm account/package ownership, provenance",
     "  signature generation (GitHub OIDC), network install, postinstall scripts, Windows/macOS",
     "  runtime behavior (see the CI OS matrix), and actual `npm publish`.",
     "",

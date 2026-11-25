@@ -9,10 +9,12 @@ It is a CLI (`mygrace`, 23 commands) plus an agent methodology (15 skills) and
 an MCP server (25 tools). It does not generate code, call a model, or send telemetry — it
 enforces traceability and context discipline for the agent you already use.
 
-Current version: `1.7.0`
+Current version: `1.7.1`
 
-> The package is **not published to npm yet**: install from a source checkout or
-> a packed tarball (see [Install](#install)). The v2 hardening waves are tracked
+> The package is **not published to npm yet** under its final unscoped name
+> `mygrace-cli`: install from a source checkout or a packed tarball (see [Install](#install)).
+> `@osovv` is a third-party scope (the project's starting point); this repository is
+> not affiliated with it and never publishes there. The v2 hardening waves are tracked
 > in [`ROADMAP.md`](ROADMAP.md).
 
 ## The model: indexes + per-entity files
@@ -91,8 +93,8 @@ bun run src/grace.ts --version
 From a packed tarball (what `bun pm pack` ships):
 
 ```bash
-bun pm pack                       # creates osovv-mygrace-cli-<version>.tgz
-mkdir mygrace-cli && tar -xzf osovv-mygrace-cli-*.tgz -C mygrace-cli
+bun pm pack                       # creates mygrace-cli-<version>.tgz
+mkdir mygrace-cli && tar -xzf mygrace-cli-*.tgz -C mygrace-cli
 cd mygrace-cli/package
 bun install --production
 bun run src/grace.ts --version
@@ -138,7 +140,7 @@ exercised in CI; the card is a convenience, and the CLI remains the source of
 truth.
 
 `install-dsh --bundle` was **removed in v1.1** and exits `2`: `packages/mygrace-dsh`
-is an unpublished optional preview (it needs unpublished `@osovv/*` packages and
+is an unpublished optional preview (it needs unpublished preview packages and
 a private panel package), not a supported install path.
 
 ## Quick start
@@ -248,11 +250,28 @@ Unavailable, disabled or unsupported tools produce `INTEGRATION_UNAVAILABLE` /
 `INTEGRATION_UNSUPPORTED_VERSION` info/warning findings and the command keeps its
 normal output and exit code. `MYGRACE_INTEGRATIONS=off` disables every adapter for
 reproducible CI. Versions are pinned and checked; nothing is downloaded or sent.
-Known limitation: the Octocode 0.29.2 MCP server did not answer `initialize` on
-our Linux dev host during the v1.4.x smoke runs, so the Octocode adapter's MCP contract is
-proven by recorded-payload/fake-server tests and the real-binary smoke
-(`bun run test:integrations --download`) is manual until that upstream issue is
-understood.
+### Octocode setup (graph mode)
+
+Octocode starts a **local FastEmbed/ONNX embedding model before it answers MCP
+`initialize`**. The default Jina code model is ~612 MB and is downloaded on first
+use; on a slow link that looks like a hang. Pre-warm the cache once (or configure
+smaller FastEmbed models) and subsequent sessions start in ~2 s:
+
+```bash
+# smaller, verified model pair (~215 MB total cache, no API key):
+octocode config \
+  --code-embedding-model fastembed:Qdrant/bge-small-en-v1.5-onnx-Q \
+  --text-embedding-model fastembed:Xenova/all-MiniLM-L6-v2
+# then run any graph command once with a generous timeout; it warms the cache:
+mygrace trace M-CLI --code --path .
+```
+
+Config lives in `~/.local/share/octocode/config.toml`. Octocode 0.30 migrates it
+to config version 4, which the pinned adapter (0.29.x) refuses — keep one version
+per machine, or restore the generated `config.toml.v3.*.bak`. Real-binary evidence
+(2026-11-25): with a warm cache, `trace --code` resolved 8/9 MODULE_MAP entries and
+`impact --code-graph` produced real cross-module import edges. The detailed
+investigation is in [`analysis/octocode-startup.md`](analysis/octocode-startup.md).
 
 ## Traceability, impact and next-step advice
 
@@ -528,7 +547,7 @@ Contributor workflow, code conventions and release gates:
 
 ## Release engineering and publishing
 
-One npm package ships everything (`@osovv/mygrace-cli`). Publishing is
+One npm package ships everything (`mygrace-cli`). Publishing is
 tag-driven and CI-only: `.github/workflows/release.yml` runs on a `v*` tag (or
 manually via workflow_dispatch with `dry_run=true`), executes
 `bun run release:check` and `bun run publish:dry`, then
@@ -546,11 +565,13 @@ published. CI runs the same gates plus an OS matrix (Ubuntu, Windows, macOS).
   credentials; real publication does.
 - The exact hand-off (semver policy, tag flow, trusted-publisher setup,
   provenance) is in [`CONTRIBUTING.md`](CONTRIBUTING.md) §"Releasing
-  `@osovv/mygrace-cli` (npm)".
+  `mygrace-cli` (npm)".
 
-The package is **publish-ready but not published** yet, so installation stays
-"from source or a tarball" (above). Once the owner publishes, `bun add -g
-@osovv/mygrace-cli` becomes the supported path.
+The package is **publish-ready but not published** yet (the npm account/token is
+owner-gated), so installation stays "from source or a tarball" (above). The first
+publication bootstraps the package with a one-time `NPM_TOKEN`, then the workflow
+switches to trusted publishing (OIDC + provenance); after that `npm install -g
+mygrace-cli` becomes the supported path.
 
 ## Platform support
 
@@ -574,5 +595,7 @@ The package is **publish-ready but not published** yet, so installation stays
 ## License
 
 MIT. Forked from [GRACE marketplace](https://github.com/osovv/grace-marketplace)
-by osovv. GRACE methodology designed by Vladimir Ivanov
+by osovv; the MyGRACE methodology was designed by Vladimir Ivanov. This repository
+(`anyagixx/MyGrace_DS4pro`) is an independent derivative and is **not affiliated**
+with the `@osovv` npm scope — the npm package is `mygrace-cli`.
 ([@turboplanner](https://t.me/turboplanner)).

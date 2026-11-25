@@ -1,4 +1,4 @@
-// @osovv/dsh-mygrace-rtk — DSH tool-middleware plugin: prefix noisy commands with `rtk`.
+// dsh-mygrace-rtk — DSH tool-middleware plugin: prefix noisy commands with `rtk`.
 //
 // Wraps the `bash` tool via DSH's `tools/execute` around-dispatch hook:
 // `git status` → `rtk git status` (RTK compresses test/log/git/ls/grep output

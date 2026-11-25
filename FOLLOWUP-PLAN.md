@@ -17,14 +17,15 @@ D needs a stable CLI and C is the only user-visible feature left; B is independe
 
 ---
 
-## A. npm publication — `@osovv/mygrace-cli`
+## A. npm publication — `mygrace-cli`
 
 ### Verified state (2026-11-24)
 
-- `package.json`: `name: "@osovv/mygrace-cli"`, `version: "1.6.0"`, `publishConfig.access: "public"`,
+- `package.json`: `name: "mygrace-cli"`, `version: "1.6.0"`, `publishConfig.access: "public"`,
   public GitHub repo, `repository` set.
-- `https://registry.npmjs.org/@osovv%2Fmygrace-cli` → **HTTP 404** (never published); npm search finds no
-  `mygrace`. Name is free, **scope ownership is unverified** (owner action).
+- The project does **not** own the `@osovv` scope: `@osovv` is the third-party codebase this
+  repository started from. The final unscoped package name is **`mygrace-cli`**, verified free on
+  the npm registry (HTTP 404, 2026-11-25).
 - `.github/workflows/release.yml` already has: `id-token: write`, npm ≥ 11.5.1 install, tag/version
   equality check, `release:check` + `publish:dry`, `npm publish --provenance --access public` gated by
   repository variable `NPM_PUBLISH_ENABLED == 'true'`, `NPM_TOKEN` fallback, manual `dry_run` dispatch.
@@ -33,10 +34,10 @@ D needs a stable CLI and C is the only user-visible feature left; B is independe
 
 ### A1. Owner prerequisites (blocking, outside the repo)
 
-1. Verify the npm account owns the **`@osovv`** scope/org (or create it). Without scope ownership the
-   trusted publisher cannot be configured.
+1. Create/verify an npm account for the product owner; no custom scope is needed for the unscoped
+   `mygrace-cli`. Enable 2FA.
 2. Enable 2FA on the npm account; org requires 2FA for publishing.
-3. Create a **granular npm automation token** (least privilege: publish on `@osovv` only, no org admin)
+3. Create a **granular npm automation token** (least privilege: publish `mygrace-cli` only, no org admin)
    and add it as repository secret `NPM_TOKEN`.
 4. Set repository variable `NPM_PUBLISH_ENABLED=true`.
 5. Add a protected GitHub **Environment** `npm-publish` (required reviewers = owner) and attach it to the
@@ -54,14 +55,14 @@ token. Publish the current release without a new tag:
 
 Acceptance for bootstrap:
 
-- `npm view @osovv/mygrace-cli@1.6.0 version dist.tarball dist.integrity time --json` succeeds;
-- `npm install -g @osovv/mygrace-cli@1.6.0` works on a clean Linux runner and prints `1.6.0`;
+- `npm view mygrace-cli@1.6.0 version dist.tarball dist.integrity time --json` succeeds;
+- `npm install -g mygrace-cli@1.6.0` works on a clean Linux runner and prints `1.6.0`;
 - npm page shows provenance attestation (OIDC via token publish does **not** produce provenance —
   expected for the bootstrap; the next release must).
 
 ### A3. Switch to trusted publishing (preferred steady state)
 
-1. npmjs.com → package `@osovv/mygrace-cli` → Settings → **Trusted publishing** → GitHub Actions:
+1. npmjs.com → package `mygrace-cli` → Settings → **Trusted publishing** → GitHub Actions:
    owner `anyagixx`, repo `MyGrace_DS4pro`, workflow `release.yml` (no environment, or the protected
    environment if npm supports it).
 2. Remove the `NODE_AUTH_TOKEN`/`NPM_TOKEN` block from the publish step, delete the repository secret,
@@ -72,12 +73,12 @@ Acceptance for bootstrap:
 ### A4. Repo hardening (small, do with the first publish)
 
 - `release.yml`: add post-publish verification step:
-  `node -p "require('child_process').execSync('npm view @osovv/mygrace-cli@' + process.env.VERSION + ' --json')"`
+  `node -p "require('child_process').execSync('npm view mygrace-cli@' + process.env.VERSION + ' --json')"`
   asserting version/tarball/integrity, plus `npm install -g` smoke in a temp prefix.
 - New `scripts/verify-npm-release.ts` (read-only): registry metadata, dist integrity, provenance
   attestation presence, tarball file list vs `publish:dry` expectations; exit 1 on mismatch.
 - CI scheduled job (weekly): re-verify the published package and provenance; catches yanks/registry drift.
-- README Install: replace “not published yet” with `npm install -g @osovv/mygrace-cli` and keep the
+- README Install: replace “not published yet” with `npm install -g mygrace-cli` and keep the
   source-checkout path as an alternative; CONTRIBUTING: mark trusted publishing as the primary path.
 - Rollback policy: **`npm deprecate`** the bad version with a message and publish a fix; never
   `npm unpublish` (breaks consumers, provenance stays). Keep the GitHub release asset regardless.
@@ -315,7 +316,7 @@ Release notes:
 
 | Risk | Mitigation |
 |---|---|
-| npm scope `@osovv` not owned / name unavailable | verify before anything; alternatives: unscoped `mygrace-cli` or new scope — decide in A1 (a rename is a breaking distribution change) |
+| npm account/name availability | resolved: no third-party scope is used; final name is the free unscoped `mygrace-cli`. Remaining risk is the owner's npm account/2FA/token setup |
 | First npm publish needs a token | one-time granular token, least privilege, rotate/remove immediately after OIDC works; protected environment approval |
 | Accidental publish on tag push | `NPM_PUBLISH_ENABLED` variable + protected environment with required reviewer |
 | Workflow schema v2/col-cap constraints force a bad mapping | pilot with real CLI first; prefer the delivery-plan mapping; document clamping/grouping; fall back to “architecture + tree only, workflow deferred” if validation cannot be satisfied honestly |
@@ -332,7 +333,7 @@ Release notes:
 
 ## H. Open questions for the owner
 
-1. Do you own the `@osovv` npm scope, or should we pick a different package name/scope before A2?
+1. Which npm account will own `mygrace-cli`, and can you add the one-time `NPM_TOKEN` + repository variable + protected environment? (No custom scope needed.)
 2. Is a protected GitHub Environment with manual approval acceptable for npm publication?
 3. Priority: C (new diagram kinds) before B (Octocode), or run B first if upstream responsiveness matters?
 4. For D: are you willing to run ~40–60 controlled DSH sessions as the operator, or should the Lead

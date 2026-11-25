@@ -1,5 +1,5 @@
 {
-  "name": "@osovv/dsh-skill-mygrace",
+  "name": "dsh-skill-mygrace",
   "description": "Bundled DSH skill provider for the MyGRACE methodology (15 MyGRACE skills). Optional plugin — the CLI itself needs no DSH packages.",
   "version": "0.1.0",
   "type": "module",

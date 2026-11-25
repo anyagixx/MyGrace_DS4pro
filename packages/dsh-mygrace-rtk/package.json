@@ -1,5 +1,5 @@
 {
-  "name": "@osovv/dsh-mygrace-rtk",
+  "name": "dsh-mygrace-rtk",
   "description": "DSH tool-middleware plugin: rewrites noisy dev commands to `rtk` (token saver) via the tools/execute hook.",
   "version": "0.1.0",
   "type": "module",

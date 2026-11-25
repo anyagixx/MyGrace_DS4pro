@@ -6,12 +6,12 @@
   <verification-ref>V-M-CODE-GRAPH</verification-ref>
 
   <annotations>
-    <export-READ_ONLY_TOOLS PURPOSE="ADR-9 allowlist of MCP tools this adapter may call: graphrag, view_signatures, structural_search." />
+    <export-READ_ONLY_TOOLS PURPOSE="ADR-9 allowlist of MCP tools this adapter may call: graphrag, structural_search (view_signatures is not used — real Octocode returns full file text, not signatures)." />
     <export-CodeGraphEdge PURPOSE="File→file imports edge (project-relative POSIX paths)." />
-    <export-collectImportEdges PURPOSE="One MCP session; graphrag get-relationships per supplied file; deduped, sorted imports edges; missing/broken tools → available:false + notes." />
-    <export-collectFileSymbols PURPOSE="One view_signatures call; per-file deduped symbol names/kinds; requested files always present." />
+    <export-collectImportEdges PURPOSE="One MCP session; graphrag get-relationships (format:json) per supplied file; deduped, sorted imports edges; missing/broken tools → available:false + notes." />
+    <export-collectFileSymbols PURPOSE="One graphrag search (format:json) call per file; per-file deduped symbol names/kinds from source_file inventories and symbol nodes; requested files always present." />
     <export-parseGraphRelationships PURPOSE="Defensive parser for recorded payloads: plain file endpoints only, imports only, dedupe/sort; invalid JSON → INTEGRATION_INVALID_OUTPUT note." />
-    <export-parseViewSignatures PURPOSE="Defensive parser for signatures payloads; symbol endpoints with kinds; dedupe per file." />
+    <export-parseViewSignatures PURPOSE="Defensive parser for graphrag search nodes; source_file symbol inventories + symbol kinds; dedupe per file." />
   </annotations>
 
   <CrossLink to="M-INTEGRATIONS" relation="resolution, kill switch, pinned range and scrubbed child env come from ADR-9 registry" />
@@ -37,9 +37,9 @@
   </contract>
 
   <notes>
-    <note-1>Read-only MCP tools only; no index, no semantic embeddings, no LLM, no network (graph/structural mode is tree-sitter over current sources).</note-1>
-    <note-2>Session lifecycle: spawn octocode mcp --path &lt;root&gt;, initialize, optional tools/list sanity check, calls, close in finally; one session per command invocation.</note-2>
-    <note-3>Honest limitation (v1.4.0): the pinned Octocode 0.29.2 Linux binary did not answer MCP initialize on our dev host; the contract is proven with recorded payloads and a fake MCP server, and the real-binary smoke is manual (`bun run test:integrations --download`).</note-3>
+    <note-1>Read-only MCP tools only; no semantic index, no LLM calls. Octocode does initialize its local FastEmbed embedding model before answering MCP `initialize`, so the first run may download model files (see note-3).</note-1>
+    <note-2>Session lifecycle: spawn octocode mcp --path &lt;root&gt;, initialize, optional tools/list sanity check, calls, close in finally; one session per command invocation. Startup timeout is config.integrations.octocode.timeoutMs; pre-warm models once for predictable latency.</note-2>
+    <note-3>v1.7.1 root cause fixed: the pinned 0.29.2 binary starts FastEmbed before answering `initialize`; the default Jina code model is 612 MB and downloads before the handshake, which looked like a hang. With a pre-warmed cache (or smaller FastEmbed models) the session starts in ~2 s and `impact --code-graph` / `trace --code` were verified against the real binary (see analysis/octocode-startup.md).</note-3>
     <note-4>External output is untrusted data: parsed defensively, capped (4 MB/tool, 12 notes), never shell-interpolated.</note-4>
   </notes>
 </M-CODE-GRAPH>

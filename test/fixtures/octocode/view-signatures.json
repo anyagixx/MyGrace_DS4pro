@@ -1,13 +1,53 @@
 [
   {
+    "id": "src/a/index.ts",
+    "name": "index.ts",
+    "kind": "source_file",
     "path": "src/a/index.ts",
-    "signatures": [
-      { "name": "alpha", "kind": "function" },
-      { "name": "alpha", "kind": "function" },
-      { "name": "alphaHelper", "kind": "function" },
-      { "name": "alphaThing", "kind": "class" }
-    ]
+    "symbols": ["alpha", "alphaHelper", "alphaThing"]
   },
-  { "path": "src/b/index.ts", "signatures": [{ "name": "beta", "kind": "function" }] },
-  { "path": "src/outside/unknown.ts", "signatures": [{ "name": "ghost", "kind": "function" }] }
+  {
+    "id": "src/a/index.ts::alpha",
+    "name": "alpha",
+    "kind": "function",
+    "path": "src/a/index.ts"
+  },
+  {
+    "id": "src/a/index.ts::alpha",
+    "name": "alpha",
+    "kind": "function",
+    "path": "src/a/index.ts"
+  },
+  {
+    "id": "src/a/index.ts::alphaHelper",
+    "name": "alphaHelper",
+    "kind": "function",
+    "path": "src/a/index.ts"
+  },
+  {
+    "id": "src/a/index.ts::alphaThing",
+    "name": "alphaThing",
+    "kind": "class",
+    "path": "src/a/index.ts"
+  },
+  {
+    "id": "src/b/index.ts",
+    "name": "index.ts",
+    "kind": "source_file",
+    "path": "src/b/index.ts",
+    "symbols": ["beta"]
+  },
+  {
+    "id": "src/b/index.ts::beta",
+    "name": "beta",
+    "kind": "function",
+    "path": "src/b/index.ts"
+  },
+  {
+    "id": "src/outside/unknown.ts",
+    "name": "unknown.ts",
+    "kind": "source_file",
+    "path": "src/outside/unknown.ts",
+    "symbols": ["ghost"]
+  }
 ]

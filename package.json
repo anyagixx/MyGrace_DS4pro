@@ -1,6 +1,6 @@
 {
-  "name": "@osovv/mygrace-cli",
-  "version": "1.7.0",
+  "name": "mygrace-cli",
+  "version": "1.7.1",
   "description": "MyGRACE — index-first engineering harness for AI coding agents: enforced contracts, lazy-loading knowledge graph, verification traceability, MCP/skills integration.",
   "license": "MIT",
   "homepage": "https://github.com/anyagixx/MyGrace_DS4pro#readme",
@@ -74,7 +74,8 @@
     "diagram": "bun run ./src/grace.ts diagram",
     "diagram:check": "bun run ./src/grace.ts diagram --check",
     "test:integrations:archify": "bun run ./scripts/integration-archify-smoke.ts",
-    "capsule:validate": "bun run ./src/grace.ts capsule validate"
+    "capsule:validate": "bun run ./src/grace.ts capsule validate",
+    "verify:npm": "bun run ./scripts/verify-npm-release.ts"
   },
   "bin": {
     "mygrace": "src/grace.ts"

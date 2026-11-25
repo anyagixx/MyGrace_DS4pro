@@ -1,13 +1,13 @@
 // MyGRACE DSH bundle — host plugin (UNPUBLISHED PREVIEW, see README.md).
 //
 // NOT installed by `mygrace install-dsh` in v1.1: `--bundle` was removed because
-// this package needs unpublished @osovv/* packages (and a private panel) and a
+// this package needs unpublished preview packages (and a private panel) and a
 // local `dsh plugin add` does not install its file: dependencies into the
 // profile. Kept for a future release decision; do not document it as a
 // supported path.
 //
 // Mounts the MyGRACE MCP server (`bun run src/grace-mcp.ts` of
-// @osovv/mygrace-cli) into the DSH session by mounting @deepseek-ai/dsh-mcp-client
+// mygrace-cli) into the DSH session by mounting @deepseek-ai/dsh-mcp-client
 // programmatically. Absolute paths are resolved at runtime, so the static
 // bundle patch stays path-free.
 
@@ -56,11 +56,11 @@ export function resolveBun() {
   return "bun";
 }
 
-/** Resolve the MCP server entry: src/grace-mcp.ts of @osovv/mygrace-cli. */
+/** Resolve the MCP server entry: src/grace-mcp.ts of mygrace-cli. */
 export function resolveMcpEntry() {
   const require = createRequire(import.meta.url);
   try {
-    const pkgPath = require.resolve("@osovv/mygrace-cli/package.json");
+    const pkgPath = require.resolve("mygrace-cli/package.json");
     const entry = path.join(path.dirname(pkgPath), "src", "grace-mcp.ts");
     if (existsSync(entry)) return entry;
   } catch {

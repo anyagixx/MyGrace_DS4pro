@@ -1,17 +1,19 @@
 # MyGRACE Roadmap — from audit findings to a professional agent engineering harness
 
-> Status: **v1.7.0 shipped 2026-11-24** (three diagram kinds: architecture/workflow/tree) — npm publication, Octocode startup diagnosis and capsule measurement remain; the pipeline is wired and gated. Baseline: v1.0.1 as audited on 2026-11-22
+> Status: **v1.7.1 shipped 2026-11-25** — package renamed to `mygrace-cli`, Octocode graph mode verified against the real binary, npm verification gate added; npm account bootstrap and capsule measurement remain. Baseline: v1.0.1 as audited on 2026-11-22
 > (see `analysis/00-EXECUTIVE-ASSESSMENT.md` and appendices 01–04).
 > Target: a tool that AI coding agents can use with confidence on software of **any complexity** —
 > from a 3-module script to a 500-module monorepo, on repos you do not fully trust.
-> **v1.7.0 shipped evidence:** `bun run release:check` green (typecheck 0, **727 tests / 35 files**,
+> **v1.7.1 shipped evidence:** `bun run release:check` green (typecheck 0, **727 tests / 35 files**,
 > demo lint, doc-truth gates, pack-smoke, **diagram IR freshness for all three kinds**, capsule validation),
 > `mygrace ci --path .` PASS on this repository (**29 modules / 4 phases / 29 verifications /
-> 39 declared test files**), and `bun run publish:dry` proves the publish artifact (68 files, 256 kB, 29 shipped src files, 137 relative + 28 bare imports). G13 green with
+> 39 declared test files**), and `bun run publish:dry` proves the publish artifact (68 files, 258 kB, 29 shipped src files, 137 relative + 28 bare imports). G13 green with
 > `MYGRACE_INTEGRATIONS=off`; G14: recorded-payload + fake-Octocode/fake-Archify contract tests run
 > in `bun test`, real-binary smokes stay manual; G15 checks **architecture, tree and workflow** IRs
 > (all validated/delivered against real Archify 3.2.0 and 3.3.x); G16 shipped capsules validate and
-> the capsule lifecycle is covered by fake-CLI tests.
+> the capsule lifecycle is covered by fake-CLI tests. Real Octocode 0.29.2 graph session verified
+> (warm FastEmbed cache: MCP initialize ~2.1 s; `trace --code` 8/9 symbols; `impact --code-graph`
+> 4 module edges); the adapter now matches the real `graphrag` API.
 > Surface: **23 CLI commands · 25 MCP tools · 15 skills**. Committed deterministic diagram IRs for
 > three kinds; experimental capsules with allowlisted read-only programs, replay qualification,
 > judgment hand-back and deopt-to-skill (no token-savings claims).
@@ -204,11 +206,11 @@ Release gates added: **G13** core gates pass with `MYGRACE_INTEGRATIONS=off` (no
 
 ### Wave 6 — Post-v1.6 follow-ups — *planned (full plan: `FOLLOWUP-PLAN.md`)*
 
-- **A. npm publication** *(ops, owner-gated)*: `@osovv/mygrace-cli` is still unpublished (registry 404).
+- **A. npm publication** *(ops, owner-gated)*: `mygrace-cli` is still unpublished (registry 404).
   Bootstrap the first version with a one-time granular token, then switch `release.yml` to GitHub OIDC
   trusted publishing (provenance, protected `npm-publish` environment, post-publish registry
   verification, no long-lived token); README install switches to npm once verified.
-- **B. Octocode MCP startup** *(investigation, timeboxed 2–4 days)*: the pinned 0.29.2 and the new
+- **B. Octocode MCP startup** *(v1.7.1 ✅ root cause + real-binary graph verified)*: the pinned 0.29.2 and the new
   0.30.0 both hang before answering MCP `initialize` on this host; reproduce across versions/models/
   env/flags, diagnose (ONNX/models vs startup I/O), open an upstream issue with the repro, harden the
   adapter’s startup-timeout hint/docs; claim “graph verified” only after a real smoke passes.

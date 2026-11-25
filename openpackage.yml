@@ -1,7 +1,7 @@
 name: mygrace
 description: "MyGRACE — index-first engineering harness for AI coding agents: line-capped indexes, per-entity contracts, trust-gated verification, lint-enforced invariants and MCP/skills integration."
-version: 1.7.0
-author: osovv
+version: 1.7.1
+author: anyagixx
 license: MIT
 homepage: https://github.com/anyagixx/MyGrace_DS4pro
 keywords: [mygrace, grace, semantic-markup, knowledge-graph, contracts, ai-agents, context-engineering, lazy-loading, index-based, verification, trust, mcp]

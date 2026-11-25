@@ -29,7 +29,7 @@
  *     backup files, and prints no activation instructions.
  *
  * `--bundle` was removed in v1.1: `packages/mygrace-dsh` is an unpublished
- * preview (it needs unpublished `@osovv/*` packages and a private panel), so
+ * preview (it needs unpublished preview packages and a private panel), so
  * the CLI never pretends to install it. The flag is kept as a stub that fails
  * with an actionable explanation (ADR-7: one package, optional plugins).
  */
@@ -1016,7 +1016,7 @@ function installSkills(skillsRoot: string, dryRun: boolean, actions: InstallActi
   if (sources.length === 0) {
     problems.push(
       problem("SKILLS_MISSING", `No MyGRACE skills found in "${skillsSourceDir()}".`, {
-        hint: "The package is incomplete; reinstall @osovv/mygrace-cli (the shipped tarball must contain skills/mygrace/grace-*).",
+        hint: "The package is incomplete; reinstall mygrace-cli (the shipped tarball must contain skills/mygrace/grace-*).",
       })
     );
     return;
@@ -1273,7 +1273,7 @@ function installPanel(
   if (!existsSync(source)) {
     problems.push(
       problem("PANEL_PACKAGE_MISSING", `Panel package not found at "${source}".`, {
-        hint: "Reinstall @osovv/mygrace-cli (the tarball ships packages/mygrace-status-panel).",
+        hint: "Reinstall mygrace-cli (the tarball ships packages/mygrace-status-panel).",
       })
     );
     return;
@@ -1424,7 +1424,7 @@ function preflightProblems(home: string, profile: string): InstallProblem[] {
   if (skillSourceDirs().length === 0) {
     problems.push(
       problem("SKILLS_MISSING", `No MyGRACE skills found in "${skillsSourceDir()}".`, {
-        hint: "The package is incomplete; reinstall @osovv/mygrace-cli (the shipped tarball must contain skills/mygrace/grace-*).",
+        hint: "The package is incomplete; reinstall mygrace-cli (the shipped tarball must contain skills/mygrace/grace-*).",
       })
     );
   }
@@ -1543,14 +1543,14 @@ export const installDshCommand = defineCommand({
     bundle: {
       type: "boolean",
       default: false,
-      description: "Removed in v1.1: the @osovv/mygrace-dsh bundle is an unpublished optional preview",
+      description: "Removed in v1.1: the mygrace-dsh bundle is an unpublished optional preview",
     },
     dshHome: { type: "string", description: "Override the DSH home (default: $DSH_HOME or ~/.dsh)" },
   },
   run: async ({ args }) => {
     if (args.bundle === true) {
       throw new UsageError(
-        "`install-dsh --bundle` was removed in v1.1: the @osovv/mygrace-dsh bundle is an unpublished optional preview (it needs unpublished @osovv/* packages and a private panel package).",
+        "`install-dsh --bundle` was removed in v1.1: the mygrace-dsh bundle is an unpublished optional preview (it needs unpublished preview packages and a private panel package).",
         {
           hint: "Use `mygrace install-dsh` (skills + PATH-free MCP row) or `mygrace install-dsh --panel` for the LIVE status card.",
         }

@@ -2,7 +2,7 @@
 /**
  * MyGRACE Publish Prepare
  *
- * The @osovv/mygrace-dsh bundle uses `file:` deps so the local install flow
+ * The mygrace-dsh bundle uses `file:` deps so the local install flow
  * works. For npm publish: swap the file: deps to versioned deps of the
  * sibling packages (from their package.json versions).
  *

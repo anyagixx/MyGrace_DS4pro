@@ -8,8 +8,8 @@
 
 ## Why it is a preview
 
-- It needs four packages that are **not published** (`@osovv/dsh-skill-mygrace`,
-  `@osovv/dsh-mygrace-rtk`, `@osovv/mygrace-cli`, `mygrace-status-panel`) via
+- It needs four packages that are **not published** (`dsh-skill-mygrace`,
+  `dsh-mygrace-rtk`, `mygrace-cli`, `mygrace-status-panel`) via
   `file:` dependencies, so `dsh plugin add` from a registry install cannot
   resolve them.
 - The panel dependency is deliberately `private: true`.
@@ -31,9 +31,9 @@ with `dsh --profile web --dump-config` + a real MCP tool call.
 
 | Row | Plugin | What it does |
 |---|---|---|
-| `mygrace-host` | this package | Mounts `@deepseek-ai/dsh-mcp-client` with `bun run src/grace-mcp.ts` of `@osovv/mygrace-cli` |
-| `mygrace-skills` | `@osovv/dsh-skill-mygrace` | The 15 `mygrace-*` skills in the session skill catalog |
-| `mygrace-rtk` | `@osovv/dsh-mygrace-rtk` | Rewrites noisy dev commands to `rtk` (if installed on PATH) |
+| `mygrace-host` | this package | Mounts `@deepseek-ai/dsh-mcp-client` with `bun run src/grace-mcp.ts` of `mygrace-cli` |
+| `mygrace-skills` | `dsh-skill-mygrace` | The 15 `mygrace-*` skills in the session skill catalog |
+| `mygrace-rtk` | `dsh-mygrace-rtk` | Rewrites noisy dev commands to `rtk` (if installed on PATH) |
 | `mygrace-panel` | `mygrace-status-panel` | The decorative sidebar placeholder card |
 
 ## Development-only inspection

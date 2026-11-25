@@ -4,11 +4,14 @@
  *
  * Runs the real `src/grace-code-graph.ts` adapter against a real Octocode
  * binary on `examples/demo-store` and on this repository, proving that:
- *   - graph mode works with no index, no models and no network;
+ *   - graph mode works with no semantic index and no LLM calls; Octocode does
+ *     initialize local FastEmbed embeddings first, so the model cache must be warm;
  *   - module files resolve to real import edges and per-file symbols;
  *   - the adapter degrades honestly when the tool is absent (skip mode).
  *
- * The binary is pinned to the tested range. Without `--download` the script
+ * Prerequisite: a warm Octocode FastEmbed cache (`~/.cache/octolib`). The first
+ * start downloads model files (default Jina code model ~612 MB; smaller FastEmbed
+ * models are supported and much faster to warm, see README). Without `--download` the script
  * uses `MYGRACE_OCTOCODE_BIN` → PATH and exits 0 with a skip message when the
  * tool is not installed (so `bun test` and local runs stay dependency-free).
  *

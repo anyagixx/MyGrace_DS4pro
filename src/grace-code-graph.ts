@@ -6,8 +6,8 @@
  * exactly one short-lived MCP stdio session (`octocode mcp --path <root>`) and
  * only its read-only tools:
  *
- *   - `graphrag` `{operation:"get-relationships"}` → file-level import edges
- *   - `view_signatures`                          → per-file symbol signatures
+ *   - `graphrag` `{operation:"get-relationships", format:"json"}` → file-level import edges
+ *   - `graphrag` `{operation:"search", format:"json"}`              → per-file symbol nodes
  *   - `structural_search` is allowlisted for future callers, never used to write
  *
  * Non-negotiable policy (ADR-9): the binary is resolved by the integration
@@ -34,14 +34,16 @@
 //   CodeSymbolsResult        — {available,version,files,notes} for collectFileSymbols
 //   READ_ONLY_TOOLS          — Octocode MCP tool allowlist (no index/grep/rewrite tools)
 //   parseGraphRelationships()— defensive graphrag payload → filtered/deduped/sorted import edges
-//   parseViewSignatures()    — defensive view_signatures payload → per-file deduped/sorted symbols
+//   parseViewSignatures()    — defensive graphrag search nodes → per-file deduped/sorted symbols
 //   collectImportEdges()     — one MCP session; get-relationships per module file; notes on failure
-//   collectFileSymbols()     — one MCP session; one view_signatures call; notes on failure
+//   collectFileSymbols()     — one MCP session; one graphrag search call per file; notes on failure
 // END_MODULE_MAP
 
 // START_CHANGE_SUMMARY
 //   v1.4.0 (Wave 5) — introduced the Octocode graph-only adapter: MCP session policy,
 //   import-edge and signature parsers, notes-only degradation (ADR-9).
+//   v1.7.1 — real-binary verification: graphrag needs node_id + format:json, and
+//   symbols come from graphrag search nodes (view_signatures returns file text).
 // END_CHANGE_SUMMARY
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -93,7 +95,7 @@ export interface CodeGraphOptions {
 /** Only these Octocode MCP tools may ever be called (ADR-9 allowlist, read-only). */
 export const READ_ONLY_TOOLS = ["graphrag", "view_signatures", "structural_search"] as const;
 /** Tools the adapter needs for its two capabilities (sanity check after initialize). */
-const REQUIRED_TOOLS = ["graphrag", "view_signatures"] as const;
+const REQUIRED_TOOLS = ["graphrag"] as const;
 /** Hard cap on notes so one broken session cannot flood the agent context. */
 const MAX_NOTES = 12;
 /** Output cap for a single tool payload (untrusted data, ADR-9). */
@@ -263,7 +265,16 @@ export interface ParsedSymbols {
   notes: string[];
 }
 
-/** Deduplicate/sort symbols per file; requested files are always present (possibly empty). */
+/**
+ * Parse a `graphrag search` payload defensively.
+ *
+ * Octocode returns an array of graph nodes: `source_file` nodes carry a
+ * `symbols: string[]` inventory, and symbol nodes carry `{name, kind, path}`.
+ * Symbol kinds are matched by node id (`path::name`) when present; symbols that
+ * only appear in a source-file inventory get kind `symbol`. Paths are
+ * normalized to project-relative POSIX form, restricted to the requested files,
+ * deduped and sorted. Requested files are always present (possibly empty).
+ */
 export function parseViewSignatures(
   payload: unknown,
   options: { root: string; files?: readonly string[] } = { root: "." }
@@ -281,7 +292,7 @@ export function parseViewSignatures(
     } catch {
       return {
         files: result,
-        notes: [`${INTEGRATION_FINDING_CODES.invalidOutput}: view_signatures returned invalid JSON.`],
+        notes: [`${INTEGRATION_FINDING_CODES.invalidOutput}: graphrag search returned invalid JSON.`],
       };
     }
   }
@@ -289,11 +300,24 @@ export function parseViewSignatures(
   if (items === null) {
     return {
       files: result,
-      notes: [`${INTEGRATION_FINDING_CODES.invalidOutput}: view_signatures returned an unexpected payload shape.`],
+      notes: [`${INTEGRATION_FINDING_CODES.invalidOutput}: graphrag search returned an unexpected payload shape.`],
     };
   }
 
   const allowed = options.files === undefined ? null : new Set(Object.keys(result));
+  const kinds = new Map<string, string>();
+  for (const item of items) {
+    if (item === null || typeof item !== "object" || Array.isArray(item)) continue;
+    const record = item as Record<string, unknown>;
+    const rawPath = fileOf(record, ["path", "file"]);
+    const name = typeof record.name === "string" ? record.name.trim() : "";
+    const kind = typeof record.kind === "string" ? record.kind.trim() : "";
+    if (rawPath === null || name === "" || kind === "" || kind === "source_file") continue;
+    const path = normalizeProjectFile(options.root, rawPath);
+    if (path === null) continue;
+    kinds.set(`${path}\u0000${name}`, kind);
+  }
+
   let parsedEntries = 0;
   for (const item of items) {
     if (item === null || typeof item !== "object" || Array.isArray(item)) continue;
@@ -302,19 +326,27 @@ export function parseViewSignatures(
     if (rawPath === null) continue;
     const path = normalizeProjectFile(options.root, rawPath);
     if (path === null || (allowed !== null && !allowed.has(path))) continue;
-    const signatures = Array.isArray(record.signatures) ? record.signatures : Array.isArray(record.symbols) ? record.symbols : [];
     const bucket = result[path] ?? (result[path] = []);
     const seen = new Set(bucket.map((symbol) => `${symbol.name}\u0000${symbol.kind}`));
-    for (const signature of signatures) {
-      if (signature === null || typeof signature !== "object" || Array.isArray(signature)) continue;
-      const signatureRecord = signature as Record<string, unknown>;
-      const name = typeof signatureRecord.name === "string" ? signatureRecord.name.trim() : "";
-      if (name === "") continue;
-      const kind = typeof signatureRecord.kind === "string" && signatureRecord.kind.trim() !== "" ? signatureRecord.kind.trim() : "unknown";
-      const key = `${name}\u0000${kind}`;
+    const inventory = Array.isArray(record.symbols)
+      ? record.symbols.filter((entry): entry is string => typeof entry === "string")
+      : [];
+    const directName = typeof record.name === "string" ? record.name.trim() : "";
+    const directKind = typeof record.kind === "string" ? record.kind.trim() : "";
+    const candidates: Array<{ name: string; kind: string }> = [];
+    for (const name of inventory) {
+      candidates.push({ name, kind: kinds.get(`${path}\u0000${name}`) ?? "symbol" });
+    }
+    if (inventory.length === 0 && directName !== "" && directKind !== "") {
+      candidates.push({ name: directName, kind: directKind });
+    }
+    for (const candidate of candidates) {
+      const symbol = { name: candidate.name.trim(), kind: candidate.kind };
+      if (symbol.name === "" || symbol.kind === "") continue;
+      const key = `${symbol.name}\u0000${symbol.kind}`;
       if (seen.has(key)) continue;
       seen.add(key);
-      bucket.push({ name, kind });
+      bucket.push(symbol);
     }
     parsedEntries += 1;
   }
@@ -323,7 +355,7 @@ export function parseViewSignatures(
     bucket.sort((left, right) => left.name.localeCompare(right.name) || left.kind.localeCompare(right.kind));
   }
   if (parsedEntries === 0 && items.length > 0) {
-    notes.push(`${INTEGRATION_FINDING_CODES.invalidOutput}: view_signatures returned no recognizable entries.`);
+    notes.push(`${INTEGRATION_FINDING_CODES.invalidOutput}: graphrag search returned no recognizable entries.`);
   }
   return { files: result, notes };
 }
@@ -594,16 +626,22 @@ export async function collectFileSymbols(options: CodeGraphOptions): Promise<Cod
     }
     const session = opened.session;
     try {
-      const payload = await callToolJson(session, "view_signatures", { files });
-      if (!payload.ok) {
-        notes.push(payload.note);
-        return { available: true, version: session.version, files: emptyFiles, notes: capNotes(notes) };
-      }
-      const parsed = parseViewSignatures(payload.value, { root, files });
-      notes.push(...parsed.notes);
       const filesWithSymbols: Record<string, SymbolInfo[]> = { ...emptyFiles };
-      for (const [file, symbols] of Object.entries(parsed.files)) {
-        filesWithSymbols[file] = symbols;
+      for (const file of files) {
+        const payload = await callToolJson(session, "graphrag", {
+          operation: "search",
+          query: file,
+          format: "json",
+        });
+        if (!payload.ok) {
+          notes.push(payload.note);
+          continue;
+        }
+        const parsed = parseViewSignatures(payload.value, { root, files: [file] });
+        notes.push(...parsed.notes);
+        for (const [key, symbols] of Object.entries(parsed.files)) {
+          filesWithSymbols[key] = symbols;
+        }
       }
       return { available: true, version: session.version, files: filesWithSymbols, notes: capNotes(notes) };
     } finally {

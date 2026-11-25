@@ -71,7 +71,7 @@ function readSkills(): SkillMeta[] {
 
 function packageJson(skills: readonly SkillMeta[]): Record<string, unknown> {
   return {
-    name: "@osovv/dsh-skill-mygrace",
+    name: "dsh-skill-mygrace",
     description:
       `Bundled DSH skill provider for the MyGRACE methodology (${skills.length} MyGRACE skills). ` +
       "Optional plugin — the CLI itself needs no DSH packages.",

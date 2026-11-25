@@ -1,4 +1,4 @@
-# MyGRACE release workflow — tag-driven npm publication of @osovv/mygrace-cli.
+# MyGRACE release workflow — tag-driven npm publication of mygrace-cli.
 #
 # Triggers:
 #   * push of a tag matching v* (e.g. v1.2.0)  → gates + artifact dry-run + publish
@@ -107,6 +107,10 @@ jobs:
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Verify npm publication (registry, integrity, tarball)
+        if: (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == false)) && vars.NPM_PUBLISH_ENABLED == 'true'
+        run: bun run scripts/verify-npm-release.ts --require-published
 
       - name: Publish skipped notice (publishing not enabled yet)
         if: vars.NPM_PUBLISH_ENABLED != 'true'

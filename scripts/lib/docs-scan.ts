@@ -178,7 +178,7 @@ export function extractCommandRefs(content: string, file = "<memory>"): CommandR
     while ((mention = mentions.exec(line)) !== null) {
       const start = mention.index;
       const previous = start === 0 ? " " : line[start - 1]!;
-      // Skip package names and file names: @osovv/mygrace-cli, mygrace.config.json, mygrace-http...
+      // Skip package names and file names: mygrace-cli, mygrace.config.json, mygrace-http...
       if (/[@A-Za-z0-9_\-./]/.test(previous)) continue;
       const after = line.slice(start + "mygrace".length);
       if (/^[-_.]/.test(after)) continue;

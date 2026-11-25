@@ -5,7 +5,7 @@ import { apply, inject, name, provider } from "../packages/dsh-skill-mygrace/lib
 
 const ROOT = import.meta.dirname + "/..";
 
-describe("@osovv/dsh-skill-mygrace provider", () => {
+describe("dsh-skill-mygrace provider", () => {
   test("name is the cordis plugin name, injects skills service", () => {
     expect(name).toBe("skill-mygrace");
     expect(inject).toEqual(["skills"]);
@@ -51,7 +51,7 @@ describe("@osovv/dsh-skill-mygrace provider", () => {
 
   test("package.json is the DSH skill-provider shape and says 15 skills", () => {
     const pkg = JSON.parse(readFileSync(join(ROOT, "packages", "dsh-skill-mygrace", "package.json"), "utf-8"));
-    expect(pkg.name).toBe("@osovv/dsh-skill-mygrace");
+    expect(pkg.name).toBe("dsh-skill-mygrace");
     expect(pkg.files).toContain("assets");
     expect(pkg.description).toContain("15 MyGRACE skills");
     expect(pkg.private).not.toBe(true); // this one is meant to be publishable

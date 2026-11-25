@@ -23,7 +23,7 @@ function readJson(path: string): Record<string, any> {
   return JSON.parse(readFileSync(path, "utf-8")) as Record<string, any>;
 }
 
-describe("@osovv/mygrace-dsh host plugin (unpublished preview)", () => {
+describe("mygrace-dsh host plugin (unpublished preview)", () => {
   test("name is mygrace-dsh, injects tools", () => {
     expect(name).toBe("mygrace-dsh");
     expect(inject).toEqual(["tools"]);
@@ -68,7 +68,7 @@ describe("@osovv/mygrace-dsh host plugin (unpublished preview)", () => {
 
   test("package is private and explicitly labelled an unpublished preview", () => {
     const pkg = readJson(join(DSH_PKG, "package.json"));
-    expect(pkg.name).toBe("@osovv/mygrace-dsh");
+    expect(pkg.name).toBe("mygrace-dsh");
     expect(pkg.private).toBe(true); // cannot be published accidentally
     expect(pkg.description).toContain("UNPUBLISHED PREVIEW");
     expect(pkg.description).toContain("NOT installed by `mygrace install-dsh`");

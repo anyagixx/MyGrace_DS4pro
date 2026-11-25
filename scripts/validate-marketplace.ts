@@ -464,8 +464,8 @@ function checkPackageManifest(root: string, collector: ValidationCollector): voi
   } catch {
     return; // reported by checkVersionConsistency
   }
-  if (pkg.name !== "@osovv/mygrace-cli") {
-    collector.error(`package.json name should be @osovv/mygrace-cli, got ${String(pkg.name)}`, "package.json");
+  if (pkg.name !== "mygrace-cli") {
+    collector.error(`package.json name should be mygrace-cli, got ${String(pkg.name)}`, "package.json");
   }
   // npm normalises a "./" prefix at publish time; accept both spellings.
   const binTarget = String(pkg.bin?.mygrace ?? "").replace(/^\.\//, "");

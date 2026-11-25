@@ -6,7 +6,7 @@
   <step-2 module="M-INSTALL" description="release.yml: tag v* / workflow_dispatch dry_run; release:check → publish:dry → npm publish --provenance --access public with OIDC trusted publishing (NPM_TOKEN fallback)." status="done" />
   <step-3 module="M-INSTALL" description="publish:dry artifact gate: pack → extract → static import completeness → packaged CLI smoke → offline install." status="done" />
   <step-4 module="M-INSTALL" description="CI OS matrix: typecheck/tests on ubuntu-latest, windows-latest and macos-latest; multi-language job stays separate." status="done" />
-  <step-5 module="M-INSTALL" description="npm publication of @osovv/mygrace-cli 1.3.0 with provenance — publish-ready after release:check and publish:dry; requires the owner to configure the trusted publisher and push the tag (operational action, no code owner)." status="pending" />
+  <step-5 module="M-INSTALL" description="npm publication of mygrace-cli 1.3.0 with provenance — publish-ready after release:check and publish:dry; requires the owner to configure the trusted publisher and push the tag (operational action, no code owner)." status="pending" />
 
   <outcome>
     <item-1>The DSH web sidebar shows real project counts, lint badges and the trust verdict instead of a decorative placeholder.</item-1>
@@ -19,7 +19,7 @@
     <item-1>packages/mygrace-status-panel: private host plugin + browser card, installed by install-dsh --panel only.</item-1>
     <item-2>.github/workflows/release.yml with tag/version consistency check and trusted-publishing credentials path.</item-2>
     <item-3>scripts/publish-dry-run.ts wired as `bun run publish:dry` and `bun run release:full`.</item-3>
-    <item-4>CONTRIBUTING.md "### Releasing @osovv/mygrace-cli (npm)": semver policy, tag flow, trusted publisher setup, provenance and the token fallback.</item-4>
+    <item-4>CONTRIBUTING.md "### Releasing mygrace-cli (npm)": semver policy, tag flow, trusted publisher setup, provenance and the token fallback.</item-4>
     <item-5>Published npm version 1.3.0 with provenance (pending owner action).</item-5>
   </deliverables>
 
@@ -46,7 +46,7 @@
 
   <dependencies>
     <item-1>Phase-3 gate: all 25 modules verified, `mygrace ci --path .` PASS, validators green.</item-1>
-    <item-2>Owner controls the npm scope @osovv, the trusted publisher configuration and the GitHub tag push.</item-2>
+    <item-2>Owner controls the npm account/package `mygrace-cli`, the trusted publisher configuration and the GitHub tag push.</item-2>
     <item-3>Release gates in CONTRIBUTING.md §"Releasing" describe the exact hand-off sequence.</item-3>
   </dependencies>
 </Phase-4>

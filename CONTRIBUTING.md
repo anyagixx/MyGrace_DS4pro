@@ -216,7 +216,7 @@ Rules that keep history useful:
 A release PR must run the full §6 checklist and state the version.
 
 
-### Releasing `@osovv/mygrace-cli` (npm)
+### Releasing `mygrace-cli` (npm)
 
 Version policy: semver; 1.x once release gates are green. Patch = fixes/docs only; minor = additive commands/flags/MCP tools; major = breaking CLI/JSON/envelope changes. Update CHANGELOG `[Unreleased]` → `[X.Y.Z]`, bump `package.json` version, commit, create and push a tag `vX.Y.Z`. `release.yml` refuses to publish when the tag does not equal the package version.
 
@@ -227,7 +227,7 @@ every gate and stay green with a "publish skipped" notice.
 
 Publication is tag-driven: pushing `v*` runs `release.yml`: `bun install --frozen-lockfile` → `bun run release:check` (typecheck, full tests, demo lint, `mygrace ci` self-check, marketplace/docs truth validators, pack-smoke) → `bun run publish:dry` (pack tarball, static import completeness, offline install, packaged CLI `--version`/`--help`) → `npm publish --provenance --access public`. Manual: Actions → release → Run workflow with `dry_run=true` (default) to exercise every gate without publishing.
 
-Credentials — trusted publishing preferred: on npmjs.com, package `@osovv/mygrace-cli` → Settings → Trusted publishing → GitHub Actions publisher (owner/repo, workflow `release.yml`). GitHub OIDC + `id-token: write` (already set) then publishes with provenance and no long-lived token; requires a public GitHub repo and npm CLI >= 11.5.1 (the workflow installs it). Fallback only: granular npm automation token in secret `NPM_TOKEN` wired via `NODE_AUTH_TOKEN`; rotate after use and remove the env block once OIDC is proven. Never publish from a laptop or with 2FA disabled.
+Credentials — trusted publishing preferred: on npmjs.com, package `mygrace-cli` → Settings → Trusted publishing → GitHub Actions publisher (owner/repo, workflow `release.yml`). GitHub OIDC + `id-token: write` (already set) then publishes with provenance and no long-lived token; requires a public GitHub repo and npm CLI >= 11.5.1 (the workflow installs it). Fallback only: granular npm automation token in secret `NPM_TOKEN` wired via `NODE_AUTH_TOKEN`; rotate after use and remove the env block once OIDC is proven. Never publish from a laptop or with 2FA disabled.
 
 Provenance: `--provenance` records repo/commit/workflow; it works only through the OIDC/trusted-publisher path, not a legacy token. Publication is CI-only; local sandboxes have no credentials.
 

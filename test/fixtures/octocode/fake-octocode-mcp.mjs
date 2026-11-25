@@ -26,10 +26,10 @@ const mode = modeIndex >= 0 ? argv[modeIndex + 1] : "ok";
 
 const fixture = (name) => JSON.parse(readFileSync(join(here, name), "utf8"));
 const relationships = fixture("graphrag-get-relationships.json");
-const signatures = fixture("view-signatures.json");
+const searchNodes = fixture("view-signatures.json");
 
 const TOOLS = [
-  { name: "graphrag", description: "fake graph relationships", inputSchema: { type: "object" } },
+  { name: "graphrag", description: "fake graph relationships/search", inputSchema: { type: "object" } },
   { name: "view_signatures", description: "fake file signatures", inputSchema: { type: "object" } },
   { name: "structural_search", description: "fake structural search", inputSchema: { type: "object" } },
 ];
@@ -45,7 +45,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   if (mode === "timeout") await new Promise((resolve) => setTimeout(resolve, 5_000));
   const name = request.params.name;
-  if (name === "graphrag") return text(mode === "invalid" ? "not-json{{" : JSON.stringify(relationships));
+  if (name === "graphrag") {
+    const operation = request.params.arguments?.operation;
+    return text(mode === "invalid" ? "not-json{{" : JSON.stringify(operation === "search" ? searchNodes : relationships));
+  }
   if (name === "view_signatures") return text(mode === "invalid" ? "not-json{{" : JSON.stringify(signatures));
   return text("[]");
 });
