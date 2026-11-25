@@ -9,6 +9,21 @@ release time (see `ROADMAP.md` §6, gate G10).
 
 Nothing yet.
 
+## [3.2.2] — 2026-11-26
+
+### Fixed
+
+- MWG npx-cache detection no longer spawns `npx`. It now reads npm's
+  `_npx/<hash>/node_modules/modern-web-guidance/package.json` cache directly,
+  so `integrations status`/`doctor` stay instant (the spawned probe added ~5 s
+  on Windows and tripped the doctor test timeout). No network, no child process;
+  `runner: "npx"` and the cached version are still reported.
+- Regression test builds a fake npx cache instead of a fake npx executable, so
+  the detection test runs on every platform.
+
+No runtime API changed; v3.2.0/v3.2.1 releases stay valid.
+
+
 ## [3.2.1] — 2026-11-26
 
 ### Fixed

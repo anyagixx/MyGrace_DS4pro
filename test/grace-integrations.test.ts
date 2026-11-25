@@ -8,7 +8,7 @@
  */
 
 import { describe, expect, test } from "bun:test";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { cloneDefault } from "../src/grace-config";
@@ -277,20 +277,22 @@ describe("modern-web-guidance integration", () => {
     }
   });
 
-  posixTest("falls back to a cached npx package when no global binary exists", () => {
-    const dir = makeDir();
+  test("falls back to a cached npx package when no global binary exists", () => {
+    const home = makeDir();
     const root = makeDir();
     try {
-      const npx = join(dir, "npx");
-      writeFileSync(npx, "#!/bin/sh\necho modern-web-guidance 1.0.2\n", { mode: 0o755 });
-      const status = resolveIntegration("modern-web-guidance", cloneDefault(), root, emptyEnv({ PATH: dir }));
+      const packageDir = join(home, ".npm", "_npx", "abc123", "node_modules", "modern-web-guidance");
+      mkdirSync(packageDir, { recursive: true });
+      writeFileSync(join(packageDir, "package.json"), JSON.stringify({ name: "modern-web-guidance", version: "1.0.2" }));
+      const status = resolveIntegration("modern-web-guidance", cloneDefault(), root, { HOME: home, PATH: "", TMPDIR: tmpdir() });
       expect(status.available).toBe(true);
       expect(status.supported).toBe(true);
       expect(status.runner).toBe("npx");
       expect(status.version).toBe("1.0.2");
       expect(status.source).toBe("path");
+      expect(status.bin).toBeNull();
     } finally {
-      rmSync(dir, { recursive: true, force: true });
+      rmSync(home, { recursive: true, force: true });
       rmSync(root, { recursive: true, force: true });
     }
   });

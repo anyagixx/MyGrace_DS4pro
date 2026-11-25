@@ -44,7 +44,7 @@
 
 import { defineCommand } from "citty";
 import { spawnSync } from "node:child_process";
-import { existsSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { delimiter, isAbsolute, join, resolve } from "node:path";
 import { tryFindProjectRoot } from "./grace-common";
 import { tryLoadConfig } from "./grace-config";
@@ -284,6 +284,42 @@ function archifyHint(settings: IntegrationSettings): string {
   );
 }
 
+/**
+ * Locate a cached npx package without spawning `npx` (fast, offline, Windows-safe).
+ * npm stores npx installs under `<cache>/_npx/<hash>/node_modules/<name>/package.json`.
+ */
+export function findNpxCachedPackage(
+  name: string,
+  env: NodeJS.ProcessEnv = process.env
+): { version: string; packageJson: string } | null {
+  const home = env.HOME ?? env.USERPROFILE ?? "";
+  const candidates = [
+    env.npm_config_cache ?? "",
+    home === "" ? "" : join(home, ".npm"),
+    process.platform === "win32" && env.LOCALAPPDATA !== undefined ? join(env.LOCALAPPDATA, "npm-cache") : "",
+  ].filter((value) => value !== "");
+  for (const cacheDir of candidates) {
+    const npxDir = join(cacheDir, "_npx");
+    let entries: string[];
+    try {
+      entries = readdirSync(npxDir);
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      const packageJson = join(npxDir, entry, "node_modules", name, "package.json");
+      if (!existsSync(packageJson)) continue;
+      try {
+        const parsed = JSON.parse(readFileSync(packageJson, "utf-8")) as { name?: unknown; version?: unknown };
+        if (parsed.name === name && typeof parsed.version === "string") return { version: parsed.version, packageJson };
+      } catch {
+        // ignore unreadable cache entries
+      }
+    }
+  }
+  return null;
+}
+
 function modernWebGuidanceHint(settings: IntegrationSettings, error: string | null): string {
   if (error !== null && error.includes("--version")) {
     return `Modern Web Guidance was found but its version could not be read; MyGRACE expects ${settings.versionRange}.`;
@@ -373,24 +409,21 @@ export function resolveIntegration(
     source = bin === null ? null : "path";
   }
   if (bin === null && id === "modern-web-guidance") {
-    const npx = findExecutableOnPath("npx", env);
-    if (npx !== null) {
-      const probe = probeVersionArgs(npx, ["--no-install", "modern-web-guidance", "--version"], Math.min(settings.timeoutMs, 5_000));
-      const supported = probe.version !== null && versionSatisfies(probe.version, settings.versionRange);
+    const cached = findNpxCachedPackage("modern-web-guidance", env);
+    if (cached !== null) {
+      const version = parseVersionText(cached.version);
+      const supported = version !== null && versionSatisfies(version, settings.versionRange);
       return {
         ...base,
-        available: probe.version !== null,
+        available: true,
         supported,
-        bin: npx,
+        bin: null,
         source: "path",
         runner: "npx",
-        version: probe.version === null ? null : probe.version.join("."),
-        error: probe.error,
-        hint:
-          probe.version !== null && supported
-            ? null
-            : `npx is available but a cached Modern Web Guidance ${settings.versionRange} was not found; ` +
-              `run \`npx modern-web-guidance@latest install\` or configure a guidancePacks CLI entry.`,
+        version: cached.version,
+        hint: supported
+          ? null
+          : `Cached npx Modern Web Guidance ${cached.version} is outside ${settings.versionRange}; update the npx cache or pin a supported version.`,
       };
     }
   }
