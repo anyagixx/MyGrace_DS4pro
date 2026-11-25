@@ -87,7 +87,13 @@ jobs:
         if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${GITHUB_REF_NAME}" dist/*.tgz --generate-notes --verify-tag
+        run: |
+          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            echo "release ${GITHUB_REF_NAME} already exists — refreshing the tarball asset"
+            gh release upload "${GITHUB_REF_NAME}" dist/*.tgz --clobber
+          else
+            gh release create "${GITHUB_REF_NAME}" dist/*.tgz --generate-notes --verify-tag
+          fi
 
       - name: Manual run notice (nothing released)
         if: github.event_name == 'workflow_dispatch'
