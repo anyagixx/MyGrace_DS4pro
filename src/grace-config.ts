@@ -22,7 +22,7 @@
 //   loadConfig()             — read + validate, throws ConfigError with all issues listed
 //   tryLoadConfig()          — non-throwing variant
 //   configPath()             — absolute config path for a project root
-//   serializeConfig()        — stable JSON used by `mygrace init-dsh`
+//   serializeConfig()        — stable JSON used by `mygrace setup init`
 //   IntegrationsConfig       — optional external integrations (ADR-9), validated like every other field
 // END_MODULE_MAP
 
@@ -174,7 +174,7 @@ export function loadConfig(projectRoot: string): ConfigLoadResult {
   } catch (error) {
     throw new ConfigError(`Cannot parse ${CONFIG_FILENAME}: ${error instanceof Error ? error.message : String(error)}`, {
       file: CONFIG_FILENAME,
-      hint: "The file must contain valid JSON; run `mygrace init-dsh --force` to regenerate defaults.",
+      hint: "The file must contain valid JSON; run `mygrace setup init --force` to regenerate defaults.",
     });
   }
 
@@ -208,7 +208,7 @@ export function tryLoadConfig(
   }
 }
 
-/** Stable serialization used when `init-dsh` writes the default config. */
+/** Stable serialization used when `setup init` writes the default config. */
 export function serializeConfig(config: MyGraceConfig): string {
   return `${JSON.stringify(config, null, 2)}\n`;
 }

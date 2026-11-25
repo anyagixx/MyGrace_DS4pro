@@ -23,9 +23,9 @@ describe("dsh-skill-mygrace provider", () => {
     expect(provider.name).toBe("mygrace");
   });
 
-  test("list() returns the 15 MyGRACE skills", async () => {
+  test("list() returns the 12 MyGRACE skills", async () => {
     const skills = await provider.list();
-    expect(skills.length).toBe(15);
+    expect(skills.length).toBe(12);
     for (const s of skills) {
       expect(s.name).toMatch(/^mygrace-[a-z0-9-]+$/);
       expect(s.provider).toBe("mygrace");
@@ -35,7 +35,7 @@ describe("dsh-skill-mygrace provider", () => {
       expect(typeof s.invocation.userInvocable).toBe("boolean");
       expect(typeof s.rank).toBe("number");
     }
-    expect(skills.map((s: any) => s.name)).toContain("mygrace-token-budget");
+    expect(skills.map((s: any) => s.name)).toContain("mygrace-reviewer");
   });
 
   test("get() returns the skill file content", async () => {
@@ -49,11 +49,11 @@ describe("dsh-skill-mygrace provider", () => {
     expect(loaded.source).toBe("bundled");
   });
 
-  test("package.json is the DSH skill-provider shape and says 15 skills", () => {
+  test("package.json is the DSH skill-provider shape and says 12 skills", () => {
     const pkg = JSON.parse(readFileSync(join(ROOT, "packages", "dsh-skill-mygrace", "package.json"), "utf-8"));
     expect(pkg.name).toBe("dsh-skill-mygrace");
     expect(pkg.files).toContain("assets");
-    expect(pkg.description).toContain("15 MyGRACE skills");
+    expect(pkg.description).toContain("12 MyGRACE skills");
     expect(pkg.private).not.toBe(true); // this one is meant to be publishable
   });
 });

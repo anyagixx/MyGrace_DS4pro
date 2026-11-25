@@ -71,11 +71,11 @@ describe("mygrace-dsh host plugin (unpublished preview)", () => {
     expect(pkg.name).toBe("mygrace-dsh");
     expect(pkg.private).toBe(true); // cannot be published accidentally
     expect(pkg.description).toContain("UNPUBLISHED PREVIEW");
-    expect(pkg.description).toContain("NOT installed by `mygrace install-dsh`");
+    expect(pkg.description).toContain("NOT installed by `mygrace setup install`");
     const readme = readFileSync(join(DSH_PKG, "README.md"), "utf-8");
     expect(readme).toContain("UNPUBLISHED OPTIONAL PREVIEW");
     expect(readme).toContain("not installed by the CLI");
-    expect(readme).not.toContain("bun run src/grace.ts install-dsh --bundle");
+    expect(readme).not.toContain("bun run src/grace.ts setup install --bundle");
   });
 
   test("bundle patch is valid YAML with the four preview rows", () => {

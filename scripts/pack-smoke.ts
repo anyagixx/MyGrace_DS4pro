@@ -8,8 +8,8 @@
  *
  *   1. verifies every relative import of `src/grace.ts` exists in the tarball,
  *   2. runs the packaged CLI (`--version`, `--help`),
- *   3. runs `init-dsh` on an empty project and lints the generated scaffold,
- *   4. runs `install-dsh --dry-run` against a throwaway DSH_HOME.
+ *   3. runs `setup init` on an empty project and lints the generated scaffold,
+ *   4. runs `setup install --dry-run` against a throwaway DSH_HOME.
  *
  * Exits 1 with an actionable message on the first failed assertion.
  *
@@ -111,14 +111,14 @@ function checkCliStarts(ctx: SmokeContext): void {
   log("packaged CLI --help works");
 }
 
-/** 3. End-to-end: init-dsh must produce a lint-clean scaffold from packaged templates. */
+/** 3. End-to-end: setup init must produce a lint-clean scaffold from packaged templates. */
 function checkInitDsh(ctx: SmokeContext): void {
   const projectDir = join(ctx.workDir, "scaffold");
   mkdirSync(projectDir, { recursive: true });
-  run("bun", ["run", ctx.packagedCli, "init-dsh", "--path", projectDir, "--name", "PackSmoke"], ctx.packageDir);
+  run("bun", ["run", ctx.packagedCli, "setup", "init", "--path", projectDir, "--name", "PackSmoke"], ctx.packageDir);
 
   const indexPath = join(projectDir, "docs", "graph-index.xml");
-  if (!existsSync(indexPath)) fail("init-dsh did not create docs/graph-index.xml");
+  if (!existsSync(indexPath)) fail("setup init did not create docs/graph-index.xml");
   try {
     const document = parseXml(readFileSync(indexPath, "utf-8"), indexPath);
     if (!findElements(document, (element) => element.tag === "GraphIndex").length) {
@@ -132,7 +132,7 @@ function checkInitDsh(ctx: SmokeContext): void {
   if (!lintOutput.includes("0") || lintOutput.includes("Errors: 1")) {
     fail(`fresh scaffold does not lint clean:\n${lintOutput}`);
   }
-  log("init-dsh scaffold lints clean");
+  log("setup init scaffold lints clean");
 }
 
 /** 4. Installer dry-run against a throwaway home (never touches the real ~/.dsh). */
@@ -141,13 +141,13 @@ function checkInstallDryRun(ctx: SmokeContext): void {
   mkdirSync(join(fakeHome, ".dsh", "profiles", "web"), { recursive: true });
   writeFileSync(join(fakeHome, ".dsh", "profiles", "web", "cordis.patch.yml"), "[]\n");
 
-  const output = run("bun", ["run", ctx.packagedCli, "install-dsh", "--dry-run"], ctx.packageDir, {
+  const output = run("bun", ["run", ctx.packagedCli, "setup", "install", "--dry-run"], ctx.packageDir, {
     HOME: fakeHome,
     DSH_HOME: join(fakeHome, ".dsh"),
   });
-  if (!output.includes("would")) fail(`install-dsh --dry-run printed no planned actions:\n${output}`);
-  if (existsSync(join(fakeHome, ".dsh", "skills"))) fail("install-dsh --dry-run wrote files despite --dry-run");
-  log("install-dsh --dry-run plans actions without writing");
+  if (!output.includes("would")) fail(`setup install --dry-run printed no planned actions:\n${output}`);
+  if (existsSync(join(fakeHome, ".dsh", "skills"))) fail("setup install --dry-run wrote files despite --dry-run");
+  log("setup install --dry-run plans actions without writing");
 }
 
 function main(): void {

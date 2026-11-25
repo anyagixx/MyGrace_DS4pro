@@ -20,7 +20,7 @@ legacy monolithic XML is not used — do not create or read it.
 ## Trust model (CRITICAL)
 
 Project-declared commands (`<module-checks>` in the canonical
-`docs/verification/V-M-XXX.xml`) are **untrusted input**. `mygrace test` /
+`docs/verification/V-M-XXX.xml`) are **untrusted input**. `mygrace verify` /
 `mygrace verify` execute them only when one of these holds:
 
 - `.mygrace/trust.json` is current — created by `mygrace trust` after review;
@@ -36,13 +36,13 @@ Dangerous command patterns are refused even in a trusted project unless
 `mygrace trust` again. If a command is refused, report the refusal; do not
 bypass it.
 
-## Skills (15)
+## Skills (12)
 
 Prefer the matching skill (via the `skill` tool) over re-deriving the process:
 
 | Skill | Purpose |
 |---|---|
-| `mygrace-init` | Bootstrap docs/ + AGENTS.md + config (`mygrace init-dsh`) |
+| `mygrace-init` | Bootstrap docs/ + AGENTS.md + config (`mygrace setup init`) |
 | `mygrace-plan` | Design modules/phases/verification; write entities + indexes |
 | `mygrace-verification` | Design scenarios, log markers and evidence |
 | `mygrace-execute` | Implement the plan step by step (current phase + module) |
@@ -58,15 +58,15 @@ Prefer the matching skill (via the `skill` tool) over re-deriving the process:
 | `mygrace-setup-subagents` | DSH subagent role prompts |
 | `mygrace-token-budget` | Output-side token policy |
 
-## MCP tools (25, when the mygrace MCP server is connected)
+## MCP tools (21, when the mygrace MCP server is connected)
 
-`mygrace_list_modules` · `mygrace_show_module` · `mygrace_show_phase` ·
+`mygrace_find_modules` · `mygrace_show_module` · `mygrace_show_phase` ·
 `mygrace_find_modules` · `mygrace_phase_index` · `mygrace_doctor` ·
-`mygrace_test` · `mygrace_trust` · `mygrace_ci` · `mygrace_packet` ·
-`mygrace_focus` · `mygrace_context_cost` · `mygrace_verify` ·
+`mygrace_verify` · `mygrace_trust` · `mygrace_ci` · `mygrace_context` ·
+`mygrace_context` · `mygrace_context` · `mygrace_verify` ·
 `mygrace_list_verifications` · `mygrace_lint` · `mygrace_show_file` · `mygrace_status` · `mygrace_trace` · `mygrace_impact` · `mygrace_next` · `mygrace_projects` · `mygrace_integrations` · `mygrace_diagram` ·
 `mygrace_capsule_list` · `mygrace_capsule_run`
-DSH exposes them as `mcp__mygrace__<tool>` (e.g. `mcp__mygrace__lint`). `install-dsh --panel` also wires the optional LIVE sidebar card that reads `mygrace status`.
+DSH exposes them as `mcp__mygrace__<tool>` (e.g. `mcp__mygrace__lint`). `setup install --panel` also wires the optional LIVE sidebar card that reads `mygrace status`.
 
 ## Six Principles
 
@@ -106,7 +106,7 @@ AGENTS.md                  # this file
 
 When `docs/graph-index.xml` approaches `indexCaps.graph`, shard it: `mygrace module shard` is a dry run, `--apply` writes `docs/modules/shard-<slug>.xml` + `<Shard href=.../>` refs and a backup; reads are shard-transparent except `module show`. `sourceDirs`/`markupExts` replace defaults, `testRunner` is only the no-`<module-checks>` fallback; `mygrace projects` covers monorepos.
 
-## Commands (23 CLI)
+## Commands (18 CLI)
 
 - `mygrace status --path .` / `mygrace ci --path .` / `mygrace next --path .` — snapshot / one-command gate / deterministic next action
 - `mygrace lint --strict --path .` — integrity gate; add `--changed --base <ref>` (or `--files`) for incremental scope
@@ -115,9 +115,9 @@ When `docs/graph-index.xml` approaches `indexCaps.graph`, shard it: `mygrace mod
 - `mygrace diagram [--kind architecture|workflow|tree] [--format json|mermaid|html] [--check]` — render the docs graph as the module graph, the delivery plan or the capability hierarchy (IR/Mermaid always; HTML via optional Archify); `--check` verifies every committed IR
 - `mygrace capsule list|validate|qualify|run|continue` — experimental allowlisted routines with replay qualification and judgment hand-back (disabled unless `integrations.capsules.enabled`)
 - `mygrace trust --path .` — review + record project commands; `--check`/`--revoke`; audit log + deny list
-- `mygrace test --module M-XXX` / `mygrace verify --module M-XXX` — scoped tests
+- `mygrace verify --module M-XXX` / `mygrace verify --module M-XXX` — scoped tests
 - `mygrace projects --path .` — monorepo health; `mygrace module index|find|show|list`, `mygrace phase index|show`, `mygrace verification index`
-- `mygrace packet M-XXX` / `mygrace focus M-XXX` / `mygrace context-cost --path .` — worker prompt / set / budget; `mygrace doctor --path .` — environment
+- `mygrace context packet M-XXX` / `mygrace context focus M-XXX` / `mygrace context cost --path .` — worker prompt / set / budget; `mygrace setup doctor --path .` — environment
 
 ## Editing Rules
 

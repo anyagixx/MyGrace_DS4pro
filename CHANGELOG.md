@@ -9,6 +9,44 @@ release time (see `ROADMAP.md` §6, gate G10).
 
 Nothing yet.
 
+## [2.0.0] — 2026-11-25
+
+### Breaking changes (surface consolidation)
+
+- **CLI: 23 → 18 top-level commands.** `mygrace test` is merged into
+  `mygrace verify` (always compact; full run is the default), `packet`/`focus`/
+  `context-cost` moved under `mygrace context packet|focus|cost`, and
+  `init-dsh`/`install-dsh`/`doctor` moved under `mygrace setup init|install|doctor`.
+  There are **no deprecated aliases**; migration table:
+  [`docs/migrations/v2.0.md`](docs/migrations/v2.0.md).
+- **MCP: 25 → 21 tools.** `mygrace_test` → `mygrace_verify`
+  (`allowUnsafeCommands` moved with it); `mygrace_packet`/`mygrace_focus`/
+  `mygrace_context_cost` → `mygrace_context {mode: "packet"|"focus"|"cost"}`;
+  `mygrace_list_modules` → `mygrace_find_modules` (no query lists all).
+- **Skills: 15 → 12.** `mygrace-token-budget` merged into `mygrace-cli`,
+  `mygrace-setup-subagents` into `mygrace-multiagent-execute`,
+  `mygrace-refresh` into `mygrace-reviewer`.
+- No capability was removed; behavior, trust/deny-list/audit, JSON envelopes and
+  exit codes are unchanged. The public/docs validators now enforce
+  18 commands / 21 tools / 12 skills.
+
+### Changed
+
+- Docs, AGENTS/templates, skills, quickstart, migration guide and validators
+  rewritten for the smaller surface; the quickstart keeps the daily path at
+  `mygrace next` and `mygrace ci`.
+- Tests: **729 tests / 35 files** (MCP catalogue/mapping, CLI entry points,
+  install e2e and skill provider updated); no runtime dependency changes.
+
+### Limitations
+
+- v2.0 is intentionally breaking: scripts pinned to the old command/tool names
+  must migrate; there is no compatibility shim.
+- Consolidation is not maximal: `module`/`phase`/`verification`/`file` readers
+  remain separate commands; further reduction is a later major decision.
+- Benchmarks and the external/agent measurement gap are unchanged from v1.8.0.
+
+
 ## [1.8.0] — 2026-11-25
 
 ### Added

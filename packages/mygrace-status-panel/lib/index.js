@@ -12,7 +12,7 @@
  * Data is computed FRESH per request by `buildStatusPayload()`
  * (`lib/status-payload.js`), which spawns `mygrace status --format json`
  * through a PATH-free CLI resolution (MYGRACE_BIN → the launcher written by
- * `mygrace install-dsh`). The route is disposed when the plugin is disposed.
+ * `mygrace setup install`). The route is disposed when the plugin is disposed.
  *
  * This half is deliberately dependency-free beyond node builtins and the
  * sibling data module, so DSH can load it from a profile-installed package

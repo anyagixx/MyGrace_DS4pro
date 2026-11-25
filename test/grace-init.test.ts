@@ -14,10 +14,10 @@ interface RunResult {
   stdout: string;
 }
 
-/** Run `mygrace init-dsh` in a throwaway directory. */
+/** Run `mygrace setup init` in a throwaway directory. */
 function runInit(path: string, extraArgs: string[] = []): RunResult {
   try {
-    const stdout = execFileSync(process.execPath, ["run", CLI, "init-dsh", "--path", path, ...extraArgs], {
+    const stdout = execFileSync(process.execPath, ["run", CLI, "setup", "init", "--path", path, ...extraArgs], {
       encoding: "utf-8",
       env: { ...process.env },
       stdio: ["ignore", "pipe", "pipe"],
@@ -38,7 +38,7 @@ function withTempDir<T>(body: (dir: string) => T): T {
   }
 }
 
-describe("init-dsh", () => {
+describe("setup init", () => {
   test("bootstraps docs indexes, AGENTS.md, config and a .gitignore", () => {
     withTempDir((project) => {
       const result = runInit(project, ["--name", "InitTest"]);

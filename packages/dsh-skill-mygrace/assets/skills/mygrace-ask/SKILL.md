@@ -9,7 +9,7 @@ whenToUse: "The user asks a question about project structure, modules, phases, v
 ## 1. Load the index only
 
 Read `docs/graph-index.xml` (≤100 lines) — or use the MCP tool
-`mygrace_list_modules` when connected. It tells you every module that exists.
+`mygrace_find_modules` when connected. It tells you every module that exists.
 Do not read all module files; do not look for legacy monolithic
 `knowledge-graph.xml` (it does not exist in MyGRACE projects).
 

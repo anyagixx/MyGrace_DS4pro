@@ -1,4 +1,4 @@
-<!-- Canonical verification entry. <module-checks> is read by mygrace test/verify; commands are trust-gated (run `mygrace trust` after review). -->
+<!-- Canonical verification entry. <module-checks> is read by mygrace verify/verify; commands are trust-gated (run `mygrace trust` after review). -->
 <V-M-INSTALL MODULE="M-INSTALL" PRIORITY="medium" STATUS="done">
   <test-files>
     <file>test/grace-install.test.ts</file>
@@ -13,7 +13,7 @@
   <scenarios>
     <scenario-1 kind="success">Install is structurally idempotent, atomic and reversible byte-for-byte.</scenario-1>
     <scenario-2 kind="failure">Malformed YAML is refused before editing; a failed component exits non-zero.</scenario-2>
-    <scenario-3 kind="success">LIVE status panel: install-dsh --panel registers the host route GET /api/mygrace.status and the browser card; the payload is built from `mygrace status --format json` via MYGRACE_BIN/$DSH_HOME launcher, honours ?path=/MYGRACE_PROJECT_ROOT/cwd walk-up, sets cache-control: no-store and reports {ok:false,error} instead of throwing (5 s CLI timeout).</scenario-3>
+    <scenario-3 kind="success">LIVE status panel: setup install --panel registers the host route GET /api/mygrace.status and the browser card; the payload is built from `mygrace status --format json` via MYGRACE_BIN/$DSH_HOME launcher, honours ?path=/MYGRACE_PROJECT_ROOT/cwd walk-up, sets cache-control: no-store and reports {ok:false,error} instead of throwing (5 s CLI timeout).</scenario-3>
     <scenario-4 kind="failure">Uninstalling the panel restores the profile byte-for-byte, and a missing project/route/CLI/timeout renders the graceful "MyGRACE: not connected — reason" line rather than breaking the GUI.</scenario-4>
   </scenarios>
 

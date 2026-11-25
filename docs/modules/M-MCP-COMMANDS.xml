@@ -40,6 +40,6 @@
   <notes>
     <note-1>Pure data and formatting: no MCP SDK import, no filesystem access, no process spawning, fully unit-testable.</note-1>
     <note-2>ListTools and CallTool share this one catalog, so schemas and mappings cannot drift.</note-2>
-    <note-3>25 tools including mygrace_trace, mygrace_impact, mygrace_next, mygrace_projects, mygrace_integrations, mygrace_diagram, mygrace_capsule_list, mygrace_capsule_run; DSH exposes them as mcp__mygrace__&lt;tool&gt;.</note-3>
+    <note-3>21 tools including mygrace_trace, mygrace_impact, mygrace_next, mygrace_projects, mygrace_integrations, mygrace_diagram, mygrace_capsule_list, mygrace_capsule_run; DSH exposes them as mcp__mygrace__&lt;tool&gt;.</note-3>
   </notes>
 </M-MCP-COMMANDS>

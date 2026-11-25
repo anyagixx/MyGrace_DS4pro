@@ -1,11 +1,11 @@
 ---
 name: mygrace-cli
-description: "Reference for the mygrace CLI (23 commands) and MCP server (25 tools): quality gate, trust, index reads, verification and JSON envelopes. Use when you need the exact command/flag/tool for a MyGRACE operation."
+description: "Reference for the mygrace CLI (18 commands) and MCP server (21 tools): quality gate, trust, index reads, verification and JSON envelopes. Use when you need the exact command/flag/tool for a MyGRACE operation."
 whenToUse: "You need a concrete CLI command or MCP tool — flags, exit codes, trust behaviour or JSON output."
 ---
 
 Use `mygrace` as the MyGRACE-aware read/execute layer, and the MCP tools as the
-preferred in-agent access path (25 tools; DSH exposes them as
+preferred in-agent access path (21 tools; DSH exposes them as
 `mcp__mygrace__<tool>`).
 
 ## Project resolution (harness sessions)
@@ -36,13 +36,13 @@ but explicit paths are required for correctness across multiple projects.
 - `mygrace phase index --path <root>` · `mygrace phase show <Phase-N> --path <root>`
 - `mygrace verification index --priority <p> --format json --path <root>`
 - `mygrace file show <path> --root <root> [--contracts] [--blocks]`
-- `mygrace context-cost --path <root>` — read budget per operation
-- `mygrace doctor --path <root> [--format json]` — environment + DSH integration
+- `mygrace context cost --path <root>` — read budget per operation
+- `mygrace setup doctor --path <root> [--format json]` — environment + DSH integration
 
 ## Execution commands (trust-gated)
 
 - `mygrace trust --path <root>` — review declared commands, write `.mygrace/trust.json`
-- `mygrace test --module <M-XXX> [--compact] [--allow-commands] --path <root>`
+- `mygrace verify --module <M-XXX> [--compact] [--allow-commands] --path <root>`
 - `mygrace verify [--module <M-XXX>] [--allow-commands] --path <root>` — digest; `.mygrace/last-failures.md` on failure
 - `mygrace lint --strict --path <root>` — integrity gate; incremental scope with `--changed [--base <ref>]` or `--files a,b,c`
 - `mygrace trace <ID> --path <root> [--format json] [--code] [--strict-contracts]` — proof chain (module/verification → tests → command provenance → requirements → phases → dependents); ID is M-XXX or V-M-XXX; exit 1 on broken chain; `--code` adds the optional MODULE_MAP↔symbol check (Octocode, ADR-9), `--strict-contracts` promotes missing symbols to errors
@@ -54,14 +54,14 @@ but explicit paths are required for correctness across multiple projects.
 - `mygrace capsule list [--format json]` — local allowlisted routines with qualification state; `capsule validate` checks schema/allowlist/bindings
 - `mygrace capsule qualify <name> --fixture <project>` — replay every program on the fixture and record the capsule hash (required before run)
 - `mygrace capsule run <name> [--module M-XXX] [--files a,b]` — run a qualified capsule; stops at judgment and prints the continue id; `capsule continue <run-id>` resumes
-- `mygrace packet <M-XXX>` / `mygrace focus <M-XXX>` — worker prompt / minimal set
+- `mygrace context packet <M-XXX>` / `mygrace context focus <M-XXX>` — worker prompt / minimal set
 
 ## MCP tools (25)
 
-`mygrace_list_modules`, `mygrace_show_module`, `mygrace_show_phase`,
+`mygrace_find_modules`, `mygrace_show_module`, `mygrace_show_phase`,
 `mygrace_find_modules`, `mygrace_phase_index`, `mygrace_doctor`,
-`mygrace_test`, `mygrace_trust`, `mygrace_ci`, `mygrace_packet`,
-`mygrace_focus`, `mygrace_context_cost`, `mygrace_verify`,
+`mygrace_verify`, `mygrace_trust`, `mygrace_ci`, `mygrace_context`,
+`mygrace_context`, `mygrace_context`, `mygrace_verify`,
 `mygrace_list_verifications`, `mygrace_lint`, `mygrace_show_file`,
 `mygrace_status`, `mygrace_trace`, `mygrace_impact`, `mygrace_next`,
 `mygrace_projects`, `mygrace_integrations`, `mygrace_diagram`,
@@ -73,8 +73,18 @@ catalogue does not cover. Local state (`.mygrace/`) is never committed.
 
 ## Configuration
 
-`mygrace.config.json` (optional; written by `mygrace init-dsh`) sets
+`mygrace.config.json` (optional; written by `mygrace setup init`) sets
 `sourceDirs`, `markupExts`, `ignoreDirs`, `indexCaps`, `sizeBudgets`,
 `testRunner`, `allowCommands` and `language`. A list you set replaces the default
 entirely, and `testRunner` is only the fallback when no canonical
 `<module-checks>` exists.
+
+## Output budget (merged from mygrace-token-budget in v2.0)
+
+Prefer the compact built-in paths: `status --format json`, `verify --module M-X`,
+`context cost --path .`, `context packet M-X`, and the MCP tools. Use `rtk <cmd>`
+only if the optional third-party `rtk` is installed; never depend on it. Compress
+large memory files only with explicit permission and always keep a backup; never
+compress the three indexes or entity contracts. Never paste whole test logs or
+entity trees into the conversation; do not present line/byte estimates as tokens.
+

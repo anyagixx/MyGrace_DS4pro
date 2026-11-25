@@ -749,9 +749,9 @@ export function lintIndexSync(
 
   if (!existsSync(indexPath)) {
     issues.push(
-      finding("error", "MISSING_INDEX_FILE", `Missing ${indexFileRel} — run mygrace init-dsh`, {
+      finding("error", "MISSING_INDEX_FILE", `Missing ${indexFileRel} — run mygrace setup init`, {
         file: indexFileRel,
-        hint: "Run `mygrace init-dsh --path .` to create the index from templates.",
+        hint: "Run `mygrace setup init --path .` to create the index from templates.",
       })
     );
     return issues;
@@ -817,7 +817,7 @@ function lintEntityEntries(
     issues.push(
       finding("error", "MISSING_ENTITY_DIR", `Missing docs/${entityDirName}/ directory`, {
         file: `docs/${entityDirName}`,
-        hint: "Create the directory (and its .gitkeep) or run `mygrace init-dsh`.",
+        hint: "Create the directory (and its .gitkeep) or run `mygrace setup init`.",
       })
     );
     return issues;
@@ -921,9 +921,9 @@ export function lintGraphIndex(root: string, config?: MyGraceConfig): LintIssue[
   const indexPath = join(root, "docs", "graph-index.xml");
   if (!existsSync(indexPath)) {
     issues.push(
-      finding("error", "MISSING_INDEX_FILE", "Missing docs/graph-index.xml — run mygrace init-dsh", {
+      finding("error", "MISSING_INDEX_FILE", "Missing docs/graph-index.xml — run mygrace setup init", {
         file: "docs/graph-index.xml",
-        hint: "Run `mygrace init-dsh --path .` to create the index from templates.",
+        hint: "Run `mygrace setup init --path .` to create the index from templates.",
       })
     );
     return issues;
@@ -1273,9 +1273,9 @@ export function collectLintIssues(
   } else if (!allowMissingDocs) {
     for (const indexFile of ["graph-index.xml", "plan-index.xml", "verification-index.xml"]) {
       issues.push(
-        finding("error", "MISSING_INDEX_FILE", `Missing docs/${indexFile} — run mygrace init-dsh`, {
+        finding("error", "MISSING_INDEX_FILE", `Missing docs/${indexFile} — run mygrace setup init`, {
           file: indexFile,
-          hint: "Run `mygrace init-dsh --path .` to bootstrap the docs/ structure.",
+          hint: "Run `mygrace setup init --path .` to bootstrap the docs/ structure.",
         })
       );
     }

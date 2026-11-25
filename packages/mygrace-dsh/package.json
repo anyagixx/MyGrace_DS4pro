@@ -1,6 +1,6 @@
 {
   "name": "mygrace-dsh",
-  "description": "UNPUBLISHED PREVIEW — optional DeepSeek Harness bundle (MCP host + 15 skills + decorative panel). NOT installed by `mygrace install-dsh` in v1.1.",
+  "description": "UNPUBLISHED PREVIEW \u2014 optional DeepSeek Harness bundle (MCP host + 12 skills + decorative panel). NOT installed by `mygrace setup install` in v1.1.",
   "version": "0.1.0",
   "private": true,
   "dsh": {
@@ -8,7 +8,11 @@
       "patch": "./cordis.patch.yml"
     }
   },
-  "files": ["cordis.patch.yml", "lib/index.js", "README.md"],
+  "files": [
+    "cordis.patch.yml",
+    "lib/index.js",
+    "README.md"
+  ],
   "license": "MIT",
   "dependencies": {
     "dsh-skill-mygrace": "file:../dsh-skill-mygrace",

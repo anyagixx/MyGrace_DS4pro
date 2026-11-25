@@ -1,7 +1,7 @@
 {
   "name": "mygrace",
   "description": "OpenCode metadata stub for MyGRACE — no context files are shipped in this release; see README platform matrix.",
-  "version": "1.8.0",
+  "version": "2.0.0",
   "author": "anyagixx",
   "license": "MIT"
 }

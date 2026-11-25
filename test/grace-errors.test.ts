@@ -128,7 +128,7 @@ describe("error subclasses", () => {
     expect(error.exitCode).toBe(EXIT.USAGE);
     expect(error.message).toContain("docs/graph-index.xml");
     expect(error.hint).toContain("/tmp/nothing");
-    expect(error.hint).toContain("init-dsh");
+    expect(error.hint).toContain("setup init");
   });
 
   test("XmlError is a finding (exit 1) and carries the line", () => {

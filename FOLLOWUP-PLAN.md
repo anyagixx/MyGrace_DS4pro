@@ -258,10 +258,12 @@ Status of the three priorities from the project review (2026-11-25):
   `analysis/benchmark.md`: `ci` ≈ 380 ms / 109 MB on 29 modules and ≈ 419 ms /
   94 MB on a generated 70-module project; `status`/`lint` ≈ 155–260 ms. Still
   missing: external OSS repositories and agent-task/token benchmarks.
-- **Surface simplification — 🟡 started.** `docs/quickstart.md`, two-command
-  guidance (`next` + `ci`), measured-performance section and docs trim. Removing
-  public commands/tools/skills is a breaking-major change and remains planned,
-  not done.
+- **Surface simplification — ✅ v2.0.0 (breaking).** CLI 23→18 (`test`→`verify`,
+  `context` group, `setup` group), MCP 25→21 (test→verify, context modes,
+  list→find), skills 15→12 (token-budget→cli, setup-subagents→multiagent,
+  refresh→reviewer). No aliases; migration guide `docs/migrations/v2.0.md`.
+  Remaining: further reduction of the `module`/`phase`/`verification`/`file`
+  readers is a later major decision.
 
 ## E. Sequencing, releases, and ownership
 

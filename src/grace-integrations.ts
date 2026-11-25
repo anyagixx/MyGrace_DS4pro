@@ -176,7 +176,7 @@ function pathDirs(pathValue: string): string[] {
 /**
  * Find an executable by name on PATH.
  *
- * POSIX requires a file with any exec bit (same rule as `install-dsh`); Windows
+ * POSIX requires a file with any exec bit (same rule as `setup install`); Windows
  * additionally probes `.exe`, `.cmd` and `.bat`, because PATH entries are
  * directories and PATHEXT resolution is the shell's job.
  */

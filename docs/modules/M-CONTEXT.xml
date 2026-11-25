@@ -8,7 +8,7 @@
   <annotations>
     <fn-buildContextTable PURPOSE="Safe aggregation; missing entity dirs degrade to 0 lines, never a crash." />
     <fn-contextFindings PURPOSE="Map index read errors and over-cap indexes to coded findings." />
-    <export-contextCostCommand PURPOSE="mygrace context-cost [--format json]." />
+    <export-contextCostCommand PURPOSE="mygrace context cost [--format json]." />
     <type-ContextTable PURPOSE="Per-operation line counts plus index caps and read errors." />
   </annotations>
 

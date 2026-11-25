@@ -13,7 +13,7 @@
  *   - NEVER throw for expected failures: every failure becomes a
  *     `{ok:false, error}` payload the card can render ("not connected");
  *   - NEVER rely on PATH alone: the CLI comes from `MYGRACE_BIN`, else the
- *     launcher written by `mygrace install-dsh`
+ *     launcher written by `mygrace setup install`
  *     (`$DSH_HOME/mygrace/bin/mygrace`), else a clear error;
  *   - project root resolution order: validated `?path=` → `MYGRACE_PROJECT_ROOT`
  *     (validated) → walk up from the harness cwd to `docs/graph-index.xml`;
@@ -278,7 +278,7 @@ export function resolveProjectRoot(options) {
  * Resolve the MyGRACE executable WITHOUT relying on PATH:
  *   1. explicit `MYGRACE_BIN` (absolute path must exist; a bare command name is
  *      honoured as an explicit user choice);
- *   2. the launcher written by `mygrace install-dsh`
+ *   2. the launcher written by `mygrace setup install`
  *      (`$DSH_HOME/mygrace/bin/mygrace[-cmd]`);
  *   3. an actionable error (never a silent PATH fallback).
  *
@@ -304,7 +304,7 @@ export function resolveCliCommand(options = {}) {
   return {
     ok: false,
     error:
-      `MyGRACE CLI not found: set ${PANEL_BIN_ENV} to the CLI launcher, or run \`mygrace install-dsh\` ` +
+      `MyGRACE CLI not found: set ${PANEL_BIN_ENV} to the CLI launcher, or run \`mygrace setup install\` ` +
       `(expected launcher at "${launcher}").`,
   };
 }

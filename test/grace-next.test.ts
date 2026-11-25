@@ -120,7 +120,7 @@ describe("recommendNext — priority ladder", () => {
       const result = recommendNext(empty);
       expect(result.root).toBeNull();
       expect(result.action.code).toBe("INIT_PROJECT");
-      expect(result.action.command).toContain("mygrace init-dsh");
+      expect(result.action.command).toContain("mygrace setup init");
       expect(result.action.why).toContain("No docs/graph-index.xml");
     } finally {
       rmSync(empty, { recursive: true, force: true });
@@ -315,7 +315,7 @@ describe("nextCommand", () => {
       expect(envelope.ok).toBe(true);
       expect(envelope.exitCode).toBe(0);
       expect(envelope.data.action.code).toBe("INIT_PROJECT");
-      expect(envelope.data.action.command).toContain("init-dsh");
+      expect(envelope.data.action.command).toContain("setup init");
       expect(envelope.meta.command).toBe("next");
     } finally {
       rmSync(empty, { recursive: true, force: true });

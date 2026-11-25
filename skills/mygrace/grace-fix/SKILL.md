@@ -8,7 +8,7 @@ whenToUse: "A bug, error or failing test must be traced and fixed inside a MyGRA
 
 ## 1. Locate via the index
 
-Read `docs/graph-index.xml` (≤100 lines, or MCP `mygrace_list_modules`). Find the
+Read `docs/graph-index.xml` (≤100 lines, or MCP `mygrace_find_modules`). Find the
 module implied by the error/log marker. Note its `PATH` and `VERIFICATION_REF`.
 Do not read all modules.
 
@@ -44,7 +44,7 @@ semantic block boundaries; update `CHANGE_SUMMARY`.
 - Contract changed → update `docs/modules/M-XXX.xml` and the index entry.
 - Tests/markers changed → update the verification file, then re-run
   `mygrace trust --path <root>` (the trust record hashes command sources).
-- Run `mygrace test --module <M-XXX> --compact --path <root>` (trust-gated) and
+- Run `mygrace verify --module <M-XXX> --path <root>` (trust-gated) and
   `mygrace lint --strict --path <root>`.
 
 ## Rules

@@ -9,7 +9,7 @@
     <fn-buildDoctorReport PURPOSE="Read-only report construction that never throws for unreadable inputs." />
     <fn-doctorFindings PURPOSE="Map check rows to ADR-3 findings (exit-code source of truth)." />
     <fn-printDoctorReport PURPOSE="Human text rendering." />
-    <export-doctorCommand PURPOSE="mygrace doctor [--format json]." />
+    <export-doctorCommand PURPOSE="mygrace setup doctor [--format json]." />
     <type-DoctorReport PURPOSE="Typed check rows plus error/warning totals and effective config." />
   </annotations>
 

@@ -12,7 +12,7 @@ whenToUse: "Before first execution, when tests are too shallow, or when a bug ne
   configurable in `mygrace.config.json`).
 - One index line per entry: `docs/verification-index.xml`.
 - **`<module-checks>` belongs in the verification file** — it is the canonical
-  command source for `mygrace test` / `mygrace verify` (a module-file
+  command source for `mygrace verify` / `mygrace verify` (a module-file
   `<module-checks>` is a deprecated fallback). Do not duplicate it.
 - Commands are trust-gated: after creating/editing verification files, the trust
   record is stale. Review the commands, then run `mygrace trust --path <root>`

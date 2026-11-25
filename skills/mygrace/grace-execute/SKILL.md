@@ -23,7 +23,7 @@ whenToUse: "The plan and verification surfaces exist, phases are pending, and th
 ## Trust gate (before running any project command)
 
 Project commands come from repository files and are untrusted. Before
-`mygrace test` / `mygrace verify` (or the MCP equivalents):
+`mygrace verify` / `mygrace verify` (or the MCP equivalents):
 
 1. Review the declared `<module-checks>` in the verification files.
 2. Run `mygrace trust --path <root>` to record their hashes (or pass
@@ -38,7 +38,7 @@ invalidates the trust record: re-run `mygrace trust` before the next run.
 1. Implement the module against its contract: `MODULE_CONTRACT`,
    `MODULE_MAP`, `CHANGE_SUMMARY`, function contracts, semantic blocks.
 2. Add/extend module tests; run scoped checks with
-   `mygrace test --module <M-XXX> --compact --path <root>` (trust-gated).
+   `mygrace verify --module <M-XXX> --path <root>` (trust-gated).
 3. Commit after verification passes.
 4. Scoped review; fix findings.
 5. Update statuses: `docs/plans/Phase-N.xml` step, `docs/graph-index.xml` and

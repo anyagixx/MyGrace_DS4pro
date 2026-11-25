@@ -6,13 +6,14 @@ that connect intent → modules → tests. Agents read the index first and only 
 entity they need, instead of re-reading the tree.
 
 **Start here:** [`docs/quickstart.md`](docs/quickstart.md) — the two commands you need
-and a five-minute path. Full reference is below.
+and a five-minute path. Upgrading from v1.x? See
+[`docs/migrations/v2.0.md`](docs/migrations/v2.0.md). Full reference is below.
 
-It is a CLI (`mygrace`, 23 commands) plus an agent methodology (15 skills) and
-an MCP server (25 tools). It does not generate code, call a model, or send telemetry — it
+It is a CLI (`mygrace`, 18 commands) plus an agent methodology (12 skills) and
+an MCP server (21 tools). It does not generate code, call a model, or send telemetry — it
 enforces traceability and context discipline for the agent you already use.
 
-Current version: `1.8.0`
+Current version: `2.0.0`
 
 > Distribution is **GitHub Releases + source**: there is no npm publication
 > (decision 2026-11-25). `@osovv` is a third-party scope (the project's starting
@@ -62,7 +63,7 @@ machine-readable finding codes for:
 
 Commands declared by a project (`<module-checks>` in the canonical
 `docs/verification/V-M-XXX.xml`) are **repository data**, and a cloned repo can
-be hostile. `mygrace test` / `mygrace verify` therefore print the command and
+be hostile. `mygrace verify` therefore prints the command and
 refuse to execute it unless one of these holds:
 
 - you created `.mygrace/trust.json` with `mygrace trust` after reviewing the
@@ -73,7 +74,7 @@ refuse to execute it unless one of these holds:
 
 Commands run argv-only (never through a shell), shell-style commands need an
 extra explicit opt-in, and `.mygrace/` is local state: add it to your project's
-`.gitignore` (a fresh `init-dsh` project has none; `mygrace trust` warns when the
+`.gitignore` (a fresh `setup init` project has none; `mygrace trust` warns when the
 record is not ignored).
 
 Defense in depth beyond trust:
@@ -82,7 +83,7 @@ Defense in depth beyond trust:
   destructive removal, network/download tools, `eval`/`exec`, encoded payloads,
   permission changes, device writes, publishing or out-of-tree redirects are
   refused even in a trusted project; `--allow-unsafe-commands` is a one-off,
-  explicit override (also available on `test`, `verify`, `ci` and MCP tools);
+  explicit override (also available on `verify`, `ci` and MCP tools);
 - **audit log** — every executed command (and every policy/shell refusal) appends
   a JSONL record to `.mygrace/audit.log` (timestamp, module, command, exit,
   authorization source, duration); the log is local and gitignored;
@@ -120,16 +121,16 @@ bun run src/grace.ts --version
 ### DeepSeek Harness integration
 
 ```bash
-# installs the 15 skills into $DSH_HOME/skills and a PATH-free MCP row
+# installs the 12 skills into $DSH_HOME/skills and a PATH-free MCP row
 # into the profile's cordis.patch.yml (YAML-validated, atomic, backed up)
-bun run src/grace.ts install-dsh --dry-run      # inspect planned actions
-bun run src/grace.ts install-dsh                # apply (idempotent)
+bun run src/grace.ts setup install --dry-run      # inspect planned actions
+bun run src/grace.ts setup install                # apply (idempotent)
 
 # optional, opt-in: the LIVE status card in the DSH web sidebar (private package)
-bun run src/grace.ts install-dsh --panel
+bun run src/grace.ts setup install --panel
 
-# remove everything install-dsh added (byte-identical config restore)
-bun run src/grace.ts install-dsh --uninstall
+# remove everything setup install added (byte-identical config restore)
+bun run src/grace.ts setup install --uninstall
 ```
 
 The installer writes a launcher at `$DSH_HOME/mygrace/bin/mygrace`, records
@@ -156,7 +157,7 @@ the real DSH 0.2.1-rc.2 loader, but a live `dsh web` browser session is **not**
 exercised in CI; the card is a convenience, and the CLI remains the source of
 truth.
 
-`install-dsh --bundle` was **removed in v1.1** and exits `2`: `packages/mygrace-dsh`
+`setup install --bundle` was **removed in v1.1** and exits `2`: `packages/mygrace-dsh`
 is an unpublished optional preview (it needs unpublished preview packages and
 a private panel package), not a supported install path.
 
@@ -170,7 +171,7 @@ execute.
 
 ```bash
 # 1. create a project (docs/ indexes + AGENTS.md + mygrace.config.json)
-bun run src/grace.ts init-dsh --path /tmp/my-project --name MyProject
+bun run src/grace.ts setup init --path /tmp/my-project --name MyProject
 
 # 2. fill docs/requirements.xml + docs/technology.xml, then use the
 #    mygrace-plan / mygrace-verification skills to build the module graph
@@ -184,14 +185,14 @@ bun run src/grace.ts trust --path /tmp/my-project
 
 # 5. scoped verification, then the full gate including trust-gated tests
 #    (requires at least one planned module)
-bun run src/grace.ts test --module M-AUTH --path /tmp/my-project
+bun run src/grace.ts verify --module M-AUTH --path /tmp/my-project
 bun run src/grace.ts verify --path /tmp/my-project
 bun run src/grace.ts ci --path /tmp/my-project --tests
 
 # optional read-only checks
 bun run src/grace.ts lint --path /tmp/my-project --strict
 bun run src/grace.ts status --path /tmp/my-project --format json
-bun run src/grace.ts doctor --path /tmp/my-project
+bun run src/grace.ts setup doctor --path /tmp/my-project
 ```
 
 With the CLI installed the same commands are `mygrace <command> ...`. In the
@@ -202,57 +203,50 @@ least one planned module: before that `verify` reports `0 ok` and `ci` reports
 unplanned module reports a finding and exits 1.
 
 The commands that do not require a planned module were executed in a scratch copy
-of this repository (Bun 1.4.5): `init-dsh`, `ci`, `trust`, `verify`,
-`ci --tests`, `lint --strict` and `status --format json` all exited 0. `doctor`
+of this repository (Bun 1.4.5): `setup init`, `ci`, `trust`, `verify`,
+`ci --tests`, `lint --strict` and `status --format json` all exited 0. `setup doctor`
 is environment-dependent: in a bare checkout without a DeepSeek Harness
 integration it reports the missing DSH pieces and exits 1, with hints for each.
 
-## CLI commands (23)
+## CLI commands (18)
 
 | Command | What it does |
 |---|---|
 | `mygrace ci` | One-command quality gate: strict lint + status + verification coverage (`--tests` adds trust-gated tests) |
 | `mygrace lint` | Validate XML, index↔entity drift, caps/budgets, markup; `--strict`, `--format json`, incremental `--changed`/`--base`/`--files` |
 | `mygrace status` | Health snapshot from the three indexes + lint summary; `--format json` |
+| `mygrace verify` | Run verification-scoped tests with a compact digest; writes `.mygrace/last-failures.md` on failure; `--module`, `--allow-unsafe-commands` |
+| `mygrace trust` | Review declared commands and write `.mygrace/trust.json`; `--check` verifies without writing, `--revoke` deletes the record |
 | `mygrace module` | `index` (with shard summary), `find`, `show <id>`, `list` with `--status`/`--type`, `shard` (generate index shards; dry-run default) |
 | `mygrace phase` | `index` (phase index), `show <Phase-N>` |
 | `mygrace verification` | `index` with `--priority`/`--format` filters |
 | `mygrace file` | `show <path>`: file-local contracts, maps, blocks |
-| `mygrace test` | Run verification-scoped tests; trust-gated, `--module`, `--compact`, `--allow-unsafe-commands` |
-| `mygrace verify` | Agent-loop digest; writes `.mygrace/last-failures.md` on failure |
-| `mygrace trust` | Review declared commands and write `.mygrace/trust.json`; `--check` verifies without writing, `--revoke` deletes the record |
-| `mygrace packet` | Self-contained worker prompt for one module |
-| `mygrace focus` | Minimal working set for one module |
-| `mygrace context-cost` | Read budget per operation (lines/bytes/estimate) |
+| `mygrace context` | Worker context: `packet M-X` (self-contained prompt), `focus M-X` (minimal set), `cost` (read budget per operation) |
+| `mygrace setup` | Setup: `init` (scaffold), `install` (DSH skills + MCP row), `doctor` (environment health) |
 | `mygrace trace` | Trace one module end-to-end: verification → test files → command → phases → dependents, with coded gaps (`<ID>` = module or verification id); `--code` adds the optional MODULE_MAP↔symbol check (`--strict-contracts` fails on gaps) |
 | `mygrace impact` | Map changed files (git, `--staged`, `--since`, or `--files`) to affected modules, dependents, verification blast radius and phases; `--code-graph` adds real import edges via optional Octocode |
 | `mygrace next` | Deterministic nine-code advice ladder: init → index → lint → coverage → trust → verify → warnings → next phase |
 | `mygrace projects` | Monorepo discovery: per-project counts, lint and coverage under a tree (`--depth`, `--strict`) |
-| `mygrace doctor` | Environment and DSH-integration health checks (incl. optional integrations) |
 | `mygrace integrations` | Detect optional external tools (`status`), their versions and tested ranges; advisory, never fails the core gates |
 | `mygrace diagram` | Export the docs graph as deterministic Archify IR — `--kind architecture\|workflow\|tree` — as JSON, Mermaid (architecture) or standalone HTML (needs optional Archify); `--check` guards every committed IR |
 | `mygrace capsule` | Local allowlisted routines: `list`/`show`/`validate`, `qualify` (replay + hash), `run` with judgment hand-back, `continue`; execution disabled by default (`integrations.capsules.enabled`) |
-| `mygrace init-dsh` | Bootstrap `docs/`, `AGENTS.md`, `mygrace.config.json` |
-| `mygrace install-dsh` | Wire skills + a PATH-free MCP row into DeepSeek Harness |
 
 Every command accepts `--help`; `--format json` commands return the envelope
 `{ ok, exitCode, data, findings[], meta }`.
 
-## MCP tools (25)
+## MCP tools (21)
 
 The stdio server is a transport adapter over the CLI: every tool maps to a
 command, arguments are schema-validated, and CLI failures keep their output in
 the tool result. DSH exposes them as `mcp__mygrace__<tool>` — e.g. the
 quality gate is `mcp__mygrace__ci`.
 
-`mygrace_list_modules` · `mygrace_show_module` · `mygrace_show_phase` ·
-`mygrace_find_modules` · `mygrace_phase_index` · `mygrace_doctor` ·
-`mygrace_test` · `mygrace_trust` · `mygrace_ci` · `mygrace_packet` ·
-`mygrace_focus` · `mygrace_context_cost` · `mygrace_verify` ·
+`mygrace_show_module` · `mygrace_show_phase` · `mygrace_find_modules` ·
+`mygrace_phase_index` · `mygrace_doctor` · `mygrace_context` · `mygrace_verify` ·
 `mygrace_list_verifications` · `mygrace_lint` · `mygrace_show_file` ·
-`mygrace_status` · `mygrace_trace` · `mygrace_impact` · `mygrace_next` ·
-`mygrace_projects` · `mygrace_integrations` · `mygrace_diagram` ·
-`mygrace_capsule_list` · `mygrace_capsule_run`
+`mygrace_status` · `mygrace_trust` · `mygrace_ci` · `mygrace_trace` ·
+`mygrace_impact` · `mygrace_next` · `mygrace_projects` · `mygrace_integrations` ·
+`mygrace_diagram` · `mygrace_capsule_list` · `mygrace_capsule_run`
 
 ### Optional integrations (ADR-9)
 
@@ -381,7 +375,7 @@ committed IRs; `--format json --out <path>` refreshes an IR without Archify.
 Tested against Archify CLI 3.2.0 and 3.3.x (fake-CLI contract in `bun test`,
 real-binary smoke manual: `bun run test:integrations:archify`).
 
-## Skills (15, shared from `skills/mygrace/`)
+## Skills (12, shared from `skills/mygrace/`)
 
 | Skill | Purpose |
 |---|---|
@@ -389,21 +383,18 @@ real-binary smoke manual: `bun run test:integrations:archify`).
 | `mygrace-plan` | Design modules/phases/verification; write entities + indexes |
 | `mygrace-verification` | Design scenarios, log markers and evidence per module |
 | `mygrace-execute` | Implement a phase step by step (current phase + module only) |
-| `mygrace-multiagent-execute` | Parallel waves via DSH subagents |
+| `mygrace-multiagent-execute` | Parallel waves via DSH subagents (includes role prompts, merged from setup-subagents) |
 | `mygrace-refactor` | Safe restructuring with atomic index updates |
-| `mygrace-refresh` | Sync indexes with per-entity files after drift |
-| `mygrace-reviewer` | Integrity audit (scoped / wave / full) |
+| `mygrace-reviewer` | Integrity audit (scoped / wave / full) + index-refresh recovery (merged from refresh) |
 | `mygrace-fix` | Debug: index → module → block |
 | `mygrace-status` | Health report from indexes + lint summary |
 | `mygrace-ask` | Q&A via lazy navigation |
-| `mygrace-cli` | CLI/MCP reference |
+| `mygrace-cli` | CLI/MCP reference + output budget (merged from token-budget) |
 | `mygrace-explainer` | Methodology reference and honest metrics |
-| `mygrace-setup-subagents` | DSH subagent role prompts |
-| `mygrace-token-budget` | Output-side token policy |
 
 ## Project configuration
 
-`mygrace.config.json` is optional; `mygrace init-dsh` writes it so the layout is
+`mygrace.config.json` is optional; `mygrace setup init` writes it so the layout is
 visible and editable. Unknown keys are rejected with every problem listed at
 once; defaults reproduce the classic layout.
 
@@ -527,7 +518,7 @@ everything). Measured slope: +4.3 percentage points per 100 modules for
 single-module work, +16.5 for phase execution. The 200-module point is a
 synthetic model, not a benchmark of a real repository.
 
-Runtime view for agents: `mygrace context-cost --path <project>`.
+Runtime view for agents: `mygrace context cost --path <project>`.
 
 ## Project structure
 
@@ -539,7 +530,7 @@ docs/
   modules/                 # one M-XXX.xml per module
   plans/                   # one Phase-N.xml per phase
   verification/            # one V-M-XXX.xml per module (<module-checks> canonical)
-  operational-packets.xml  # execution-packet template (written by init-dsh)
+  operational-packets.xml  # execution-packet template (written by setup init)
   archive/                 # completed phases (remove their plan-index entry)
   requirements.xml, technology.xml
 mygrace.config.json        # layout/budgets/runner/allowCommands
@@ -600,7 +591,7 @@ same gates plus an OS matrix (Ubuntu, Windows, macOS).
 
 | Platform | Packaging | Status |
 |---|---|---|
-| **DeepSeek Harness** | `mygrace install-dsh` (skills + MCP row; optional LIVE status panel) | ✅ primary, verified end-to-end |
+| **DeepSeek Harness** | `mygrace setup install` (skills + MCP row; optional LIVE status panel) | ✅ primary, verified end-to-end |
 | Claude Code / Gemini CLI / OpenCode | `plugins/*` | ⚠️ metadata stubs only — no context files shipped yet |
 | Codex / Cursor / Windsurf / KiloCode / Copilot / Aider | `rules/*` instruction files | ⚠️ instruction files only (wire them into the tool yourself) |
 | Qwen Code | `extensions/mygrace/` | ⚠️ legacy extension, not maintained; kept for reference |
@@ -613,7 +604,7 @@ same gates plus an OS matrix (Ubuntu, Windows, macOS).
 - [`docs/architecture.md`](docs/architecture.md) — module graph, ADRs, enforcement table
 - [`ROADMAP.md`](ROADMAP.md) — vision, ADRs, waves and release gates
 - [`CHANGELOG.md`](CHANGELOG.md) — released and unreleased changes
-- [`AGENTS.md`](AGENTS.md) — the agent-facing instruction file (`init-dsh` writes it)
+- [`AGENTS.md`](AGENTS.md) — the agent-facing instruction file (`setup init` writes it)
 
 ## License
 

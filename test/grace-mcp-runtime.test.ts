@@ -57,21 +57,17 @@ afterAll(() => rmSync(MEMORY_FILE, { force: true }));
 const P = resolve("/p");
 
 /**
- * The expected MCP surface: the 17 v1.2 tools plus trace/impact/next/projects
- * (W3.4/3.5 = 21, W5.1 = 22, W5.2 = 23, W6.0 = 25). Renaming one is a breaking change; docs updates are owned by
- * the docs owner.
+ * The v2.0 MCP surface: 21 tools. Earlier versions had 25; mygrace_test was
+ * folded into mygrace_verify, packet/focus/context-cost into mygrace_context and
+ * mygrace_list_modules into mygrace_find_modules (see docs/migrations/v2.0.md).
  */
 const DOCUMENTED_TOOL_NAMES = [
-  "mygrace_list_modules",
   "mygrace_show_module",
   "mygrace_show_phase",
   "mygrace_find_modules",
   "mygrace_phase_index",
   "mygrace_doctor",
-  "mygrace_test",
-  "mygrace_packet",
-  "mygrace_focus",
-  "mygrace_context_cost",
+  "mygrace_context",
   "mygrace_verify",
   "mygrace_list_verifications",
   "mygrace_lint",
@@ -91,16 +87,12 @@ const DOCUMENTED_TOOL_NAMES = [
 
 /** Minimal valid arguments per tool, used to prove no `undefined` reaches argv. */
 const MINIMAL_CALL_ARGS: Record<string, Record<string, unknown>> = {
-  mygrace_list_modules: { path: DEMO },
   mygrace_show_module: { id: "M-CART", path: DEMO },
   mygrace_show_phase: { name: "Phase-1", path: DEMO },
   mygrace_find_modules: { path: DEMO },
   mygrace_phase_index: { path: DEMO },
   mygrace_doctor: { path: DEMO },
-  mygrace_test: { path: DEMO },
-  mygrace_packet: { id: "M-CART", path: DEMO },
-  mygrace_focus: { id: "M-CART", path: DEMO },
-  mygrace_context_cost: { path: DEMO },
+  mygrace_context: { mode: "packet", id: "M-CART", path: DEMO },
   mygrace_verify: { path: DEMO },
   mygrace_list_verifications: { path: DEMO },
   mygrace_lint: { path: DEMO },
@@ -159,7 +151,7 @@ function textOf(result: { content?: Array<{ type: string; text?: string }> }): s
 // ─── Catalog invariants (no server process needed) ─────────────────────
 
 describe("MCP catalog", () => {
-  test("exposes exactly the 25 expected tool names, in a stable order", () => {
+  test("exposes exactly the 21 expected tool names, in a stable order", () => {
     expect(TOOL_NAMES.join(",")).toBe(DOCUMENTED_TOOL_NAMES.join(","));
     expect(new Set(TOOL_NAMES).size).toBe(DOCUMENTED_TOOL_NAMES.length);
     expect(TOOLS.length).toBe(DOCUMENTED_TOOL_NAMES.length);
@@ -290,11 +282,11 @@ describe("MCP argument validation", () => {
     expect(wrongType.ok).toBe(false);
     if (!wrongType.ok) expect(wrongType.issues[0]?.field).toBe("path");
 
-    const badEnum = validateToolArgs("mygrace_list_modules", { path: DEMO, status: "maybe" });
+    const badEnum = validateToolArgs("mygrace_find_modules", { path: DEMO, status: "maybe" });
     expect(badEnum.ok).toBe(false);
     if (!badEnum.ok) expect(badEnum.issues[0]?.message).toContain("must be one of");
 
-    const traversal = validateToolArgs("mygrace_packet", { id: "../outside-secret" });
+    const traversal = validateToolArgs("mygrace_context", { mode: "packet", id: "../outside-secret" });
     expect(traversal.ok).toBe(false);
     if (!traversal.ok) expect(traversal.issues[0]?.field).toBe("id");
 
@@ -304,17 +296,9 @@ describe("MCP argument validation", () => {
   });
 
   test("defaults are applied so declared schema defaults are real (audit M-14)", () => {
-    const testResult = validateToolArgs("mygrace_test", { path: DEMO });
-    expect(testResult.ok).toBe(true);
-    if (testResult.ok) expect(testResult.args.compact).toBe(true);
-
     const lintResult = validateToolArgs("mygrace_lint", { path: DEMO });
     expect(lintResult.ok).toBe(true);
     if (lintResult.ok) expect(lintResult.args.compact).toBe(true);
-
-    const listResult = validateToolArgs("mygrace_list_modules", { path: DEMO });
-    expect(listResult.ok).toBe(true);
-    if (listResult.ok) expect(listResult.args.format).toBe("text");
 
     const trustDefault = validateToolArgs("mygrace_trust", { path: DEMO });
     expect(trustDefault.ok).toBe(true);
@@ -510,7 +494,7 @@ describe("MCP server over stdio with an empty PATH (C-3 regression)", () => {
     expect(client.getServerCapabilities()?.tools).toBeDefined();
   });
 
-  test("tools/list returns the exact 25 expected tools with non-empty descriptions", async () => {
+  test("tools/list returns the exact 21 expected tools with non-empty descriptions", async () => {
     const { tools } = await client.listTools();
     expect(tools.map((tool) => tool.name)).toEqual(DOCUMENTED_TOOL_NAMES);
     for (const tool of tools) {

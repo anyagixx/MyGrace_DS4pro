@@ -1,5 +1,5 @@
 <!-- Per-module verification entry. Target length: 20-60 lines (sizeBudgets.verification).
-     <module-checks> is the canonical command source: mygrace test/verify read it HERE (module files are
+     <module-checks> is the canonical command source: mygrace verify/verify read it HERE (module files are
      a deprecated fallback). Commands are trust-gated: review them, then run `mygrace trust`. -->
 <V-M-XXX MODULE="$MODULE_ID" PRIORITY="$PRIORITY" STATUS="pending">
   <test-files>

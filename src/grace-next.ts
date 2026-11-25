@@ -5,7 +5,7 @@
  * One deterministic recommendation for the next unit of work, for an agent that
  * has no session memory. The ladder is fixed (never heuristic):
  *
- *   1. INIT_PROJECT        no MyGRACE project → `mygrace init-dsh`
+ *   1. INIT_PROJECT        no MyGRACE project → `mygrace setup init`
  *   2. FIX_INDEX           unreadable/malformed index → `mygrace lint --format json`
  *   3. FIX_LINT_ERRORS     lint errors → `mygrace lint --format json` + mygrace-fix skill
  *   4. ADD_VERIFICATION_COVERAGE  coverage gaps → mygrace-verification skill
@@ -205,7 +205,7 @@ export function recommendNext(projectPath = "."): NextResult {
         "INIT_PROJECT",
         "Initialize MyGRACE in this repository",
         `No docs/graph-index.xml was found from "${requested}" — the project has no index to work against.`,
-        { command: `mygrace init-dsh --path ${quoteCli(cliPath(requested))}` }
+        { command: `mygrace setup init --path ${quoteCli(cliPath(requested))}` }
       ),
     };
   }

@@ -5,7 +5,7 @@
  * registration/disposal (`lib/index.js`), the browser bundle contract
  * (`lib/client.js`, static checks only — no browser here), the documented
  * payload/failure matrix, the trust observation, and the installer composition
- * against a temp DSH home (`install-dsh --panel --dry-run` and a real
+ * against a temp DSH home (`setup install --panel --dry-run` and a real
  * `install-dsh --panel` followed by `dsh --profile web --dump-config`).
  *
  * Nothing here touches the real ~/.dsh: every HOME/DSH_HOME is a unique temp
@@ -231,7 +231,7 @@ describe("resolveCliCommand", () => {
     if (!result.ok) expect(result.error).toContain("MYGRACE_BIN points to a missing executable");
   });
 
-  test("falls back to the install-dsh launcher under $DSH_HOME", () => {
+  test("falls back to the setup install launcher under $DSH_HOME", () => {
     const dshHome = tempDir("dsh-");
     mkdirSync(join(dshHome, "mygrace", "bin"), { recursive: true });
     const launcherName = process.platform === "win32" ? "mygrace.cmd" : "mygrace";
@@ -246,7 +246,7 @@ describe("resolveCliCommand", () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.error).toContain("MyGRACE CLI not found");
-      expect(result.error).toContain("mygrace install-dsh");
+      expect(result.error).toContain("mygrace setup install");
       expect(result.error).toContain("MYGRACE_BIN");
     }
   });
@@ -825,7 +825,7 @@ function makeDshHome(patch = "[]\n"): { home: string; dshHome: string } {
 function runInstallCli(home: string, dshHome: string, args: string[], path: string): { status: number; stdout: string; stderr: string } {
   const result = spawnSync(
     process.execPath,
-    ["run", CLI, "install-dsh", "--dsh-home", dshHome, ...args],
+    ["run", CLI, "setup", "install", "--dsh-home", dshHome, ...args],
     { cwd: ROOT, encoding: "utf-8", timeout: 120_000, env: scrubbedEnv({ HOME: home, DSH_HOME: dshHome, PATH: path }) }
   );
   return { status: result.status ?? -1, stdout: result.stdout ?? "", stderr: result.stderr ?? "" };

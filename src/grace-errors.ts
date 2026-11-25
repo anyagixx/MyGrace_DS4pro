@@ -141,7 +141,7 @@ export class ProjectNotFoundError extends MyGraceError {
   constructor(startDir: string) {
     super("PROJECT_NOT_FOUND", "MyGRACE project not found. Run in a project with docs/graph-index.xml", {
       exitCode: EXIT.USAGE,
-      hint: `Searched "${startDir}" and every parent directory. Run \`mygrace init-dsh\` in the project root, or pass --path <project-root>.`,
+      hint: `Searched "${startDir}" and every parent directory. Run \`mygrace setup init\` in the project root, or pass --path <project-root>.`,
     });
     this.name = "ProjectNotFoundError";
   }

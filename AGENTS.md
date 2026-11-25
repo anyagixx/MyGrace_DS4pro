@@ -22,8 +22,7 @@ legacy monolithic XML is not used — do not create or read it.
 ## Trust model (CRITICAL)
 
 Project-declared commands (`<module-checks>` in the canonical
-`docs/verification/V-M-XXX.xml`) are **untrusted input**. `mygrace test` /
-`mygrace verify` execute them only when one of these holds:
+`docs/verification/V-M-XXX.xml`) are **untrusted input**. `mygrace verify` executes them only when one of these holds:
 
 - `.mygrace/trust.json` is current — created by `mygrace trust` after review
   (`mygrace trust --check` inspects it without writing, `--revoke` removes it);
@@ -40,37 +39,34 @@ Every execution/refusal is appended to `.mygrace/audit.log` (local, gitignored).
 `mygrace trust` again. If a command is refused, report the refusal; do not
 bypass it.
 
-## Skills (15)
+## Skills (12)
 
 Prefer the matching skill (via the `skill` tool) over re-deriving the process:
 
 | Skill | Purpose |
 |---|---|
-| `mygrace-init` | Bootstrap docs/ + AGENTS.md + config (`mygrace init-dsh`) |
+| `mygrace-init` | Bootstrap docs/ + AGENTS.md + config |
 | `mygrace-plan` | Design modules/phases/verification; write entities + indexes |
-| `mygrace-verification` | Design scenarios, log markers and evidence |
-| `mygrace-execute` | Implement the plan step by step (current phase + module) |
-| `mygrace-multiagent-execute` | Parallel waves via DSH subagents |
+| `mygrace-verification` | Design scenarios, log markers and evidence per module |
+| `mygrace-execute` | Implement a phase step by step (current phase + module only) |
+| `mygrace-multiagent-execute` | Parallel waves via DSH subagents (includes role prompts, merged from setup-subagents) |
 | `mygrace-refactor` | Safe restructuring with atomic index updates |
-| `mygrace-refresh` | Sync indexes with per-entity files after drift |
-| `mygrace-reviewer` | Integrity audit (scoped / wave / full) |
+| `mygrace-reviewer` | Integrity audit (scoped / wave / full) + index-refresh recovery (merged from refresh) |
 | `mygrace-fix` | Debug: index → module → block |
 | `mygrace-status` | Health report from indexes + lint summary |
 | `mygrace-ask` | Q&A via lazy navigation |
-| `mygrace-cli` | CLI/MCP reference |
+| `mygrace-cli` | CLI/MCP reference + output budget (merged from token-budget) |
 | `mygrace-explainer` | Methodology reference and honest metrics |
-| `mygrace-setup-subagents` | DSH subagent role prompts |
-| `mygrace-token-budget` | Output-side token policy |
 
-## MCP tools (25, when the mygrace MCP server is connected)
+## MCP tools (21, when the mygrace MCP server is connected)
 
-`mygrace_list_modules` · `mygrace_show_module` · `mygrace_show_phase` ·
-`mygrace_find_modules` · `mygrace_phase_index` · `mygrace_doctor` ·
-`mygrace_test` · `mygrace_trust` · `mygrace_ci` · `mygrace_packet` ·
-`mygrace_focus` · `mygrace_context_cost` · `mygrace_verify` ·
-`mygrace_list_verifications` · `mygrace_lint` · `mygrace_show_file` · `mygrace_status` · `mygrace_trace` · `mygrace_impact` · `mygrace_next` · `mygrace_projects` · `mygrace_integrations` · `mygrace_diagram` ·
-`mygrace_capsule_list` · `mygrace_capsule_run`
-DSH exposes them as `mcp__mygrace__<tool>` (e.g. `mcp__mygrace__lint`). `install-dsh --panel` also wires the optional LIVE sidebar card that reads `mygrace status`.
+`mygrace_show_module` · `mygrace_show_phase` · `mygrace_find_modules` ·
+`mygrace_phase_index` · `mygrace_doctor` · `mygrace_context` · `mygrace_verify` ·
+`mygrace_list_verifications` · `mygrace_lint` · `mygrace_show_file` ·
+`mygrace_status` · `mygrace_trust` · `mygrace_ci` · `mygrace_trace` ·
+`mygrace_impact` · `mygrace_next` · `mygrace_projects` · `mygrace_integrations` ·
+`mygrace_diagram` · `mygrace_capsule_list` · `mygrace_capsule_run`
+DSH exposes them as `mcp__mygrace__<tool>` (e.g. `mcp__mygrace__lint`). `setup install --panel` also wires the optional LIVE sidebar card that reads `mygrace status`.
 
 ## Six Principles
 
@@ -110,18 +106,19 @@ AGENTS.md                  # this file
 
 When `docs/graph-index.xml` approaches `indexCaps.graph`, shard it: `mygrace module shard` is a dry run, `--apply` writes `docs/modules/shard-<slug>.xml` + `<Shard href=.../>` refs and a backup; reads are shard-transparent except `module show`. `sourceDirs`/`markupExts` replace defaults, `testRunner` is only the no-`<module-checks>` fallback; `mygrace projects` covers monorepos.
 
-## Commands (23 CLI)
+## Commands (18 CLI)
 
 - `mygrace status --path .` / `mygrace ci --path .` / `mygrace next --path .` — snapshot / one-command gate / deterministic next action
 - `mygrace lint --strict --path .` — integrity gate; add `--changed --base <ref>` (or `--files`) for incremental scope
 - `mygrace trace <M-XXX>` / `mygrace impact [--files a,b,c]` — proof chain / change blast radius (both read-only)
 - `mygrace integrations status --path .` — detect optional external tools (Octocode/Archify) and tested versions; advisory only
-- `mygrace diagram [--kind architecture|workflow|tree] [--format json|mermaid|html] [--check]` — render the docs graph as the module graph, the delivery plan or the capability hierarchy (IR/Mermaid always; HTML via optional Archify); `--check` verifies every committed IR
-- `mygrace capsule list|validate|qualify|run|continue` — experimental allowlisted routines with replay qualification and judgment hand-back (disabled unless `integrations.capsules.enabled`)
-- `mygrace trust --path .` — review + record project commands (before test/verify); `--check` inspects, `--revoke` removes; dangerous patterns need `--allow-unsafe-commands`; `.mygrace/audit.log` records every run/refusal
-- `mygrace test --module M-XXX` / `mygrace verify --module M-XXX` — scoped tests
-- `mygrace projects --path .` — monorepo health; `mygrace module index|find|show|list`, `mygrace phase index|show`, `mygrace verification index`
-- `mygrace packet M-XXX` / `mygrace focus M-XXX` / `mygrace context-cost --path .` — worker prompt / set / budget; `mygrace doctor --path .` — environment
+- `mygrace diagram [--kind architecture|workflow|tree] [--format json|mermaid|html] [--check]` — render the docs graph; `--check` verifies every committed IR
+- `mygrace capsule list|validate|qualify|run|continue` — experimental allowlisted routines (disabled unless `integrations.capsules.enabled`)
+- `mygrace trust --path .` — review/record project commands; `--check` inspects, `--revoke` removes; dangerous patterns need `--allow-unsafe-commands`; `.mygrace/audit.log` records execution
+- `mygrace verify --module M-XXX` — scoped tests/digest (the old `test` command was merged here in v2.0)
+- `mygrace context packet M-XXX` / `mygrace context focus M-XXX` / `mygrace context cost --path .` — worker prompt / set / budget
+- `mygrace setup init|install|doctor` — scaffold / DSH integration / environment health
+- `mygrace projects --path .`; `mygrace module index|find|show|list`; `mygrace phase index|show`; `mygrace verification index`; `mygrace file show`
 
 ## Editing Rules
 

@@ -15,7 +15,7 @@ and returns counts — it never scans the source tree for you:
   status and priority, plus lint error/warning counts.
 - `mygrace ci --path <root>` — one-command gate (strict lint + status + verification coverage).
 - `mygrace lint --strict --path <root>` when you need the findings themselves.
-- `mygrace doctor --path <root>` when the environment/integration looks wrong.
+- `mygrace setup doctor --path <root>` when the environment/integration looks wrong.
 - `mygrace next --path <root>` — the deterministic recommendation with its code
   (INIT_PROJECT · FIX_INDEX · FIX_LINT_ERRORS · ADD_VERIFICATION_COVERAGE ·
   TRUST_COMMANDS · VERIFY_MODULE · REFRESH_WARNINGS · NEXT_PHASE · NOTHING_TO_DO);
@@ -47,7 +47,7 @@ status report; the indexes are the source of truth for counts and status.
 
 This report is about indexes and lint, not code quality. Do not claim a
 "percentage saved" or estimate tokens; if you need read-budget numbers, run
-`mygrace context-cost --path <root>`.
+`mygrace context cost --path <root>`.
 
 ## Capsule fast path (experimental, v1.6)
 

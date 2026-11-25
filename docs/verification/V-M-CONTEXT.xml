@@ -1,4 +1,4 @@
-<!-- Canonical verification entry. <module-checks> is read by mygrace test/verify; commands are trust-gated (run `mygrace trust` after review). -->
+<!-- Canonical verification entry. <module-checks> is read by mygrace verify/verify; commands are trust-gated (run `mygrace trust` after review). -->
 <V-M-CONTEXT MODULE="M-CONTEXT" PRIORITY="low" STATUS="done">
   <test-files>
     <file>test/grace-context.test.ts</file>

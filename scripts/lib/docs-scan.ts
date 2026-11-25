@@ -144,7 +144,7 @@ export function resolveCommand(tree: CommandTree, commandPath: readonly string[]
   const twoTokens = tree.commands.get(commandPath.slice(0, 2).join(" "));
   if (twoTokens !== undefined) return twoTokens;
 
-  // `mygrace packet M-XXX` / `mygrace find auth`: the extra token is a positional
+  // `mygrace context packet M-XXX` / `mygrace find auth`: the extra token is a positional
   // of a leaf command, not a subcommand.
   if (!root.group) return root;
   return undefined;

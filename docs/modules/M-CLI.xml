@@ -32,7 +32,7 @@
   </contract>
 
   <notes>
-    <note-1>20 top-level commands: ci, lint, module, phase, verification, file, status, install-dsh, init-dsh, doctor, test, trust, verify, packet, focus, context-cost, trace, impact, next, projects.</note-1>
+    <note-1>20 top-level commands: ci, lint, module, phase, verification, file, status, setup install, setup init, doctor, test, trust, verify, packet, focus, context-cost, trace, impact, next, projects.</note-1>
     <note-2>Importing this module never executes a command, so scripts and tests can load the command tree.</note-2>
     <note-3>Every command is wrapped by guard(), so a typed error becomes one line plus its documented exit code.</note-3>
   </notes>

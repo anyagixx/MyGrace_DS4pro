@@ -1,5 +1,5 @@
 /**
- * End-to-end tests for `mygrace install-dsh` (ROADMAP W1.4 acceptance).
+ * End-to-end tests for `mygrace setup install` (ROADMAP W1.4 acceptance).
  *
  * These spawn the real CLI in a subprocess against throwaway DSH homes under
  * `analysis/_w1-install/` (never the real `~/.dsh`), and assert the behaviours
@@ -73,7 +73,7 @@ function makeHome(patchContent = "[]\n", options: { profileManifest?: boolean } 
 }
 
 function runCli(home: string, args: string[], extraEnv: Record<string, string> = {}): CliRun {
-  const result = spawnSync(BUN, ["run", CLI, "install-dsh", "--dsh-home", join(home, ".dsh"), ...args], {
+  const result = spawnSync(BUN, ["run", CLI, "setup", "install", "--dsh-home", join(home, ".dsh"), ...args], {
     cwd: ROOT,
     encoding: "utf-8",
     timeout: 120_000,
@@ -108,7 +108,7 @@ function extractMcpEntry(content: string): any {
 
 // ─── Lifecycle ──────────────────────────────────────────────────────────
 
-describe("install-dsh lifecycle (subprocess)", () => {
+describe("setup install lifecycle (subprocess)", () => {
   test("dry run plans actions without writing anything", () => {
     const original = "# patch\n[]\n";
     const { home, dshHome } = makeHome(original);
@@ -185,7 +185,7 @@ describe("install-dsh lifecycle (subprocess)", () => {
 
 // ─── Failure honesty ────────────────────────────────────────────────────
 
-describe("install-dsh failure honesty", () => {
+describe("setup install failure honesty", () => {
   test("malformed user YAML exits 2 and the file is not touched", () => {
     const malformed = "not: [valid\n";
     const { home, dshHome } = makeHome(malformed);
@@ -227,14 +227,14 @@ describe("install-dsh failure honesty", () => {
     const result = runCli(home, ["--bundle"]);
     expect(result.status).toBe(2);
     expect(result.stderr).toContain("was removed in v1.1");
-    expect(result.stderr).toContain("install-dsh");
+    expect(result.stderr).toContain("setup install");
   }, 60_000);
 });
 
 // ─── PATH-free MCP row (the point of the launcher) ──────────────────────
 
 describe("generated MCP row runs with an empty PATH", () => {
-  test("lists 15 tools and successfully calls mygrace_list_modules", async () => {
+  test("lists the v2.0 tool surface and successfully calls mygrace_find_modules", async () => {
     const { home, dshHome } = makeHome();
     expect(runCli(home, []).status).toBe(0);
 
@@ -252,14 +252,14 @@ describe("generated MCP row runs with an empty PATH", () => {
       const tools = await client.listTools();
       // ADR-8: the MCP server grows over time (15+ tools); the installer only
       // has to guarantee the row works, not freeze the tool count.
-      expect(tools.tools.length).toBeGreaterThanOrEqual(15);
-      expect(tools.tools.map((tool) => tool.name)).toContain("mygrace_list_modules");
+      expect(tools.tools.length).toBeGreaterThanOrEqual(21);
+      expect(tools.tools.map((tool) => tool.name)).toContain("mygrace_find_modules");
       const result = (await client.callTool({
-        name: "mygrace_list_modules",
+        name: "mygrace_find_modules",
         arguments: { path: FIXTURE_PROJECT },
       })) as { isError?: boolean; content?: Array<{ type: string; text?: string }> };
       expect(result.isError).not.toBe(true);
-      expect(result.content?.[0]?.text ?? "").toContain("Modules");
+      expect(result.content?.[0]?.text ?? "").toContain("Found 2 module(s)");
     } finally {
       await client.close().catch(() => {});
     }

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * MyGRACE init-dsh Command
+ * MyGRACE setup init Command
  *
  * Non-interactive bootstrap of a MyGRACE project:
  * - creates the docs/ index structure from templates,
@@ -90,7 +90,7 @@ function ensureGitignore(root: string): { action: "created" | "listed" | "noted"
 
 export const initDshCommand = defineCommand({
   meta: {
-    name: "init-dsh",
+    name: "init",
     description: "Bootstrap docs/ index structure, AGENTS.md and mygrace.config.json from templates (non-interactive)",
   },
   args: {

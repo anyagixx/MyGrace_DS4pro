@@ -9,7 +9,7 @@ whenToUse: "A new project needs MyGRACE scaffolding before the plan/verification
 ## Fast path (non-interactive)
 
 ```
-mygrace init-dsh --path . --name <ProjectName> [--keywords k1,k2]   [--annotation "one line"] [--language typescript] [--runtime bun]   [--framework <name>] [--testRunner "bun test"] [--force]
+mygrace setup init --path . --name <ProjectName> [--keywords k1,k2]   [--annotation "one line"] [--language typescript] [--runtime bun]   [--framework <name>] [--testRunner "bun test"] [--force]
 ```
 
 It creates `docs/{modules,plans,verification,archive}`, the three index files,
@@ -37,7 +37,7 @@ skipped unless `--force` is passed.
 - Module data lives in `docs/modules/M-XXX.xml`, phases in
   `docs/plans/Phase-N.xml`, verification in `docs/verification/V-M-XXX.xml`.
 - `AGENTS.md` is auto-loaded by DeepSeek Harness; keep it current (the template
-  ships with `init-dsh`).
+  ships with `setup init`).
 - This distribution is DSH-first; other platform files in the repository
   (`rules/`, `plugins/`, legacy `extensions/`) are reference material, not part
   of project scaffolding.

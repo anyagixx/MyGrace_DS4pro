@@ -181,12 +181,6 @@ describe("collectLintIssues", () => {
 // ─── buildToolCommand (MCP mapping) ─────────────────────────────────────
 
 describe("buildToolCommand", () => {
-  test("mygrace_list_modules maps to module list with filters", () => {
-    expect(
-      buildToolCommand("mygrace_list_modules", { path: P, status: "wip", type: "CORE_LOGIC", format: "json" })
-    ).toEqual(["module", "list", "--path", P, "--status", "wip", "--type", "CORE_LOGIC", "--format", "json"]);
-  });
-
   test("mygrace_show_module maps to module show", () => {
     expect(buildToolCommand("mygrace_show_module", { id: "M-AUTH", path: P, withVerification: true }))
       .toEqual(["module", "show", "M-AUTH", "--path", P, "--with-verification"]);
@@ -235,24 +229,13 @@ describe("buildToolCommand", () => {
     expect(buildToolCommand("mygrace_doctor", { path: P })).toEqual(["doctor", "--path", P]);
   });
 
-  test("mygrace_test maps to test with module + compact", () => {
-    expect(buildToolCommand("mygrace_test", { path: P, module: "M-AUTH", compact: true }))
-      .toEqual(["test", "--path", P, "--module", "M-AUTH", "--compact"]);
-  });
-
-  test("mygrace_packet maps to packet", () => {
-    expect(buildToolCommand("mygrace_packet", { id: "M-AUTH", path: P }))
-      .toEqual(["packet", "M-AUTH", "--path", P]);
-  });
-
-  test("mygrace_focus maps to focus", () => {
-    expect(buildToolCommand("mygrace_focus", { id: "M-AUTH", path: P }))
-      .toEqual(["focus", "M-AUTH", "--path", P]);
-  });
-
-  test("mygrace_context_cost maps to context-cost --format json", () => {
-    expect(buildToolCommand("mygrace_context_cost", { path: P }))
-      .toEqual(["context-cost", "--path", P, "--format", "json"]);
+  test("mygrace_context maps packet/focus/cost to the grouped CLI", () => {
+    expect(buildToolCommand("mygrace_context", { mode: "packet", id: "M-AUTH", path: P }))
+      .toEqual(["context", "packet", "M-AUTH", "--path", P]);
+    expect(buildToolCommand("mygrace_context", { mode: "focus", id: "M-AUTH", path: P }))
+      .toEqual(["context", "focus", "M-AUTH", "--path", P]);
+    expect(buildToolCommand("mygrace_context", { mode: "cost", path: P }))
+      .toEqual(["context", "cost", "--path", P, "--format", "json"]);
   });
 
   test("mygrace_verify maps to verify", () => {

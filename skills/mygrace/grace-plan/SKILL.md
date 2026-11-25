@@ -36,7 +36,7 @@ from `mygrace-init` (three indexes + per-entity directories). If missing, run th
 4. `docs/plans/Phase-N.xml` — steps with module refs.
 5. `docs/verification-index.xml` — one line per module's verification entry (default cap 80).
 6. `docs/verification/V-M-XXX.xml` — scenarios + **canonical `<module-checks>`**
-   (the `mygrace-verification` skill owns the detail; `mygrace test`/`verify`
+   (the `mygrace-verification` skill owns the detail; `mygrace verify`/`verify`
    read the command from here).
 
 ## Scaling the index (sharding)

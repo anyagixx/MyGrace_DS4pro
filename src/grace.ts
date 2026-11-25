@@ -6,10 +6,11 @@
  * `MyGraceError` becomes one readable line plus the documented exit code
  * (ROADMAP ADR-3) instead of a stack trace.
  *
- * Command surface (see `mygrace <cmd> --help`):
- *   ci, lint, module {index,find,shard,show,list}, phase {index,show}, verification {index},
- *   file show, status, install-dsh, init-dsh, doctor, test, trust, verify, packet,
- *   focus, context-cost, trace, impact, next, projects, integrations, diagram, capsule
+ * Command surface (v2.0, see `mygrace <cmd> --help`):
+ *   ci, lint, status, verify, trust, module {index,find,shard,show,list},
+ *   phase {index,show}, verification {index}, file show,
+ *   context {packet,focus,cost}, setup {init,install,doctor},
+ *   trace, impact, next, projects, integrations, diagram, capsule
  */
 
 // START_MODULE_CONTRACT
@@ -52,7 +53,7 @@ import { installDshCommand } from "./grace-install";
 import { initDshCommand } from "./grace-init";
 import { statusCommand } from "./grace-status";
 import { doctorCommand } from "./grace-doctor";
-import { testCommand, trustCommand } from "./grace-test";
+import { trustCommand } from "./grace-test";
 import { packetCommand, focusCommand } from "./grace-packet";
 import { contextCostCommand } from "./grace-context";
 import { verifyCommand } from "./grace-verify";
@@ -93,6 +94,26 @@ function guard<A extends ArgsDef>(command: CommandDef<A>): CommandDef<A> {
   return wrapped;
 }
 
+/** `mygrace context` — worker-context commands (packet, focus, cost). */
+const contextCommand = defineCommand({
+  meta: { name: "context", description: "Worker context: packet M-X, focus M-X, cost" },
+  subCommands: {
+    packet: packetCommand,
+    focus: focusCommand,
+    cost: contextCostCommand,
+  },
+});
+
+/** `mygrace setup` — bootstrap/install/diagnostics for DSH environments. */
+const setupCommand = defineCommand({
+  meta: { name: "setup", description: "Setup: init (scaffold), install (DSH), doctor (diagnostics)" },
+  subCommands: {
+    init: initDshCommand,
+    install: installDshCommand,
+    doctor: doctorCommand,
+  },
+});
+
 export const main = defineCommand({
   meta: {
     name: "mygrace",
@@ -102,20 +123,15 @@ export const main = defineCommand({
   subCommands: {
     ci: guard(ciCommand),
     lint: guard(lintCommand),
+    status: guard(statusCommand),
+    verify: guard(verifyCommand),
+    trust: guard(trustCommand),
     module: guard(moduleCommand),
     phase: guard(phaseCommand),
     verification: guard(verificationCommand),
     file: guard(fileCommand),
-    status: guard(statusCommand),
-    "install-dsh": guard(installDshCommand),
-    "init-dsh": guard(initDshCommand),
-    doctor: guard(doctorCommand),
-    test: guard(testCommand),
-    trust: guard(trustCommand),
-    verify: guard(verifyCommand),
-    packet: guard(packetCommand),
-    focus: guard(focusCommand),
-    "context-cost": guard(contextCostCommand),
+    context: guard(contextCommand),
+    setup: guard(setupCommand),
     trace: guard(traceCommand),
     impact: guard(impactCommand),
     next: guard(nextCommand),

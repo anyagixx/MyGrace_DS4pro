@@ -78,7 +78,7 @@ function readIndexRawOrThrow(root: string, indexFile: string): string {
   const content = readFileOrNull(join(root, "docs", indexFile));
   if (content === null) {
     throw new UsageError(`Cannot read docs/${indexFile}.`, {
-      hint: "Run `mygrace init-dsh` to create the index, or check its permissions.",
+      hint: "Run `mygrace setup init` to create the index, or check its permissions.",
     });
   }
   return content;

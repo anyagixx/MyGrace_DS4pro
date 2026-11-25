@@ -51,7 +51,7 @@
     </UC-004>
     <UC-005>
       <Actor>HumanMaintainer</Actor>
-      <Action>Runs mygrace init-dsh on a new project.</Action>
+      <Action>Runs mygrace setup init on a new project.</Action>
       <Goal>Bootstrap docs/ indexes, AGENTS.md and mygrace.config.json from templates without overwriting existing files.</Goal>
       <Preconditions>Bundled templates are present in the package.</Preconditions>
       <AcceptanceCriteria>Generated scaffold is lint-clean; existing AGENTS.md is preserved unless --force is passed.</AcceptanceCriteria>
@@ -69,7 +69,7 @@
     </UC-006>
     <UC-007>
       <Actor>AIAgent</Actor>
-      <Action>Runs mygrace packet, focus and context-cost.</Action>
+      <Action>Runs mygrace context packet, focus and context-cost.</Action>
       <Goal>Budget context before reading, and receive a self-contained worker prompt per module.</Goal>
       <Preconditions>The module id exists in docs/graph-index.xml.</Preconditions>
       <AcceptanceCriteria>Output includes the module contract, canonical command and dependencies; ids are validated.</AcceptanceCriteria>
@@ -78,7 +78,7 @@
     </UC-007>
     <UC-008>
       <Actor>HumanMaintainer</Actor>
-      <Action>Runs mygrace status and mygrace doctor.</Action>
+      <Action>Runs mygrace status and mygrace setup doctor.</Action>
       <Goal>See honest project and environment health with an exit code that matches the findings.</Goal>
       <Preconditions>Optional DSH integration for environment checks.</Preconditions>
       <AcceptanceCriteria>Counts match the indexes; malformed indexes are findings, never crashes.</AcceptanceCriteria>
@@ -87,7 +87,7 @@
     </UC-008>
     <UC-009>
       <Actor>HomeMaintainer</Actor>
-      <Action>Runs mygrace install-dsh.</Action>
+      <Action>Runs mygrace setup install.</Action>
       <Goal>Wire skills, the MCP row and the status-panel row into DeepSeek Harness safely and reversibly.</Goal>
       <Preconditions>DSH home and profile exist; the user may opt into the bundle.</Preconditions>
       <AcceptanceCriteria>Atomic validated YAML edits, timestamped backups, byte-identical uninstall, non-zero on failed steps.</AcceptanceCriteria>

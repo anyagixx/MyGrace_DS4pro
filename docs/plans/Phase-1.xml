@@ -28,7 +28,7 @@
     <item-3>ADR-4 ids and paths validated everywhere; ADR-5 configuration replaces hardcoded layout.</item-3>
     <item-4>mygrace lint --strict detects every drift class listed in ROADMAP section 4.2.</item-4>
     <item-5>MCP server exposes 16 tools and works from a plain checkout (no PATH dependency).</item-5>
-    <item-6>Packaging is gated by pack-smoke: the tarball CLI starts, init-dsh and lint succeed.</item-6>
+    <item-6>Packaging is gated by pack-smoke: the tarball CLI starts, setup init and lint succeed.</item-6>
   </outcome>
 
   <evidence>

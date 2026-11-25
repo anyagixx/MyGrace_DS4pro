@@ -70,7 +70,7 @@ Dependency rules:
 
 | Module | Responsibility | Depends on |
 |---|---|---|
-| `src/grace.ts` | CLI entry: citty `defineCommand` tree (ci, lint, module, phase, verification, file, status, install-dsh, init-dsh, doctor, test, trust, verify, packet, focus, context-cost), `guard()` wrapper that turns a thrown `MyGraceError` into one readable line plus the documented exit code, `runMain()`. | all command modules, `grace-errors` |
+| `src/grace.ts` | CLI entry: citty `defineCommand` tree (ci, lint, module, phase, verification, file, status, setup install, setup init, doctor, test, trust, verify, packet, focus, context-cost), `guard()` wrapper that turns a thrown `MyGraceError` into one readable line plus the documented exit code, `runMain()`. | all command modules, `grace-errors` |
 | `src/grace-errors.ts` | Exit-code constants (`0/1/2/3`), `Finding` + `finding()`, typed errors (`UsageError`, `ConfigError`, `ProjectNotFoundError`, `XmlError`, `TrustError`), `exitCodeForFindings()`, JSON envelope (`createEnvelope`), `printJson()`, `handleCliError()`. Pure formatting; no filesystem. | none (leaf) |
 | `src/grace-xml.ts` | Strict XML layer: well-formedness validation with line/column, element tree, structural index/entity parsing (`M-*`, `V-M-*`, `Phase-N`), accessors (`findElements`, `childElements`, `textOf`, `attr`, `elementAtPath`), serialization helpers. Malformed XML is an `XmlError`, never a silent empty result. | `grace-errors`, `fast-xml-parser` |
 | `src/grace-paths.ts` | Id grammars (`M-…`, `V-M-…`, `Phase-N`), `assertEntityId`, `entityDir`/`entityPath`, `assertSafeRelativePath`, `resolveWithin`/`isWithin` containment. | `grace-errors`, `node:path` |
@@ -87,12 +87,12 @@ Dependency rules:
 | `src/grace-impact.ts` | `impact`: changed files (`--files` → `--staged` → `--since` → `git diff HEAD`) → direct modules (exact PATH / module-dir prefix / docs entity) → transitive reverse-`DEPENDS` closure → verification/test blast radius → affected phases → suggested commands; git is argv-only with a 2 s timeout and degrades gracefully (contract: `docs/modules/M-IMPACT.xml`). | `grace-common`, `grace-config`, `grace-errors`, `grace-paths`, `grace-shard`, `grace-test` |
 | `src/grace-next.ts` | `next`: deterministic nine-code advice ladder (`INIT_PROJECT`, `FIX_INDEX`, `FIX_LINT_ERRORS`, `ADD_VERIFICATION_COVERAGE`, `TRUST_COMMANDS`, `VERIFY_MODULE`, `REFRESH_WARNINGS`, `NEXT_PHASE`, `NOTHING_TO_DO`) over the same collectors as `ci`; read-only, exit 0 for any advice (contract: `docs/modules/M-NEXT.xml`). | `grace-common`, `grace-config`, `grace-errors`, `grace-ci`, `grace-lint`, `grace-shard`, `grace-test` |
 | `src/grace-projects.ts` | `projects`: bounded BFS discovery by `docs/graph-index.xml` (depth 4, 2000-dir cap, `truncated`), per-project counts/lint/coverage/status via the same collectors, totals; exit 0 clean / 1 findings / `--strict` promotes warnings (contract: `docs/modules/M-PROJECTS.xml`). | `grace-common`, `grace-config`, `grace-errors`, `grace-status`, `grace-lint`, `grace-ci`, `grace-shard` |
-| `src/grace-test.ts` | Execution contract: canonical `<module-checks>` (verification file, module fallback), `<test-files>`, trust model (`.mygrace/trust.json`), `authorizeCommands()`, quote-aware argv tokenizer, shell-metacharacter policy, plan/execute API, `mygrace test` and `mygrace trust`, shared `runCommandOutcome()` output/exit-code helper. | `grace-common`, `grace-xml`, `grace-paths`, `grace-config`, `grace-errors`, `node:child_process` |
+| `src/grace-test.ts` | Execution contract: canonical `<module-checks>` (verification file, module fallback), `<test-files>`, trust model (`.mygrace/trust.json`), `authorizeCommands()`, quote-aware argv tokenizer, shell-metacharacter policy, plan/execute API, `mygrace verify` and `mygrace trust`, shared `runCommandOutcome()` output/exit-code helper. | `grace-common`, `grace-xml`, `grace-paths`, `grace-config`, `grace-errors`, `node:child_process` |
 | `src/grace-verify.ts` | Agent-loop verification: runs planned module checks under the same authorization as `test`, compact digest, `.mygrace/last-failures.md` only on failure, text/JSON envelopes. | `grace-test`, `grace-common`, `grace-config`, `grace-errors` |
 | `src/grace-packet.ts` | `packet` (self-contained worker prompt: contract + verification + deps) and `focus` (minimal working set); ids validated, JSON envelope. | `grace-common`, `grace-paths` |
 | `src/grace-context.ts` | `context-cost`: per-operation line/byte/token-estimate budget from the real project files (same line/byte model as `scripts/measure-context.ts`); config-aware; JSON envelope. | `grace-common`, `grace-config` |
-| `src/grace-init.ts` | `init-dsh`: creates `docs/{modules,plans,verification,archive}`, writes scaffold files from `templates/` (`graph-index`, `plan-index`, `verification-index`, `operational-packets`, `requirements`, `technology`, `AGENTS.md`) and the default `mygrace.config.json`. Refuses to overwrite without `--force`. | `grace-config`, `node:fs`, `templates/` |
-| `src/grace-install.ts` | `install-dsh`: copies `skills/mygrace/grace-*` → `$DSH_HOME/skills/mygrace-*`, inserts the `mcp-mygrace` row into the profile's `cordis.patch.yml` (launcher = `process.execPath` + absolute `grace-mcp.ts`), and, with `--panel`, installs the **LIVE** status-panel host route + browser card (private package; reads `mygrace status --format json` through the launcher). YAML is parsed and validated before/after each edit, writes are atomic, backups are timestamped, failed components exit non-zero. Flags: `--bundle`, `--source`, `--dryRun`, `--uninstall`, `--profile`, `--panel`, `--dshHome`. | `grace-errors`, `yaml`, `node:fs`, `node:child_process` |
+| `src/grace-init.ts` | `setup init`: creates `docs/{modules,plans,verification,archive}`, writes scaffold files from `templates/` (`graph-index`, `plan-index`, `verification-index`, `operational-packets`, `requirements`, `technology`, `AGENTS.md`) and the default `mygrace.config.json`. Refuses to overwrite without `--force`. | `grace-config`, `node:fs`, `templates/` |
+| `src/grace-install.ts` | `setup install`: copies `skills/mygrace/grace-*` → `$DSH_HOME/skills/mygrace-*`, inserts the `mcp-mygrace` row into the profile's `cordis.patch.yml` (launcher = `process.execPath` + absolute `grace-mcp.ts`), and, with `--panel`, installs the **LIVE** status-panel host route + browser card (private package; reads `mygrace status --format json` through the launcher). YAML is parsed and validated before/after each edit, writes are atomic, backups are timestamped, failed components exit non-zero. Flags: `--bundle`, `--source`, `--dryRun`, `--uninstall`, `--profile`, `--panel`, `--dshHome`. | `grace-errors`, `yaml`, `node:fs`, `node:child_process` |
 | `src/grace-mcp.ts` | stdio MCP server (`@modelcontextprotocol/sdk`), 23 tools: derives `ListTools` from the catalog, validates arguments, launches the CLI without a `PATH` dependency (`MYGRACE_BIN` → package-local `src/grace.ts` via `process.execPath` → `mygrace` on `PATH`), preserves stdout/stderr on failure, configurable timeout (`MYGRACE_MCP_TIMEOUT_MS`, default 120 s). | `grace-mcp-commands`, MCP SDK |
 | `src/grace-mcp-commands.ts` | Single source of truth for MCP tools: `TOOLS` (`name`, `description`, `inputSchema`, `rootArg`, `buildArgs`, optional `digestOutput`), `TOOL_NAMES`, `buildToolCommand()`, `validateToolArgs()`. No SDK imports. | `grace-errors` only (pure) |
 | `src/grace-integrations.ts` | ADR-9 registry: detects optional external tools (Octocode, Archify) via config → env → PATH, probes `--version`, checks pinned tested ranges, prints actionable hints; `mygrace integrations status`; advisory (exit 0) and never required by the core gates. | `grace-config`, `grace-common`, `grace-errors`, `grace-test` |
@@ -199,11 +199,11 @@ explicit argument → `MYGRACE_PROJECT_ROOT` → the process working directory.
 
 ### 3.4 Install / bootstrap path (side effects)
 
-- `init-dsh`: reads `templates/`, substitutes project variables, creates
+- `setup init`: reads `templates/`, substitutes project variables, creates
   `docs/{modules,plans,verification,archive}` (with `.gitkeep`), writes the
   scaffold files listed in §2 plus `mygrace.config.json` with the effective
   defaults. Safe: skips existing files, `--force` to overwrite.
-- `install-dsh`: writes only under `$DSH_HOME` (or `--dshHome`), parses and
+- `setup install`: writes only under `$DSH_HOME` (or `--dshHome`), parses and
   validates `cordis.patch.yml` with the `yaml` package before and after each
   edit, performs atomic writes, keeps timestamped backups, is idempotent, and
   supports `--dryRun` (no writes) and `--uninstall`.
@@ -250,7 +250,7 @@ spawn "status --path <root> --format json"  (5 s timeout, never throws)
   generatedAt, durationMs, error? }   →  failure: { ok:false, error }
 ```
 
-The panel is opt-in (`install-dsh --panel`), private/unpublished and read-only.
+The panel is opt-in (`setup install --panel`), private/unpublished and read-only.
 Route registration/disposal, payload building and profile composition are tested
 against the real DSH 0.2.1-rc.2 loader (`test/grace-panel.test.ts`); a live
 `dsh web` browser session is not exercised in CI — a documented limit.
@@ -275,7 +275,7 @@ gate; the package is publish-ready but not published yet.
 
 ## 4. Project configuration
 
-`mygrace.config.json` is optional; `init-dsh` writes it so the layout is visible
+`mygrace.config.json` is optional; `setup init` writes it so the layout is visible
 and editable. Unknown keys are rejected (every problem is listed at once), and
 the defaults reproduce the v1 layout.
 
@@ -344,7 +344,7 @@ The tool's credibility depends on this table being true.
 | The LIVE panel reads real data | The host route shells out to `mygrace status --format json` (never parses `docs/` itself), has a 5 s timeout, sets `cache-control: no-store`, and degrades to `{ok:false,error}`/“not connected” instead of throwing | `packages/mygrace-status-panel/lib/index.js`, `status-payload.js`, `client.js`; `test/grace-panel.test.ts` | **enforced** (route/payload/install tests against the real DSH loader; live GUI session is a documented gap) |
 | One-command gate agrees with the individual checks | `mygrace ci` runs the same strict-lint/status/coverage logic (and the same trust-gated test runner) and must return the same verdict as the individual commands | `grace-ci.ts` (`runCiGate`, `collectCoverage`), composed from `grace-lint.ts`, `grace-status.ts`, `grace-test.ts`/`grace-verify.ts` | **enforced** (unit-tested gate + self-check on this repo: `mygrace ci --path .` PASS) |
 | The packaged CLI works | Every runtime file is in the tarball and the packaged CLI starts | `scripts/pack-smoke.ts` via `bun run pack:smoke` (`ci`, `release:check`) | **enforced** |
-| Documented surface matches the code | Counts, commands, flags and MCP names checked against source in CI | `scripts/validate-docs.ts`, `scripts/validate-marketplace.ts`, `.github/workflows/ci.yml` | **enforced** by CI — both validators pass; counted claims come from source (22 commands, 23 MCP tools, 15 skills) |
+| Documented surface matches the code | Counts, commands, flags and MCP names checked against source in CI | `scripts/validate-docs.ts`, `scripts/validate-marketplace.ts`, `.github/workflows/ci.yml` | **enforced** by CI — both validators pass; counted claims come from source (18 commands, 21 MCP tools, 12 skills) |
 
 ## 7. Where to change things
 

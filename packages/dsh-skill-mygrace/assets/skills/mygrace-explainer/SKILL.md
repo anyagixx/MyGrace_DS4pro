@@ -40,7 +40,7 @@ files; caps and budgets are configurable in `mygrace.config.json` and enforced b
 
 `<module-checks>` in `docs/verification/V-M-XXX.xml` is the canonical command
 source (module files are a deprecated fallback; `testRunner` from config is the
-last fallback). `mygrace test` / `mygrace verify` refuse to execute those
+last fallback). `mygrace verify` / `mygrace verify` refuse to execute those
 commands unless `.mygrace/trust.json` is current (`mygrace trust` after review),
 `config.allowCommands` is true, or `--allow-commands` is passed. `.mygrace/` is
 gitignored local state; editing docs/modules, docs/verification or the config
@@ -57,7 +57,7 @@ stable codes and honest exit codes (ADR-3).
 ## Configuration (`mygrace.config.json`)
 
 `sourceDirs`, `markupExts`, `ignoreDirs`, `indexCaps`, `sizeBudgets`,
-`testRunner`, `allowCommands`, `language`. `mygrace init-dsh` writes it; defaults
+`testRunner`, `allowCommands`, `language`. `mygrace setup init` writes it; defaults
 reproduce the classic layout; unknown keys are rejected.
 
 ## Honest metrics
@@ -70,7 +70,7 @@ classic repository. On the checked-in demo (3 modules): status 316 → 19 lines
 verification audit 90 → 90 (0%). The 12/50/200-module sweep shows the win grows
 with size but saturates; a 200-module point is synthetic. Reproduce with
 `bun run scripts/measure-context.ts --json`; runtime view:
-`mygrace context-cost --path <root>`.
+`mygrace context cost --path <root>`.
 
 ## Query surface and operations
 
@@ -84,7 +84,7 @@ with size but saturates; a 200-module point is synthetic. Reproduce with
 
 ## Platform
 
-DeepSeek Harness is primary (skills + MCP + AGENTS.md). The `install-dsh --panel`
+DeepSeek Harness is primary (skills + MCP + AGENTS.md). The `setup install --panel`
 component is now a **LIVE** sidebar card (GET `/api/mygrace.status`, payload built
 from `mygrace status --format json`; opt-in/private; route+loader verified
 against the real DSH 0.2.1-rc.2 loader, live GUI session not exercised in CI).

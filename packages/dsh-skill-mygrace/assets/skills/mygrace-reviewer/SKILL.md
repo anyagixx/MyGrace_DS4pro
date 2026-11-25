@@ -79,3 +79,14 @@ If the run reports `CAPSULE_DEOPT`, stop and follow the source skill procedure
 above; capsules never replace this skill and never execute anything beyond the
 read-only MyGRACE CLI allowlist. Qualify first if the capsule is not qualified:
 `mygrace capsule qualify <name> --fixture examples/demo-store`.
+
+## Recovery: refresh indexes after drift (merged from mygrace-refresh in v2.0)
+
+When lint reports drift, fix by class instead of hand-editing XML blindly:
+`ORPHANED_INDEX_ENTRY` (delete the entry or restore the file), `MISSING_INDEX_ENTRY`
+(add it), `*_DRIFT` (decide the truth, then update the index; change the contract
+only with approval), `PATH_MISSING`/`DEPENDS_UNKNOWN`/`VERIFICATION_REF_MISSING`
+(fix the reference), `ENTITY_TOO_SMALL|LARGE`/index caps (split/enrich or change
+budgets deliberately). Re-run `mygrace trust` after any docs/config edit, then
+`mygrace lint --strict` and `mygrace ci`.
+

@@ -31,8 +31,8 @@
   </acceptance-gates>
 
   <evidence>
-    <item-1>AGENTS.md sha256 is identical before and after init-dsh without --force (the existing file must be preserved).</item-1>
-    <item-2>mygrace module show M-XML and mygrace packet M-LINT read the new docs successfully.</item-2>
+    <item-1>AGENTS.md sha256 is identical before and after setup init without --force (the existing file must be preserved).</item-1>
+    <item-2>mygrace module show M-XML and mygrace context packet M-LINT read the new docs successfully.</item-2>
     <item-3>bun test remains green after the documentation work (no test was changed to fit docs).</item-3>
   </evidence>
 

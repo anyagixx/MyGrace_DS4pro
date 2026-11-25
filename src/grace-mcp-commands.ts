@@ -40,16 +40,12 @@ import { resolve } from "node:path";
 import { UsageError } from "./grace-errors";
 
 export type ToolName =
-  | "mygrace_list_modules"
   | "mygrace_show_module"
   | "mygrace_show_phase"
   | "mygrace_find_modules"
   | "mygrace_phase_index"
   | "mygrace_doctor"
-  | "mygrace_test"
-  | "mygrace_packet"
-  | "mygrace_focus"
-  | "mygrace_context_cost"
+  | "mygrace_context"
   | "mygrace_verify"
   | "mygrace_list_verifications"
   | "mygrace_lint"
@@ -161,36 +157,10 @@ function wantsJson(args: ToolArgs): boolean {
  */
 export const TOOLS: readonly ToolDefinition[] = [
   {
-    name: "mygrace_list_modules",
-    description:
-      "List modules from graph-index.xml (≤100 lines). Filter by status or type. " +
-      "This is the lazy-loading entry point — always start here. " +
-      ROOT_NOTE,
-    inputSchema: {
-      type: "object",
-      properties: {
-        path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
-        status: { type: "string", enum: ["pending", "wip", "done"], description: "Filter by module STATUS." },
-        type: { type: "string", description: "Filter by module TYPE (e.g. CORE_LOGIC)." },
-        format: { type: "string", enum: ["text", "json"], default: "text", description: "Output format." },
-      },
-    },
-    rootArg: "path",
-    buildArgs(args, root) {
-      const cmd = ["module", "list", "--path", root];
-      const status = stringArg(args, "status");
-      const type = stringArg(args, "type");
-      if (status !== undefined) cmd.push("--status", status);
-      if (type !== undefined) cmd.push("--type", type);
-      if (wantsJson(args)) cmd.push("--format", "json");
-      return cmd;
-    },
-  },
-  {
     name: "mygrace_show_module",
     description:
       "Show the per-module file from docs/modules/M-XXX.xml (30-80 lines). " +
-      "Use after mygrace_list_modules to find the module ID. " +
+      "Use mygrace_find_modules to find the module ID. " +
       ROOT_NOTE,
     inputSchema: {
       type: "object",
@@ -294,87 +264,27 @@ export const TOOLS: readonly ToolDefinition[] = [
     },
   },
   {
-    name: "mygrace_test",
+    name: "mygrace_context",
     description:
-      "Run module tests scoped from verification files (test-files + module-checks, default `bun test`). " +
-      "compact (default true) keeps failures and the summary only; exit 1 on failure. " +
+      "Worker context, one tool with a mode: `packet` (self-contained prompt), `focus` (minimal working set) " +
+      "or `cost` (context budget per operation). Use before delegating or when planning a read. " +
       ROOT_NOTE,
     inputSchema: {
       type: "object",
       properties: {
-        module: { type: "string", pattern: MODULE_ID_PATTERN, description: "Module ID (e.g. M-AUTH); omit to run all modules in graph-index.xml." },
-        compact: { type: "boolean", default: true, description: "Print only failures and the summary." },
-        allowUnsafeCommands: {
-          type: "boolean",
-          default: false,
-          description: "One-off opt-in for deny-listed dangerous command patterns (requires an explicit review).",
-        },
+        mode: { type: "string", enum: ["packet", "focus", "cost"], description: "Context mode: packet | focus | cost." },
+        id: { type: "string", pattern: MODULE_ID_PATTERN, description: "Module ID (required for packet/focus; ignored for cost)." },
         path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
       },
+      required: ["mode"],
     },
     rootArg: "path",
     buildArgs(args, root) {
-      const cmd = ["test", "--path", root];
-      const moduleId = stringArg(args, "module");
-      if (moduleId !== undefined) cmd.push("--module", moduleId);
-      if (booleanFlag(args, "compact")) cmd.push("--compact");
-      if (booleanFlag(args, "allowUnsafeCommands")) cmd.push("--allow-unsafe-commands");
-      return cmd;
-    },
-  },
-  {
-    name: "mygrace_packet",
-    description:
-      "Generate a self-contained worker prompt for one module (contract + verification excerpt + dependency list). " +
-      "For DSH subagents — smaller context than reading several files. " +
-      ROOT_NOTE,
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string", pattern: MODULE_ID_PATTERN, description: "Module ID (e.g. M-AUTH)." },
-        path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
-      },
-      required: ["id"],
-    },
-    rootArg: "path",
-    buildArgs(args, root) {
-      return ["packet", requiredStringArg("mygrace_packet", args, "id"), "--path", root];
-    },
-  },
-  {
-    name: "mygrace_focus",
-    description:
-      "Print the minimal working set for one module (contract + deps + tests command). " +
-      "Smaller than mygrace_show_module. " +
-      ROOT_NOTE,
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string", pattern: MODULE_ID_PATTERN, description: "Module ID (e.g. M-AUTH)." },
-        path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
-      },
-      required: ["id"],
-    },
-    rootArg: "path",
-    buildArgs(args, root) {
-      return ["focus", requiredStringArg("mygrace_focus", args, "id"), "--path", root];
-    },
-  },
-  {
-    name: "mygrace_context_cost",
-    description:
-      "Context budget per operation in lines (status, single module work, phase execution, verification audit). " +
-      "Use it to budget how much an agent may read. JSON output. " +
-      ROOT_NOTE,
-    inputSchema: {
-      type: "object",
-      properties: {
-        path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
-      },
-    },
-    rootArg: "path",
-    buildArgs(_args, root) {
-      return ["context-cost", "--path", root, "--format", "json"];
+      const mode = requiredStringArg("mygrace_context", args, "mode");
+      if (mode === "cost") return ["context", "cost", "--path", root, "--format", "json"];
+      if (mode === "packet") return ["context", "packet", requiredStringArg("mygrace_context", args, "id"), "--path", root];
+      if (mode === "focus") return ["context", "focus", requiredStringArg("mygrace_context", args, "id"), "--path", root];
+      throw new UsageError(`mygrace_context: unsupported mode "${mode}" (expected packet, focus or cost).`);
     },
   },
   {

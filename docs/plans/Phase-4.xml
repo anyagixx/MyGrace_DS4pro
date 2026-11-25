@@ -2,7 +2,7 @@
 <Phase-4 name="Release engineering and operations" status="wip">
   <description>Wave 4/5: ship MyGRACE like a product — a LIVE DeepSeek Harness status panel, a tag-driven release workflow with provenance, an artifact dry-run gate, a cross-platform CI matrix, and the actual npm publication (pending owner action). The package is publish-ready but not published.</description>
 
-  <step-1 module="M-INSTALL" description="LIVE DSH status panel (W4.1): install-dsh --panel installs a real host route GET /api/mygrace.status + browser card reading `mygrace status --format json`; graceful {ok:false,error} on every failure." status="done" />
+  <step-1 module="M-INSTALL" description="LIVE DSH status panel (W4.1): setup install --panel installs a real host route GET /api/mygrace.status + browser card reading `mygrace status --format json`; graceful {ok:false,error} on every failure." status="done" />
   <step-2 module="M-INSTALL" description="release.yml: tag v* / workflow_dispatch; release:check → publish:dry (artifact gate) → pack tarball → GitHub Release (no npm publication, owner decision 2026-11-25)." status="done" />
   <step-3 module="M-INSTALL" description="publish:dry artifact gate: pack → extract → static import completeness → packaged CLI smoke → offline install." status="done" />
   <step-4 module="M-INSTALL" description="CI OS matrix: typecheck/tests on ubuntu-latest, windows-latest and macos-latest; multi-language job stays separate." status="done" />
@@ -16,7 +16,7 @@
   </outcome>
 
   <deliverables>
-    <item-1>packages/mygrace-status-panel: private host plugin + browser card, installed by install-dsh --panel only.</item-1>
+    <item-1>packages/mygrace-status-panel: private host plugin + browser card, installed by setup install --panel only.</item-1>
     <item-2>.github/workflows/release.yml with tag/version consistency check and trusted-publishing credentials path.</item-2>
     <item-3>scripts/publish-dry-run.ts wired as `bun run publish:dry` and `bun run release:full`.</item-3>
     <item-4>CONTRIBUTING.md "### Releasing mygrace-cli (GitHub Releases, no npm)": semver policy, tag flow, release gates and artifact creation.</item-4>
@@ -27,7 +27,7 @@
     <item-1>`bun run release:check` and `bun run publish:dry` pass locally before any tag is cut.</item-1>
     <item-2>`bun run publish:dry` reports the expected file list and verifies the packed CLI offline; no registry credentials exist.</item-2>
     <item-3>release.yml refuses to publish when the tag differs from the package.json version.</item-3>
-    <item-4>install-dsh --uninstall removes the panel row byte-for-byte; a broken panel never breaks the GUI.</item-4>
+    <item-4>setup install --uninstall removes the panel row byte-for-byte; a broken panel never breaks the GUI.</item-4>
     <item-5>README keeps "from source/tarball" installation until the owner publishes, then switches to npm.</item-5>
   </acceptance-gates>
 

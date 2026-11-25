@@ -1,7 +1,7 @@
 # MyGRACE DSH bundle — UNPUBLISHED OPTIONAL PREVIEW
 
 > **Status in v1.1: not supported, not published, not installed by the CLI.**
-> `mygrace install-dsh --bundle` was removed. `mygrace install-dsh` (the
+> `mygrace setup install --bundle` was removed. `mygrace setup install` (the
 > supported path) installs the skills + a PATH-free MCP row and, with
 > `--panel`, the decorative sidebar placeholder. This package is kept as an
 > optional preview for a future release decision (ROADMAP Wave 4).

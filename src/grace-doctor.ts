@@ -202,7 +202,7 @@ export function buildDoctorReport(startDir: string): DoctorReport {
 
   let project: DoctorReport["project"];
   if (!projectFound) {
-    project = { ok: false, error: "docs/graph-index.xml not found — run mygrace init-dsh or create docs/" };
+    project = { ok: false, error: "docs/graph-index.xml not found — run mygrace setup init or create docs/" };
   } else {
     const indexErrors: string[] = [];
     const modules = countIndex(projectRoot, "graph-index.xml", indexErrors);
@@ -242,7 +242,7 @@ export function buildDoctorReport(startDir: string): DoctorReport {
     name: "mygrace-* skills",
     ok: foundSkills.length === expectedSkills.length,
     detail: `${foundSkills.length}/${expectedSkills.length} installed in ${dshHome}/skills`,
-    hint: "mygrace install-dsh (or dsh plugin --profile web add file:./packages/mygrace-dsh)",
+    hint: "mygrace setup install (or dsh plugin --profile web add file:./packages/mygrace-dsh)",
   };
 
   const profilePatchPath = join(dshHome, "profiles", "web", "cordis.patch.yml");
@@ -252,7 +252,7 @@ export function buildDoctorReport(startDir: string): DoctorReport {
     name: "MCP row mcp-mygrace",
     ok: mcpOk,
     detail: mcpOk ? "present in cordis.patch.yml" : "missing",
-    hint: "mygrace install-dsh",
+    hint: "mygrace setup install",
   };
 
   const profilePkgPath = join(dshHome, "profiles", "web", "package.json");
@@ -262,7 +262,7 @@ export function buildDoctorReport(startDir: string): DoctorReport {
     name: "status panel",
     ok: panelOk,
     detail: panelOk ? "installed in profile deps" : "missing",
-    hint: "mygrace install-dsh (needs pnpm)",
+    hint: "mygrace setup install (needs pnpm)",
   };
 
   const bun = probe("bun", ["--version"]);
@@ -340,7 +340,7 @@ export function doctorFindings(report: DoctorReport): Finding[] {
     if (report.project.status === undefined) {
       findings.push(
         finding("error", "PROJECT_NOT_FOUND", report.project.error ?? "docs/graph-index.xml not found.", {
-          hint: "Run `mygrace init-dsh` in the project root, or pass --path <project-root>.",
+          hint: "Run `mygrace setup init` in the project root, or pass --path <project-root>.",
         })
       );
     }

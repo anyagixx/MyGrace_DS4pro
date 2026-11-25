@@ -8,8 +8,8 @@
   <annotations>
     <fn-loadModuleDocument PURPOSE="Validated and structurally parsed module file." />
     <fn-depTable PURPOSE="Dependency rows resolved from the graph index." />
-    <export-packetCommand PURPOSE="mygrace packet &lt;id&gt; [--format json]." />
-    <export-focusCommand PURPOSE="mygrace focus &lt;id&gt; [--format json]." />
+    <export-packetCommand PURPOSE="mygrace context packet &lt;id&gt; [--format json]." />
+    <export-focusCommand PURPOSE="mygrace context focus &lt;id&gt; [--format json]." />
   </annotations>
 
   <CrossLink to="M-PATHS" relation="validates the module id before reading" />

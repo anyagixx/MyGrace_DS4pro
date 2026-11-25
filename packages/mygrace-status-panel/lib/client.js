@@ -157,7 +157,7 @@ window.__ModuleLoader__.load({
         fetch(STATUS_ROUTE, { cache: "no-store" })
           .then(function (response) {
             if (!response.ok) {
-              var hint = response.status === 404 ? " (host route missing \u2014 reinstall with `mygrace install-dsh --panel`)" : "";
+              var hint = response.status === 404 ? " (host route missing \u2014 reinstall with `mygrace setup install --panel`)" : "";
               throw new Error("HTTP " + String(response.status) + hint);
             }
             return response.json();

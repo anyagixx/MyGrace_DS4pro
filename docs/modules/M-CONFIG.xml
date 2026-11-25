@@ -14,7 +14,7 @@
     <fn-configPath PURPOSE="Absolute config path for a project root." />
     <fn-loadConfig PURPOSE="Read and validate; throws ConfigError listing every problem." />
     <fn-tryLoadConfig PURPOSE="Non-throwing variant for reporting callers." />
-    <fn-serializeConfig PURPOSE="Stable JSON used by init-dsh." />
+    <fn-serializeConfig PURPOSE="Stable JSON used by setup init." />
     <fn-cloneDefault PURPOSE="Deep copy of the default configuration." />
   </annotations>
 
