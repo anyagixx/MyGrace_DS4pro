@@ -37,6 +37,10 @@ jobs:
   release:
     name: release (${{ github.event_name }})
     runs-on: ubuntu-latest
+    # Needed only for the tag-push `gh release create` step; the workflow itself
+    # stays read-only for every other trigger.
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -81,8 +85,6 @@ jobs:
 
       - name: Create GitHub Release (tag push)
         if: github.event_name == 'push'
-        permissions:
-          contents: write
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release create "${GITHUB_REF_NAME}" dist/*.tgz --generate-notes --verify-tag
