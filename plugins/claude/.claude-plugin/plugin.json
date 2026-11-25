@@ -1,7 +1,7 @@
 {
   "name": "mygrace",
   "description": "Claude Code metadata stub for MyGRACE — no context files are shipped in this release; see README platform matrix.",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "author": "anyagixx",
   "license": "MIT"
 }

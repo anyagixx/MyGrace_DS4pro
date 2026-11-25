@@ -9,6 +9,20 @@ release time (see `ROADMAP.md` §6, gate G10).
 
 Nothing yet.
 
+## [3.2.1] — 2026-11-26
+
+### Fixed
+
+- Regenerated `packages/dsh-skill-mygrace` after the v3.2.0 skill text change
+  (`mygrace-cli` guidance section); the CI generated-assets check caught the
+  drift on the tag build.
+- `bun run release:check` now runs `check:generated` (example + DSH skill assets)
+  before pack-smoke, so local release gates catch generated drift like CI does.
+
+No runtime behavior changed; the v3.2.0 GitHub Release stays valid and this patch
+makes tag CI green.
+
+
 ## [3.2.0] — 2026-11-26
 
 ### Added

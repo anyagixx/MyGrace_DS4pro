@@ -2,7 +2,7 @@
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "metadata": {
     "name": "mygrace",
-    "version": "3.2.0",
+    "version": "3.2.1",
     "owner": "anyagixx",
     "homepage": "https://github.com/anyagixx/MyGrace_DS4pro"
   },
@@ -10,7 +10,7 @@
     {
       "name": "mygrace",
       "source": "./plugins/claude",
-      "version": "3.2.0",
+      "version": "3.2.1",
       "strict": true,
       "components": {
         "skills": [
@@ -78,5 +78,5 @@
       }
     }
   ],
-  "version": "3.2.0"
+  "version": "3.2.1"
 }

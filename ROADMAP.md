@@ -1,6 +1,6 @@
 # MyGRACE Roadmap — from audit findings to a professional agent engineering harness
 
-> Status: **v3.2.0 shipped 2026-11-26** — guidance professionalization: agent workflow, npx-cache MWG detection, pin warnings and a quality-benchmark pilot. Quality/token gains remain unproven; Wave 7 lists the remaining acceptance criteria. Baseline: v1.0.1 as audited on 2026-11-22
+> Status: **v3.2.1 shipped 2026-11-26** — guidance professionalization: agent workflow, npx-cache MWG detection, pin warnings and a quality-benchmark pilot. Quality/token gains remain unproven; Wave 7 lists the remaining acceptance criteria. Baseline: v1.0.1 as audited on 2026-11-22
 > (see `analysis/00-EXECUTIVE-ASSESSMENT.md` and appendices 01–04).
 > Target: a tool that AI coding agents can use with confidence on software of **any complexity** —
 > from a 3-module script to a 500-module monorepo, on repos you do not fully trust.
