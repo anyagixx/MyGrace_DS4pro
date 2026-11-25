@@ -1,13 +1,13 @@
 # MyGRACE Roadmap — from audit findings to a professional agent engineering harness
 
-> Status: **v1.7.1 shipped 2026-11-25** — package renamed to `mygrace-cli`, Octocode graph mode verified against the real binary, npm verification gate added; npm account bootstrap and capsule measurement remain. Baseline: v1.0.1 as audited on 2026-11-22
+> Status: **v1.7.2 shipped 2026-11-25** — distribution is GitHub Releases + source (npm publication cancelled), Octocode graph mode verified against the real binary, capsule pilot measured (inconclusive, capsules stay experimental). Baseline: v1.0.1 as audited on 2026-11-22
 > (see `analysis/00-EXECUTIVE-ASSESSMENT.md` and appendices 01–04).
 > Target: a tool that AI coding agents can use with confidence on software of **any complexity** —
 > from a 3-module script to a 500-module monorepo, on repos you do not fully trust.
-> **v1.7.1 shipped evidence:** `bun run release:check` green (typecheck 0, **727 tests / 35 files**,
+> **v1.7.2 shipped evidence:** `bun run release:check` green (typecheck 0, **727 tests / 35 files**,
 > demo lint, doc-truth gates, pack-smoke, **diagram IR freshness for all three kinds**, capsule validation),
 > `mygrace ci --path .` PASS on this repository (**29 modules / 4 phases / 29 verifications /
-> 39 declared test files**), and `bun run publish:dry` proves the publish artifact (68 files, 258 kB, 29 shipped src files, 137 relative + 28 bare imports). G13 green with
+> 39 declared test files**), and `bun run publish:dry` proves the publish artifact (68 files, 259 kB, 29 shipped src files, 137 relative + 28 bare imports). G13 green with
 > `MYGRACE_INTEGRATIONS=off`; G14: recorded-payload + fake-Octocode/fake-Archify contract tests run
 > in `bun test`, real-binary smokes stay manual; G15 checks **architecture, tree and workflow** IRs
 > (all validated/delivered against real Archify 3.2.0 and 3.3.x); G16 shipped capsules validate and
@@ -16,7 +16,10 @@
 > 4 module edges); the adapter now matches the real `graphrag` API.
 > Surface: **23 CLI commands · 25 MCP tools · 15 skills**. Committed deterministic diagram IRs for
 > three kinds; experimental capsules with allowlisted read-only programs, replay qualification,
-> judgment hand-back and deopt-to-skill (no token-savings claims).
+> judgment hand-back and deopt-to-skill (no token-savings claims; a 12-session
+> pre-registered pilot was inconclusive, see analysis/capsule-eval/report.md).
+> Distribution is GitHub Releases + source; npm publication is intentionally not
+> used (owner decision 2026-11-25).
 
 ## 1. Vision
 
@@ -48,7 +51,7 @@ A release is professional when **all** of the following hold, verified by CI, no
 | G7 | Dogfooding | this repo has `docs/` and passes `mygrace ci --strict` on itself |
 | G8 | Docs are true | every documented command/flag/MCP tool/count auto-verified by `scripts/validate-docs.ts` in CI |
 | G9 | Honest metrics | savings measured in tokens with a tokenizer + size sweep (12/50/200 modules), reproducible by script |
-| G10 | Release engineering | CHANGELOG generated from conventional commits, semver policy, npm trusted publishing, publish gate = G1+G7 |
+| G10 | Release engineering | CHANGELOG + semver policy, tag-driven gates and GitHub Release artifact; npm publication intentionally not used |
 | G11 | Scale proven | ✅ synthetic 150-module / 3-shard project: `lint` 44 ms, indexes under caps via sharding, `ci` green (200+ supported by design) |
 | G12 | Any-language support | ✅ Python/Go fixtures prove configurable `sourceDirs`, markup dialect per language, and per-project test runner (`test/grace-language.test.ts`, `language-matrix` CI job) |
 
@@ -173,8 +176,8 @@ plus MCP tools `mygrace_trace/impact/next/projects` (21 tools total).
 ✅ **Release engineering**: `publish:dry` artifact gate, tag-driven `release.yml` with provenance/OIDC,
 OS matrix (ubuntu/windows/macos). Publication itself is pending npm credentials/trusted-publisher setup.
 
-### Wave 4 — Release engineering — ✅ **done except publication** (pipeline ready; npm publish needs owner credentials)
-Version reset to a truthful `1.1.0` → `2.0.0` line; CHANGELOG automation; npm trusted publishing;
+### Wave 4 — Release engineering — ✅ done (GitHub Releases; npm publication cancelled 2026-11-25)
+Version reset to a truthful `1.1.0` → `2.0.0` line; CHANGELOG automation; tag-driven gates and GitHub Release artifacts (npm publication intentionally not used);
 publish order (single package); DSH bundle release or removal; status panel real or removed;
 Windows CI matrix; docs site optional.
 
@@ -208,8 +211,8 @@ Release gates added: **G13** core gates pass with `MYGRACE_INTEGRATIONS=off` (no
 
 - **A. npm publication** *(ops, owner-gated)*: `mygrace-cli` is still unpublished (registry 404).
   Bootstrap the first version with a one-time granular token, then switch `release.yml` to GitHub OIDC
-  trusted publishing (provenance, protected `npm-publish` environment, post-publish registry
-  verification, no long-lived token); README install switches to npm once verified.
+  tag-driven gates, packed GitHub Release artifacts and registry checks were prepared, then npm publication was
+  cancelled by the owner (2026-11-25): distribution stays GitHub Releases + source. Original plan note:
 - **B. Octocode MCP startup** *(v1.7.1 ✅ root cause + real-binary graph verified)*: the pinned 0.29.2 and the new
   0.30.0 both hang before answering MCP `initialize` on this host; reproduce across versions/models/
   env/flags, diagnose (ONNX/models vs startup I/O), open an upstream issue with the repro, harden the
@@ -218,7 +221,7 @@ Release gates added: **G13** core gates pass with `MYGRACE_INTEGRATIONS=off` (no
   nodes with `col` 0–5, edges, phases) and tree (parent-linked nodes, layout) schemas; pilot real
   validation first, ship tree (low risk) and the delivery-plan workflow mapping, `--check` per kind,
   commit deterministic IRs, extend the fake/real Archify smoke and MCP `kind` enum.
-- **D. Capsule measurement** *(analysis, no release)*: harness over DSH session records
+- **D. Capsule measurement** *(✅ pilot executed 2026-11-25 — inconclusive; capsules stay experimental, no claims; full N=10 not justified by conflicting direction)*: harness over DSH session records
   (`tokenUsage`, `sessionStats`, `contextBreakdown`), pre-registered capsule-vs-skill A/B on 2–3 tasks,
   N=10 per arm, medians + bootstrap CI; kill criterion < 15 % tool-call/turn reduction or gate
   regression → keep capsules experimental without token/cost claims.

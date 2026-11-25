@@ -216,20 +216,27 @@ Rules that keep history useful:
 A release PR must run the full §6 checklist and state the version.
 
 
-### Releasing `mygrace-cli` (npm)
+### Releasing `mygrace-cli` (GitHub Releases, no npm)
 
-Version policy: semver; 1.x once release gates are green. Patch = fixes/docs only; minor = additive commands/flags/MCP tools; major = breaking CLI/JSON/envelope changes. Update CHANGELOG `[Unreleased]` → `[X.Y.Z]`, bump `package.json` version, commit, create and push a tag `vX.Y.Z`. `release.yml` refuses to publish when the tag does not equal the package version.
+Version policy: semver; 1.x while release gates are green. Patch = fixes/docs
+only; minor = additive commands/flags/MCP tools; major = breaking
+CLI/JSON/envelope changes. Update CHANGELOG `[Unreleased]` → `[X.Y.Z]`, bump
+`package.json` version, commit, create and push a tag `vX.Y.Z`.
 
-Publishing is opt-in: set the repository variable `NPM_PUBLISH_ENABLED=true`
-(Settings → Secrets and variables → Actions → Variables) once the trusted
-publisher or `NPM_TOKEN` fallback is configured. Until then tag pushes run
-every gate and stay green with a "publish skipped" notice.
+`release.yml` is tag-driven and gate-only: on a `v*` push it installs with the
+frozen lockfile, runs `bun run release:check` (typecheck, full tests, demo lint,
+`mygrace ci` self-check, marketplace/docs truth validators, diagram/capsule gates,
+pack-smoke) and `bun run publish:dry` (pack the tarball, static import
+completeness, offline install, packaged CLI `--version`/`--help`), refuses a tag
+that does not match `package.json`, then packs `mygrace-cli-<version>.tgz`,
+uploads it as a workflow artifact and creates a GitHub Release with generated
+notes. Manual: Actions → release → Run workflow for a gates-only run.
 
-Publication is tag-driven: pushing `v*` runs `release.yml`: `bun install --frozen-lockfile` → `bun run release:check` (typecheck, full tests, demo lint, `mygrace ci` self-check, marketplace/docs truth validators, pack-smoke) → `bun run publish:dry` (pack tarball, static import completeness, offline install, packaged CLI `--version`/`--help`) → `npm publish --provenance --access public`. Manual: Actions → release → Run workflow with `dry_run=true` (default) to exercise every gate without publishing.
-
-Credentials — trusted publishing preferred: on npmjs.com, package `mygrace-cli` → Settings → Trusted publishing → GitHub Actions publisher (owner/repo, workflow `release.yml`). GitHub OIDC + `id-token: write` (already set) then publishes with provenance and no long-lived token; requires a public GitHub repo and npm CLI >= 11.5.1 (the workflow installs it). Fallback only: granular npm automation token in secret `NPM_TOKEN` wired via `NODE_AUTH_TOKEN`; rotate after use and remove the env block once OIDC is proven. Never publish from a laptop or with 2FA disabled.
-
-Provenance: `--provenance` records repo/commit/workflow; it works only through the OIDC/trusted-publisher path, not a legacy token. Publication is CI-only; local sandboxes have no credentials.
+**No npm publication.** Distribution decision 2026-11-25: the project does not
+publish to npm (`@osovv` is a third-party scope and is not used). Do not add
+`NPM_TOKEN`, trusted-publisher configuration or `npm publish` steps; installs
+come from the GitHub Release tarball or a source checkout. `publish:dry` remains
+an artifact-verification gate only and never contacts a registry.
 
 ## Licensing
 

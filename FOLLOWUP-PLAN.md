@@ -7,7 +7,7 @@ Four tracks, ordered by dependency and risk:
 
 | # | Track | Type | Effort | Release |
 |---|---|---|---|---|
-| A | npm publication (trusted publisher) | ops / owner action | 1–2 days (incl. bootstrap) | v1.6.0 publish + v1.7.0 OIDC |
+| A | npm publication | ops / owner action | — | **❌ cancelled by owner 2026-11-25** |
 | B | Octocode MCP startup diagnosis | investigation (timeboxed) | 2–4 days | v1.6.1 (docs/adapter hardening) |
 | C | `--kind workflow\|tree` diagrams | feature | 4–6 days | v1.7.0 |
 | D | Capsule measurement on real agent sessions | analysis / evidence | 3–5 days | none (report + decision) |
@@ -17,82 +17,28 @@ D needs a stable CLI and C is the only user-visible feature left; B is independe
 
 ---
 
-## A. npm publication — `mygrace-cli`
+## A. npm publication — ❌ cancelled by the owner (2026-11-25)
 
-### Verified state (2026-11-24)
+Decision: **MyGRACE is not published to npm.** Distribution is GitHub Releases
+(packed `mygrace-cli-<version>.tgz`) plus the source checkout.
 
-- `package.json`: `name: "mygrace-cli"`, `version: "1.6.0"`, `publishConfig.access: "public"`,
-  public GitHub repo, `repository` set.
-- The project does **not** own the `@osovv` scope: `@osovv` is the third-party codebase this
-  repository started from. The final unscoped package name is **`mygrace-cli`**, verified free on
-  the npm registry (HTTP 404, 2026-11-25).
-- `.github/workflows/release.yml` already has: `id-token: write`, npm ≥ 11.5.1 install, tag/version
-  equality check, `release:check` + `publish:dry`, `npm publish --provenance --access public` gated by
-  repository variable `NPM_PUBLISH_ENABLED == 'true'`, `NPM_TOKEN` fallback, manual `dry_run` dispatch.
-- Tags v1.4.0–v1.6.0 already ran the workflow green with “publish skipped”.
-- No local npm credentials; publication must stay CI-only.
+What was done and kept:
 
-### A1. Owner prerequisites (blocking, outside the repo)
+- the package was renamed from the third-party `@osovv` scope to the free
+  unscoped `mygrace-cli`; internal workspaces are `mygrace-dsh`,
+  `dsh-skill-mygrace`, `dsh-mygrace-rtk`;
+- `release.yml` was rewritten to be tag-driven release QA + GitHub Release:
+  `release:check` → `publish:dry` (artifact gate) → tag/version check → pack →
+  upload workflow artifact → `gh release create` (tag pushes only);
+- all npm-specific machinery was removed: `NPM_TOKEN`, `NPM_PUBLISH_ENABLED`,
+  trusted-publisher configuration, `scripts/verify-npm-release.ts`,
+  `publishConfig`, `prepublishOnly`;
+- README/CONTRIBUTING/ROADMAP/Phase-4 state the decision explicitly, so no future
+  contributor re-adds a registry path by accident.
 
-1. Create/verify an npm account for the product owner; no custom scope is needed for the unscoped
-   `mygrace-cli`. Enable 2FA.
-2. Enable 2FA on the npm account; org requires 2FA for publishing.
-3. Create a **granular npm automation token** (least privilege: publish `mygrace-cli` only, no org admin)
-   and add it as repository secret `NPM_TOKEN`.
-4. Set repository variable `NPM_PUBLISH_ENABLED=true`.
-5. Add a protected GitHub **Environment** `npm-publish` (required reviewers = owner) and attach it to the
-   publish job in `release.yml` — a tag push alone must not publish without approval.
-
-### A2. Bootstrap the first version (one-time token path)
-
-npm trusted publishing is configured on an **existing package** page, so the first version needs a
-token. Publish the current release without a new tag:
-
-```bash
-# Actions → release → Run workflow → dry_run=false (workflow_dispatch, tag v1.6.0)
-# or locally: nothing — publication is CI-only.
-```
-
-Acceptance for bootstrap:
-
-- `npm view mygrace-cli@1.6.0 version dist.tarball dist.integrity time --json` succeeds;
-- `npm install -g mygrace-cli@1.6.0` works on a clean Linux runner and prints `1.6.0`;
-- npm page shows provenance attestation (OIDC via token publish does **not** produce provenance —
-  expected for the bootstrap; the next release must).
-
-### A3. Switch to trusted publishing (preferred steady state)
-
-1. npmjs.com → package `mygrace-cli` → Settings → **Trusted publishing** → GitHub Actions:
-   owner `anyagixx`, repo `MyGrace_DS4pro`, workflow `release.yml` (no environment, or the protected
-   environment if npm supports it).
-2. Remove the `NODE_AUTH_TOKEN`/`NPM_TOKEN` block from the publish step, delete the repository secret,
-   keep `NPM_PUBLISH_ENABLED` as the explicit switch.
-3. v1.7.0 is published through OIDC: verify provenance (`npm view … --json` → `dist.attestations`,
-   `npm audit signatures` in a clean dir), then announce “install from npm” and update README.
-
-### A4. Repo hardening (small, do with the first publish)
-
-- `release.yml`: add post-publish verification step:
-  `node -p "require('child_process').execSync('npm view mygrace-cli@' + process.env.VERSION + ' --json')"`
-  asserting version/tarball/integrity, plus `npm install -g` smoke in a temp prefix.
-- New `scripts/verify-npm-release.ts` (read-only): registry metadata, dist integrity, provenance
-  attestation presence, tarball file list vs `publish:dry` expectations; exit 1 on mismatch.
-- CI scheduled job (weekly): re-verify the published package and provenance; catches yanks/registry drift.
-- README Install: replace “not published yet” with `npm install -g mygrace-cli` and keep the
-  source-checkout path as an alternative; CONTRIBUTING: mark trusted publishing as the primary path.
-- Rollback policy: **`npm deprecate`** the bad version with a message and publish a fix; never
-  `npm unpublish` (breaks consumers, provenance stays). Keep the GitHub release asset regardless.
-
-### A5. Acceptance / risks
-
-- Acceptance: `npm install -g` on clean Ubuntu/macOS/Windows CI; provenance attestation present for
-  v1.7.0+; secret removed; README/CONTRIBUTING updated; `publish skipped` notice no longer reachable
-  when the variable is on.
-- Risks: scope ownership unknown; first-publish bootstrap requires a token (unavoidable today); npm
-  trusted-publisher UI changes; accidental publish on tag push — mitigated by the protected environment
-  and the variable gate.
-
----
+Residual risk: someone manually runs `npm publish` from a laptop. There is no
+registry credential in CI and no repository variable to enable it; the packaged
+tarball is verified offline by `publish:dry`.
 
 ## B. Octocode MCP startup diagnosis (upstream)
 
@@ -226,7 +172,15 @@ the mapping in `docs/modules/M-DIAGRAM.xml` before coding the CLI surface.
 
 ---
 
-## D. Capsule measurement on real agent sessions
+## D. Capsule measurement on real agent sessions — ✅ pilot executed (inconclusive)
+
+Result: 12 headless sessions (2 tasks × 2 arms × 3), both gates pass. `daily-check`
+was worse for the capsule arm (cost +25 %, wall +67 %); `module-onboarding`
+showed 17.7 % lower cost but 11 % more tool calls. Pre-registered kill criterion
+not met → capsules stay experimental, no token/cost claims; full N=10 not
+started. Details: `analysis/capsule-eval/report.md`.
+
+Original design:
 
 ### Verified state (2026-11-24)
 
@@ -300,7 +254,7 @@ temperature, seeds, primary metrics, kill criterion (see D3), exclusions.
 | 2 | A2 bootstrap publish of v1.6.0 (token) | owner + Lead | 0.5 day | package on npm; `npm view`/install smoke |
 | 3 | C pilot (tree + both workflow mappings) | Lead | 1 day | validation notes; frozen mapping |
 | 4 | C implementation + tests | Lead | 3–5 days | v1.7.0 diagrams |
-| 5 | A3 trusted publisher switch on v1.7.0 | owner + Lead | 0.5 day | OIDC + provenance; token retired |
+| 5 | ~~A3 trusted publisher switch~~ | — | — | cancelled with the npm decision |
 | 6 | B repro matrix + diagnosis (parallel with 3–5) | Lead | 2–4 days (timeboxed) | analysis + upstream issue + adapter hardening (v1.6.1 if code changes) |
 | 7 | D harness + sessions + report (after v1.7.0) | Lead + owner as operator | 3–5 days | measurement report + decision |
 
@@ -316,9 +270,6 @@ Release notes:
 
 | Risk | Mitigation |
 |---|---|
-| npm account/name availability | resolved: no third-party scope is used; final name is the free unscoped `mygrace-cli`. Remaining risk is the owner's npm account/2FA/token setup |
-| First npm publish needs a token | one-time granular token, least privilege, rotate/remove immediately after OIDC works; protected environment approval |
-| Accidental publish on tag push | `NPM_PUBLISH_ENABLED` variable + protected environment with required reviewer |
 | Workflow schema v2/col-cap constraints force a bad mapping | pilot with real CLI first; prefer the delivery-plan mapping; document clamping/grouping; fall back to “architecture + tree only, workflow deferred” if validation cannot be satisfied honestly |
 | Octocode never answers initialization | timebox B; keep adapter manual-smoke + fake-contract; update docs to “unverified”; reopen only when a real smoke passes |
 | Capsule measurement shows no effect | report honestly, keep experimental, no marketing claims (pre-registered kill criterion) |
@@ -333,7 +284,7 @@ Release notes:
 
 ## H. Open questions for the owner
 
-1. Which npm account will own `mygrace-cli`, and can you add the one-time `NPM_TOKEN` + repository variable + protected environment? (No custom scope needed.)
+1. ~~npm publication?~~ Resolved: no npm publication (owner decision 2026-11-25).
 2. Is a protected GitHub Environment with manual approval acceptable for npm publication?
 3. Priority: C (new diagram kinds) before B (Octocode), or run B first if upstream responsiveness matters?
 4. For D: are you willing to run ~40–60 controlled DSH sessions as the operator, or should the Lead

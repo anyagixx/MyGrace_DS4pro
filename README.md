@@ -9,12 +9,11 @@ It is a CLI (`mygrace`, 23 commands) plus an agent methodology (15 skills) and
 an MCP server (25 tools). It does not generate code, call a model, or send telemetry — it
 enforces traceability and context discipline for the agent you already use.
 
-Current version: `1.7.1`
+Current version: `1.7.2`
 
-> The package is **not published to npm yet** under its final unscoped name
-> `mygrace-cli`: install from a source checkout or a packed tarball (see [Install](#install)).
-> `@osovv` is a third-party scope (the project's starting point); this repository is
-> not affiliated with it and never publishes there. The v2 hardening waves are tracked
+> Distribution is **GitHub Releases + source**: there is no npm publication
+> (decision 2026-11-25). `@osovv` is a third-party scope (the project's starting
+> point); this repository is not affiliated with it and never publishes there. The v2 hardening waves are tracked
 > in [`ROADMAP.md`](ROADMAP.md).
 
 ## The model: indexes + per-entity files
@@ -545,33 +544,28 @@ bun run src/grace.ts ci --path .
 Contributor workflow, code conventions and release gates:
 [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
-## Release engineering and publishing
+## Release engineering and distribution
 
-One npm package ships everything (`mygrace-cli`). Publishing is
-tag-driven and CI-only: `.github/workflows/release.yml` runs on a `v*` tag (or
-manually via workflow_dispatch with `dry_run=true`), executes
-`bun run release:check` and `bun run publish:dry`, then
-`npm publish --provenance --access public` using npm trusted publishing (OIDC,
-`id-token: write`); a granular `NPM_TOKEN` secret is only a fallback. A tag that
-does not match the `package.json` version is refused before anything is
-published. CI runs the same gates plus an OS matrix (Ubuntu, Windows, macOS).
+Distribution decision (2026-11-25): MyGRACE **is not published to npm**. It ships
+as GitHub Releases with a packed tarball plus the source checkout. `@osovv` is a
+third-party scope (the codebase this project started from) and is not used.
+
+Tag-driven and CI-only: `.github/workflows/release.yml` runs on a `v*` tag (or
+manually via workflow_dispatch for a gates-only run), executes
+`bun run release:check` and `bun run publish:dry` (artifact packing, static
+import completeness, offline install, packaged CLI smoke), refuses a tag that
+does not match `package.json`, packs `mygrace-cli-<version>.tgz`, uploads it as a
+workflow artifact and creates a GitHub Release with generated notes. CI runs the
+same gates plus an OS matrix (Ubuntu, Windows, macOS).
 
 - `bun run release:check` — the full gate: typecheck, tests, demo lint,
-  `mygrace ci` self-check, truth validators, pack-smoke.
+  `mygrace ci` self-check, truth validators, diagram/capsule gates, pack-smoke.
 - `bun run publish:dry` — packs the tarball, checks static import completeness,
-  installs it offline and runs the packaged CLI.
-- `npm publish --dry-run` works locally with a writable npm cache
-  (`npm_config_cache=$PWD/.npm-cache`): 58 files, ~155 kB tarball. It needs no
-  credentials; real publication does.
-- The exact hand-off (semver policy, tag flow, trusted-publisher setup,
-  provenance) is in [`CONTRIBUTING.md`](CONTRIBUTING.md) §"Releasing
-  `mygrace-cli` (npm)".
-
-The package is **publish-ready but not published** yet (the npm account/token is
-owner-gated), so installation stays "from source or a tarball" (above). The first
-publication bootstraps the package with a one-time `NPM_TOKEN`, then the workflow
-switches to trusted publishing (OIDC + provenance); after that `npm install -g
-mygrace-cli` becomes the supported path.
+  installs it offline and runs the packaged CLI. It is an artifact gate; it does
+  not contact any registry.
+- Local install stays from source or a packed tarball (see [Install](#install)).
+  There is no npm publication step, no `NPM_TOKEN`, and no trusted-publisher
+  configuration.
 
 ## Platform support
 

@@ -266,7 +266,7 @@ release.yml — ubuntu-latest
    ├─ bun install --frozen-lockfile
    ├─ bun run release:check                      (typecheck, tests, demo lint, self-ci, truth validators, pack-smoke)
    ├─ bun run publish:dry                        (pack → import completeness → offline install → packaged CLI smoke)
-   └─ npm publish --provenance --access public   (trusted publishing/OIDC; NPM_TOKEN fallback)
+   └─ pack mygrace-cli-<version>.tgz → GitHub Release      (no npm publication)
 ```
 
 CI additionally runs the same gates on an Ubuntu/Windows/macOS matrix. Local

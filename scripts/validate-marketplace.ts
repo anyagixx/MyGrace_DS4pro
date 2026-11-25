@@ -494,9 +494,9 @@ function checkPackageManifest(root: string, collector: ValidationCollector): voi
       collector.error(`package.json is missing the "${script}" script`, "package.json");
     }
   }
-  if (typeof scripts.prepublishOnly !== "string" || !scripts.prepublishOnly.includes("release:check")) {
-    collector.error('package.json prepublishOnly should run "bun run release:check"', "package.json");
-  }
+  // npm publication is intentionally not used (GitHub Releases distribution), so
+  // prepublishOnly/publishConfig are not required. `release:check` still runs in CI
+  // and in the tag-driven release workflow.
   for (const dependency of ["typescript", "@types/bun"]) {
     if (typeof pkg.devDependencies?.[dependency] !== "string") {
       collector.error(`package.json devDependencies is missing ${dependency}`, "package.json");

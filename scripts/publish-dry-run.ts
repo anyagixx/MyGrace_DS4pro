@@ -11,7 +11,7 @@
  *      filename matches `<normalized-name>-<version>.tgz`.
  *   2. Extract it and compare the tarball package.json with the checkout:
  *      name/version, `bin` target present, `files` entries present and non-empty,
- *      no `file:` dependencies, `publishConfig.access`, and no unexpected
+ *      no `file:` dependencies, and no unexpected
  *      top-level entries in the tarball.
  *   3. Statically prove runtime completeness: every relative import of every
  *      shipped `src/**` file resolves inside the tarball, and every bare import
@@ -141,7 +141,6 @@ interface PackageJsonShape {
   optionalDependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
   engines?: Record<string, string>;
-  publishConfig?: { access?: string };
 }
 
 interface ImportRef {
@@ -317,7 +316,6 @@ function verifyTarballManifest(packageDir: string, tarballPackage: PackageJsonSh
     tarballPackage.name === rootPkg.name && tarballPackage.version === rootPkg.version,
     `tarball package.json is ${tarballPackage.name}@${tarballPackage.version}, checkout is ${rootPkg.name}@${rootPkg.version}`
   );
-  check(tarballPackage.publishConfig?.access === "public", 'tarball package.json is missing publishConfig.access = "public" (scoped package publish would fail)');
 
   const binEntries: Array<[string, string]> =
     typeof tarballPackage.bin === "string"
@@ -368,7 +366,7 @@ function verifyTarballManifest(packageDir: string, tarballPackage: PackageJsonSh
     typeof rootPkg.bin === "string" ? [["mygrace", rootPkg.bin]] : Object.entries(rootPkg.bin ?? {});
   for (const [name, target] of rawBinEntries) {
     if (String(target).startsWith("./")) {
-      notes.push(`bin["${name}"] = "${target}": npm publish auto-normalises the leading "./" (warning only; installed CLI still works). Prefer "${String(target).slice(2)}" in package.json.`);
+      notes.push(`bin["${name}"] = "${target}": npm-style bin paths normalise the leading "./" (warning only; installed CLI still works). Prefer "${String(target).slice(2)}" in package.json.`);
     }
   }
   return notes;
@@ -582,9 +580,9 @@ function printSummary(summary: RunSummary, workDir: string): void {
     "Validated: tarball contents vs package.json files/bin, version/name, no file: deps, static import",
     "  completeness, offline dependency install (or clearly-marked degraded closure), packaged CLI",
     "  --version/--help with the documented command table.",
-    "NOT validated here: npm auth/2FA/trusted publisher, npm account/package ownership, provenance",
+    "NOT validated here: registry publication (intentionally not used; distribution is GitHub Releases)",
     "  signature generation (GitHub OIDC), network install, postinstall scripts, Windows/macOS",
-    "  runtime behavior (see the CI OS matrix), and actual `npm publish`.",
+    "  runtime behavior (see the CI OS matrix). There is no registry publication step.",
     "",
     degraded
       ? "✓ Artifact is publishable in substance (dependency install was DEGRADED — CI with a primed cache validates the true offline path)."

@@ -9,6 +9,47 @@ release time (see `ROADMAP.md` §6, gate G10).
 
 Nothing yet.
 
+## [1.7.2] — 2026-11-25
+
+### Changed
+
+- **No npm publication (owner decision).** MyGRACE is distributed as GitHub
+  Releases (packed `mygrace-cli-<version>.tgz`) plus the source checkout. The
+  release workflow is now gate-only + artifact + GitHub Release: on a `v*` tag it
+  runs `release:check` and `publish:dry`, refuses a tag/version mismatch, packs
+  the tarball, uploads it as a workflow artifact and creates a GitHub Release
+  with generated notes. All npm-specific machinery was removed (`NPM_TOKEN`,
+  `NPM_PUBLISH_ENABLED`, trusted publishing, `verify:npm`,
+  `scripts/verify-npm-release.ts`, `publishConfig`, `prepublishOnly`), and
+  README/CONTRIBUTING/ROADMAP/Phase-4 state the decision.
+- **Capsule evaluation executed and reported honestly.** A pre-registered pilot
+  (2 tasks × 2 arms × 3 sessions, headless DSH) measured capsule vs skill-prose
+  routines: `daily-check` was worse for the capsule arm on cost (+25 %) and wall
+  time; `module-onboarding` showed 17.7 % lower cost but 11 % more tool calls;
+  both arms passed the objective gate. The pre-registered kill criterion was not
+  met, so **capsules stay experimental and no token/cost claims are made**; the
+  full N=10 run was intentionally not started. Harness:
+  `scripts/run-capsule-eval.ts` + `scripts/measure-capsules.ts`; report:
+  `analysis/capsule-eval/report.md`.
+- README/build docs mark the distribution decision explicitly; the release
+  workflow no longer needs Node/npm setup or OIDC permissions.
+
+### Removed
+
+- npm publication steps, registry credentials path, `publishConfig`,
+  `prepublishOnly` and the npm verification script (obsolete after the
+  distribution decision).
+
+### Limitations
+
+- Distribution is tarball/source only; there is no npm one-liner and no
+  auto-update channel.
+- Capsule pilot is N=3 per arm/task, one model/repo/host, unblinded, with wide
+  confidence intervals; it is evidence against token-savings claims, not proof
+  that capsules can never help.
+- No functional CLI changes in this release (23 commands, 25 MCP tools, 727 tests).
+
+
 ## [1.7.1] — 2026-11-25
 
 ### Changed

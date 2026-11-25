@@ -1,6 +1,6 @@
 {
   "name": "mygrace",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "displayName": "MyGRACE — index-first engineering harness (legacy Qwen Code extension)",
   "description": "Legacy Qwen Code packaging for the MyGRACE methodology (index-first navigation, per-entity contracts, trust-gated verification). DeepSeek Harness is the primary platform; this extension is kept for reference.",
   "author": {

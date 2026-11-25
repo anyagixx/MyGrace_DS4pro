@@ -20,3 +20,6 @@ docs/diagrams/*.delivery.json
 dist/
 coverage/
 *.tgz
+
+# capsule-eval raw headless session logs stay local (may contain model output)
+analysis/capsule-eval/runs/

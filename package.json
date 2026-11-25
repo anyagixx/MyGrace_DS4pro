@@ -1,6 +1,6 @@
 {
   "name": "mygrace-cli",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "description": "MyGRACE — index-first engineering harness for AI coding agents: enforced contracts, lazy-loading knowledge graph, verification traceability, MCP/skills integration.",
   "license": "MIT",
   "homepage": "https://github.com/anyagixx/MyGrace_DS4pro#readme",
@@ -30,9 +30,6 @@
     "code-agents",
     "spec-driven"
   ],
-  "publishConfig": {
-    "access": "public"
-  },
   "files": [
     "src",
     "templates",
@@ -62,7 +59,6 @@
     "validate:marketplace": "bun run ./scripts/validate-marketplace.ts",
     "ci": "bun run typecheck && bun run test:all && bun run lint:demo && bun run check && bun run diagram:check && bun run capsule:validate && bun run validate:marketplace && bun run validate:docs && bun run pack:smoke",
     "release:check": "bun run ci",
-    "prepublishOnly": "bun run release:check",
     "validate:docs": "bun run ./scripts/validate-docs.ts",
     "test:demo": "cd examples/demo-store && bun test",
     "test:all": "bun test && bun run test:demo",
@@ -74,8 +70,7 @@
     "diagram": "bun run ./src/grace.ts diagram",
     "diagram:check": "bun run ./src/grace.ts diagram --check",
     "test:integrations:archify": "bun run ./scripts/integration-archify-smoke.ts",
-    "capsule:validate": "bun run ./src/grace.ts capsule validate",
-    "verify:npm": "bun run ./scripts/verify-npm-release.ts"
+    "capsule:validate": "bun run ./src/grace.ts capsule validate"
   },
   "bin": {
     "mygrace": "src/grace.ts"

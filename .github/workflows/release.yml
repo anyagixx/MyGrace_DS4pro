@@ -1,52 +1,33 @@
-# MyGRACE release workflow — tag-driven npm publication of mygrace-cli.
+# MyGRACE release workflow — tag-driven release QA, artifact packing and GitHub Release.
+#
+# Distribution decision (2026-11-25): MyGRACE is **not published to npm**.
+# Releases are GitHub Releases with a packed tarball (`mygrace-cli-<version>.tgz`)
+# plus the source checkout; `@osovv` is a third-party scope and is not used.
 #
 # Triggers:
-#   * push of a tag matching v* (e.g. v1.2.0)  → gates + artifact dry-run + publish
-#   * manual workflow_dispatch with dry_run=true (default) → gates + dry-run only
+#   * push of a tag matching v* (e.g. v1.7.2) — gates + artifact + GitHub Release
+#   * manual workflow_dispatch — gates + artifact dry-run only (no release)
 #
-# Gates (must all pass before anything is published):
+# Gates (must all pass):
 #   1. `bun run release:check` — typecheck, full tests + demo tests, demo lint,
-#      `mygrace ci` self-check, marketplace/docs validators, pack-smoke.
+#      `mygrace ci` self-check, marketplace/docs validators, diagram/capsule gates,
+#      pack-smoke.
 #   2. `bun run publish:dry`   — packs the tarball, verifies file/import
-#      completeness, validates the packaged CLI offline (scripts/publish-dry-run.ts).
-#   3. Tag/version consistency — v1.2.0 tag must match package.json 1.2.0.
+#      completeness, installs it offline and runs the packaged CLI (artifact gate;
+#      it does not contact any registry).
+#   3. Tag/version consistency — v1.7.2 tag must match package.json 1.7.2.
 #
-# PUBLISHING CREDENTIALS (read carefully):
-#   * PREFERRED: npm trusted publishing (OIDC) — configure the trusted publisher
-#     on npmjs.com (package Settings → Trusted publishing: GitHub Actions,
-#     owner/repo, workflow "release.yml"). No long-lived token is stored.
-#     Requires a public GitHub repository, npm CLI >= 11.5.1 and the caller to
-#     grant `id-token: write` (already set below).
-#   * FALLBACK: a granular npm automation token stored as the NPM_TOKEN secret.
-#     It is wired to NODE_AUTH_TOKEN below; remove that env block once trusted
-#     publishing is proven. Rotate the token after any exposure.
-#   * Provenance (`--provenance`) requires the OIDC path above and a public repo;
-#     it records which repo/commit/workflow built the tarball.
-#
-# ENABLING PUBLICATION (one-time, owner action):
-#   Configure the trusted publisher (or add the NPM_TOKEN secret) and then set the
-#   repository variable `NPM_PUBLISH_ENABLED=true` (Settings → Secrets and variables
-#   → Actions → Variables). Until then tag pushes run every gate and stay green
-#   without publishing; the workflow prints an explicit "publish skipped" notice.
-#
-# Note: `npm publish` also runs the package's `prepublishOnly` (release:check), so
-# the repository gates execute twice by design (defense in depth). CI is the real
-# publication gate; this workflow never publishes when dry_run=true.
+# The tarball is uploaded as a workflow artifact on every run and attached to a
+# GitHub Release on tag pushes. No npm credentials or NPM_TOKEN are used.
 name: release
 
 on:
   push:
     tags: ["v*"]
   workflow_dispatch:
-    inputs:
-      dry_run:
-        description: "Run all gates + artifact dry-run but DO NOT publish to npm"
-        type: boolean
-        default: true
 
 permissions:
   contents: read
-  id-token: write # npm provenance / trusted publishing (OIDC)
 
 concurrency:
   group: release-${{ github.ref }}
@@ -62,16 +43,6 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.4.5"
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "26"
-          registry-url: "https://registry.npmjs.org"
-
-      # Trusted publishing (OIDC) needs a recent npm CLI; Node 26's bundled npm
-      # already qualifies, this keeps it explicit for older runners.
-      - name: Ensure npm supports trusted publishing (>= 11.5.1)
-        run: npm install --global "npm@^11.5.1"
 
       - name: Install dependencies (frozen lockfile)
         run: bun install --frozen-lockfile
@@ -94,33 +65,29 @@ jobs:
           fi
           echo "tag ${TAG} matches package.json version ${VERSION}"
 
-      - name: Publish to npm (tag push)
-        if: github.event_name == 'push' && vars.NPM_PUBLISH_ENABLED == 'true'
-        run: npm publish --provenance --access public
-        env:
-          # Trusted publishing (OIDC) is preferred; NPM_TOKEN is the documented
-          # fallback. Remove this env block once OIDC is verified end-to-end.
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Publish to npm (manual, dry_run=false)
-        if: github.event_name == 'workflow_dispatch' && inputs.dry_run == false && vars.NPM_PUBLISH_ENABLED == 'true'
-        run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Verify npm publication (registry, integrity, tarball)
-        if: (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == false)) && vars.NPM_PUBLISH_ENABLED == 'true'
-        run: bun run scripts/verify-npm-release.ts --require-published
-
-      - name: Publish skipped notice (publishing not enabled yet)
-        if: vars.NPM_PUBLISH_ENABLED != 'true'
+      - name: Pack release tarball
         run: |
-          echo "All release gates passed. Release workflow: publish skipped."
-          echo "Publishing is disabled until the repository variable NPM_PUBLISH_ENABLED=true"
-          echo "is set (configure npm trusted publishing or the NPM_TOKEN secret first)."
+          mkdir -p dist
+          bun pm pack --destination dist
+          ls -l dist
 
-      - name: Dry-run notice (nothing published)
-        if: github.event_name == 'workflow_dispatch' && inputs.dry_run == true
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mygrace-cli-tarball
+          path: dist/*.tgz
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Create GitHub Release (tag push)
+        if: github.event_name == 'push'
+        permissions:
+          contents: write
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" dist/*.tgz --generate-notes --verify-tag
+
+      - name: Manual run notice (nothing released)
+        if: github.event_name == 'workflow_dispatch'
         run: |
-          echo "dry_run=true — release gates and artifact dry-run passed."
-          echo "Nothing was published. Re-run with dry_run=false (or push a v* tag) to publish."
+          echo "Manual run — release gates and artifact dry-run passed; no release was created."

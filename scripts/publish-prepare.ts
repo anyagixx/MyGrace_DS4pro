@@ -3,7 +3,7 @@
  * MyGRACE Publish Prepare
  *
  * The mygrace-dsh bundle uses `file:` deps so the local install flow
- * works. For npm publish: swap the file: deps to versioned deps of the
+ * works. (There is no npm publication; this is packaging preparation.) If a future
  * sibling packages (from their package.json versions).
  *
  * Usage:

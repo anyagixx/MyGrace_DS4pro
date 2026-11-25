@@ -1,0 +1,632 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-25T18:35:14.680Z",
+  "protocol": "analysis/capsule-eval/protocol.md",
+  "model": "dsh headless default (DeepSeek route)",
+  "sessions": 12,
+  "missingSessions": [],
+  "metrics": [
+    {
+      "sessionId": "session-3d3e9d25-8cb0-438a-99a2-769ee9223ee3",
+      "arm": "capsule",
+      "task": "daily-check",
+      "cwd": "/tmp/capsule-eval/capsule",
+      "uncachedInputTokens": 9378,
+      "outputTokens": 6222,
+      "costTokens": 15600,
+      "cacheReadTokens": 164352,
+      "messageTokens": 13999,
+      "toolCalls": 12,
+      "thinkingSteps": 13,
+      "finalChars": 513,
+      "wallSeconds": 62.4,
+      "sessionFound": true
+    },
+    {
+      "sessionId": "session-3e7f4dfc-a322-4e46-ba56-ad5b926e8e0e",
+      "arm": "skill",
+      "task": "module-onboarding",
+      "cwd": "/tmp/capsule-eval/skill",
+      "uncachedInputTokens": 11899,
+      "outputTokens": 3360,
+      "costTokens": 15259,
+      "cacheReadTokens": 77568,
+      "messageTokens": 12809,
+      "toolCalls": 8,
+      "thinkingSteps": 6,
+      "finalChars": 3003,
+      "wallSeconds": 31.9,
+      "sessionFound": true
+    },
+    {
+      "sessionId": "session-924e7eca-36e8-4bee-9899-a70fe5a30a63",
+      "arm": "capsule",
+      "task": "daily-check",
+      "cwd": "/tmp/capsule-eval/capsule",
+      "uncachedInputTokens": 1858,
+      "outputTokens": 3030,
+      "costTokens": 4888,
+      "cacheReadTokens": 70528,
+      "messageTokens": 6957,
+      "toolCalls": 6,
+      "thinkingSteps": 7,
+      "finalChars": 471,
+      "wallSeconds": 32.2,
+      "sessionFound": true
+    },
+    {
+      "sessionId": "session-7b11707f-fce5-41cc-8fe6-203618e55f38",
+      "arm": "capsule",
+      "task": "module-onboarding",
+      "cwd": "/tmp/capsule-eval/capsule",
+      "uncachedInputTokens": 7362,
+      "outputTokens": 2355,
+      "costTokens": 9717,
+      "cacheReadTokens": 76032,
+      "messageTokens": 7688,
+      "toolCalls": 10,
+      "thinkingSteps": 8,
+      "finalChars": 1658,
+      "wallSeconds": 29.8,
+      "sessionFound": true
+    },
+    {
+      "sessionId": "session-878eb2bc-679f-47d6-8827-6fbfe4429c3e",
+      "arm": "capsule",
+      "task": "daily-check",
+      "cwd": "/tmp/capsule-eval/capsule",
+      "uncachedInputTokens": 465,
+      "outputTokens": 842,
+      "costTokens": 1307,
+      "cacheReadTokens": 17152,
+      "messageTokens": 4068,
+      "toolCalls": 1,
+      "thinkingSteps": 2,
+      "finalChars": 670,
+      "wallSeconds": 11.8,
+      "sessionFound": true
+    },
+    {
+      "sessionId": "session-e8d18bc3-173f-4fff-8c3b-9848d7950aa3",
+      "arm": "skill",
+      "task": "daily-check",
+      "cwd": "/tmp/capsule-eval/skill",
+      "uncachedInputTokens": 2129,
+      "outputTokens": 1021,
+      "costTokens": 3150,
+      "cacheReadTokens": 38656,
+      "messageTokens": 5473,
+      "toolCalls": 6,
+      "thinkingSteps": 4,
+      "finalChars": 905,
+      "wallSeconds": 15.6,
+      "sessionFound": true
+    },
+    {
+      "sessionId": "session-f9f6de7a-bed3-467e-8ca8-60adadb7e274",
+      "arm": "skill",
+      "task": "module-onboarding",
+      "cwd": "/tmp/capsule-eval/skill",
+      "uncachedInputTokens": 7474,
+      "outputTokens": 3008,
+      "costTokens": 10482,
+      "cacheReadTokens": 75264,
+      "messageTokens": 12831,
+      "toolCalls": 9,
+      "thinkingSteps": 6,
+      "finalChars": 3387,
+      "wallSeconds": 29,
+      "sessionFound": true
+    },
+    {
+      "sessionId": "session-b5fb956b-bbc9-4222-8ef7-fba3111e7292",
+      "arm": "skill",
+      "task": "daily-check",
+      "cwd": "/tmp/capsule-eval/skill",
+      "uncachedInputTokens": 2638,
+      "outputTokens": 1259,
+      "costTokens": 3897,
+      "cacheReadTokens": 49536,
+      "messageTokens": 6090,
+      "toolCalls": 7,
+      "thinkingSteps": 5,
+      "finalChars": 1069,
+      "wallSeconds": 19.3,
+      "sessionFound": true
+    },
+    {
+      "sessionId": "session-3794d9c8-fd1d-408d-8412-52bac22aa732",
+      "arm": "skill",
+      "task": "module-onboarding",
+      "cwd": "/tmp/capsule-eval/skill",
+      "uncachedInputTokens": 8804,
+      "outputTokens": 2999,
+      "costTokens": 11803,
+      "cacheReadTokens": 89088,
+      "messageTokens": 12431,
+      "toolCalls": 12,
+      "thinkingSteps": 7,
+      "finalChars": 3167,
+      "wallSeconds": 31.2,
+      "sessionFound": true
+    },
+    {
+      "sessionId": "session-3940dc6a-a665-43d2-abd0-ba0bea31420c",
+      "arm": "capsule",
+      "task": "module-onboarding",
+      "cwd": "/tmp/capsule-eval/capsule",
+      "uncachedInputTokens": 6883,
+      "outputTokens": 4296,
+      "costTokens": 11179,
+      "cacheReadTokens": 154368,
+      "messageTokens": 11444,
+      "toolCalls": 12,
+      "thinkingSteps": 13,
+      "finalChars": 1936,
+      "wallSeconds": 48.5,
+      "sessionFound": true
+    },
+    {
+      "sessionId": "session-edd35001-7ab8-4364-b57d-ab070b73c23e",
+      "arm": "capsule",
+      "task": "module-onboarding",
+      "cwd": "/tmp/capsule-eval/capsule",
+      "uncachedInputTokens": 6421,
+      "outputTokens": 3137,
+      "costTokens": 9558,
+      "cacheReadTokens": 67328,
+      "messageTokens": 10060,
+      "toolCalls": 9,
+      "thinkingSteps": 6,
+      "finalChars": 2235,
+      "wallSeconds": 28.6,
+      "sessionFound": true
+    },
+    {
+      "sessionId": "session-8315f7c4-f291-4058-bedc-3dafe5ffea7a",
+      "arm": "skill",
+      "task": "daily-check",
+      "cwd": "/tmp/capsule-eval/skill",
+      "uncachedInputTokens": 3379,
+      "outputTokens": 1144,
+      "costTokens": 4523,
+      "cacheReadTokens": 61952,
+      "messageTokens": 6253,
+      "toolCalls": 8,
+      "thinkingSteps": 6,
+      "finalChars": 807,
+      "wallSeconds": 20.3,
+      "sessionFound": true
+    }
+  ],
+  "rows": [
+    {
+      "arm": "capsule",
+      "task": "daily-check",
+      "n": 3,
+      "metrics": {
+        "costTokens": {
+          "median": 4888,
+          "mean": 7265,
+          "min": 1307,
+          "max": 15600,
+          "ci95": [
+            1307,
+            15600
+          ]
+        },
+        "uncachedInputTokens": {
+          "median": 1858,
+          "mean": 3900.3333333333335,
+          "min": 465,
+          "max": 9378,
+          "ci95": [
+            465,
+            9378
+          ]
+        },
+        "outputTokens": {
+          "median": 3030,
+          "mean": 3364.6666666666665,
+          "min": 842,
+          "max": 6222,
+          "ci95": [
+            842,
+            6222
+          ]
+        },
+        "cacheReadTokens": {
+          "median": 70528,
+          "mean": 84010.66666666667,
+          "min": 17152,
+          "max": 164352,
+          "ci95": [
+            17152,
+            164352
+          ]
+        },
+        "toolCalls": {
+          "median": 6,
+          "mean": 6.333333333333333,
+          "min": 1,
+          "max": 12,
+          "ci95": [
+            1,
+            12
+          ]
+        },
+        "thinkingSteps": {
+          "median": 7,
+          "mean": 7.333333333333333,
+          "min": 2,
+          "max": 13,
+          "ci95": [
+            2,
+            13
+          ]
+        },
+        "messageTokens": {
+          "median": 6957,
+          "mean": 8341.333333333334,
+          "min": 4068,
+          "max": 13999,
+          "ci95": [
+            4068,
+            13999
+          ]
+        },
+        "wallSeconds": {
+          "median": 32.2,
+          "mean": 35.46666666666666,
+          "min": 11.8,
+          "max": 62.4,
+          "ci95": [
+            11.8,
+            62.4
+          ]
+        }
+      },
+      "gate": "pass"
+    },
+    {
+      "arm": "skill",
+      "task": "daily-check",
+      "n": 3,
+      "metrics": {
+        "costTokens": {
+          "median": 3897,
+          "mean": 3856.6666666666665,
+          "min": 3150,
+          "max": 4523,
+          "ci95": [
+            3150,
+            4523
+          ]
+        },
+        "uncachedInputTokens": {
+          "median": 2638,
+          "mean": 2715.3333333333335,
+          "min": 2129,
+          "max": 3379,
+          "ci95": [
+            2129,
+            3379
+          ]
+        },
+        "outputTokens": {
+          "median": 1144,
+          "mean": 1141.3333333333333,
+          "min": 1021,
+          "max": 1259,
+          "ci95": [
+            1021,
+            1259
+          ]
+        },
+        "cacheReadTokens": {
+          "median": 49536,
+          "mean": 50048,
+          "min": 38656,
+          "max": 61952,
+          "ci95": [
+            38656,
+            61952
+          ]
+        },
+        "toolCalls": {
+          "median": 7,
+          "mean": 7,
+          "min": 6,
+          "max": 8,
+          "ci95": [
+            6,
+            8
+          ]
+        },
+        "thinkingSteps": {
+          "median": 5,
+          "mean": 5,
+          "min": 4,
+          "max": 6,
+          "ci95": [
+            4,
+            6
+          ]
+        },
+        "messageTokens": {
+          "median": 6090,
+          "mean": 5938.666666666667,
+          "min": 5473,
+          "max": 6253,
+          "ci95": [
+            5473,
+            6253
+          ]
+        },
+        "wallSeconds": {
+          "median": 19.3,
+          "mean": 18.400000000000002,
+          "min": 15.6,
+          "max": 20.3,
+          "ci95": [
+            15.6,
+            20.3
+          ]
+        }
+      },
+      "gate": "pass"
+    },
+    {
+      "arm": "capsule",
+      "task": "module-onboarding",
+      "n": 3,
+      "metrics": {
+        "costTokens": {
+          "median": 9717,
+          "mean": 10151.333333333334,
+          "min": 9558,
+          "max": 11179,
+          "ci95": [
+            9558,
+            11179
+          ]
+        },
+        "uncachedInputTokens": {
+          "median": 6883,
+          "mean": 6888.666666666667,
+          "min": 6421,
+          "max": 7362,
+          "ci95": [
+            6421,
+            7362
+          ]
+        },
+        "outputTokens": {
+          "median": 3137,
+          "mean": 3262.6666666666665,
+          "min": 2355,
+          "max": 4296,
+          "ci95": [
+            2355,
+            4296
+          ]
+        },
+        "cacheReadTokens": {
+          "median": 76032,
+          "mean": 99242.66666666667,
+          "min": 67328,
+          "max": 154368,
+          "ci95": [
+            67328,
+            154368
+          ]
+        },
+        "toolCalls": {
+          "median": 10,
+          "mean": 10.333333333333334,
+          "min": 9,
+          "max": 12,
+          "ci95": [
+            9,
+            12
+          ]
+        },
+        "thinkingSteps": {
+          "median": 8,
+          "mean": 9,
+          "min": 6,
+          "max": 13,
+          "ci95": [
+            6,
+            13
+          ]
+        },
+        "messageTokens": {
+          "median": 10060,
+          "mean": 9730.666666666666,
+          "min": 7688,
+          "max": 11444,
+          "ci95": [
+            7688,
+            11444
+          ]
+        },
+        "wallSeconds": {
+          "median": 29.8,
+          "mean": 35.63333333333333,
+          "min": 28.6,
+          "max": 48.5,
+          "ci95": [
+            28.6,
+            48.5
+          ]
+        }
+      },
+      "gate": "pass"
+    },
+    {
+      "arm": "skill",
+      "task": "module-onboarding",
+      "n": 3,
+      "metrics": {
+        "costTokens": {
+          "median": 11803,
+          "mean": 12514.666666666666,
+          "min": 10482,
+          "max": 15259,
+          "ci95": [
+            10482,
+            15259
+          ]
+        },
+        "uncachedInputTokens": {
+          "median": 8804,
+          "mean": 9392.333333333334,
+          "min": 7474,
+          "max": 11899,
+          "ci95": [
+            7474,
+            11899
+          ]
+        },
+        "outputTokens": {
+          "median": 3008,
+          "mean": 3122.3333333333335,
+          "min": 2999,
+          "max": 3360,
+          "ci95": [
+            2999,
+            3360
+          ]
+        },
+        "cacheReadTokens": {
+          "median": 77568,
+          "mean": 80640,
+          "min": 75264,
+          "max": 89088,
+          "ci95": [
+            75264,
+            89088
+          ]
+        },
+        "toolCalls": {
+          "median": 9,
+          "mean": 9.666666666666666,
+          "min": 8,
+          "max": 12,
+          "ci95": [
+            8,
+            12
+          ]
+        },
+        "thinkingSteps": {
+          "median": 6,
+          "mean": 6.333333333333333,
+          "min": 6,
+          "max": 7,
+          "ci95": [
+            6,
+            7
+          ]
+        },
+        "messageTokens": {
+          "median": 12809,
+          "mean": 12690.333333333334,
+          "min": 12431,
+          "max": 12831,
+          "ci95": [
+            12431,
+            12831
+          ]
+        },
+        "wallSeconds": {
+          "median": 31.2,
+          "mean": 30.7,
+          "min": 29,
+          "max": 31.9,
+          "ci95": [
+            29,
+            31.9
+          ]
+        }
+      },
+      "gate": "pass"
+    }
+  ],
+  "effects": [
+    {
+      "task": "daily-check",
+      "metric": "costTokens",
+      "capsule": 4888,
+      "skill": 3897,
+      "absoluteDelta": 991,
+      "percentReduction": -25.429817808570693
+    },
+    {
+      "task": "daily-check",
+      "metric": "toolCalls",
+      "capsule": 6,
+      "skill": 7,
+      "absoluteDelta": -1,
+      "percentReduction": 14.285714285714285
+    },
+    {
+      "task": "daily-check",
+      "metric": "wallSeconds",
+      "capsule": 32.2,
+      "skill": 19.3,
+      "absoluteDelta": 12.900000000000002,
+      "percentReduction": -66.83937823834198
+    },
+    {
+      "task": "daily-check",
+      "metric": "cacheReadTokens",
+      "capsule": 70528,
+      "skill": 49536,
+      "absoluteDelta": 20992,
+      "percentReduction": -42.377260981912144
+    },
+    {
+      "task": "module-onboarding",
+      "metric": "costTokens",
+      "capsule": 9717,
+      "skill": 11803,
+      "absoluteDelta": -2086,
+      "percentReduction": 17.67347284588664
+    },
+    {
+      "task": "module-onboarding",
+      "metric": "toolCalls",
+      "capsule": 10,
+      "skill": 9,
+      "absoluteDelta": 1,
+      "percentReduction": -11.11111111111111
+    },
+    {
+      "task": "module-onboarding",
+      "metric": "wallSeconds",
+      "capsule": 29.8,
+      "skill": 31.2,
+      "absoluteDelta": -1.3999999999999986,
+      "percentReduction": 4.487179487179483
+    },
+    {
+      "task": "module-onboarding",
+      "metric": "cacheReadTokens",
+      "capsule": 76032,
+      "skill": 77568,
+      "absoluteDelta": -1536,
+      "percentReduction": 1.9801980198019802
+    }
+  ],
+  "gates": {
+    "capsule": {
+      "exit": 0,
+      "output": "Coverage:         29/29 modules verified, 39 test files declared, 0 missing\n\n✓ CI PASS — the project is consistent and verified."
+    },
+    "skill": {
+      "exit": 0,
+      "output": "Coverage:         29/29 modules verified, 39 test files declared, 0 missing\n\n✓ CI PASS — the project is consistent and verified."
+    }
+  }
+}

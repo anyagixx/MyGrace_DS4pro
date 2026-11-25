@@ -3,10 +3,10 @@
   <description>Wave 4/5: ship MyGRACE like a product — a LIVE DeepSeek Harness status panel, a tag-driven release workflow with provenance, an artifact dry-run gate, a cross-platform CI matrix, and the actual npm publication (pending owner action). The package is publish-ready but not published.</description>
 
   <step-1 module="M-INSTALL" description="LIVE DSH status panel (W4.1): install-dsh --panel installs a real host route GET /api/mygrace.status + browser card reading `mygrace status --format json`; graceful {ok:false,error} on every failure." status="done" />
-  <step-2 module="M-INSTALL" description="release.yml: tag v* / workflow_dispatch dry_run; release:check → publish:dry → npm publish --provenance --access public with OIDC trusted publishing (NPM_TOKEN fallback)." status="done" />
+  <step-2 module="M-INSTALL" description="release.yml: tag v* / workflow_dispatch; release:check → publish:dry (artifact gate) → pack tarball → GitHub Release (no npm publication, owner decision 2026-11-25)." status="done" />
   <step-3 module="M-INSTALL" description="publish:dry artifact gate: pack → extract → static import completeness → packaged CLI smoke → offline install." status="done" />
   <step-4 module="M-INSTALL" description="CI OS matrix: typecheck/tests on ubuntu-latest, windows-latest and macos-latest; multi-language job stays separate." status="done" />
-  <step-5 module="M-INSTALL" description="npm publication of mygrace-cli 1.3.0 with provenance — publish-ready after release:check and publish:dry; requires the owner to configure the trusted publisher and push the tag (operational action, no code owner)." status="pending" />
+  <step-5 module="M-INSTALL" description="npm publication cancelled by the owner (2026-11-25): distribution is GitHub Releases + source; release.yml packs the tarball and creates the GitHub Release, with no registry credentials." status="done" />
 
   <outcome>
     <item-1>The DSH web sidebar shows real project counts, lint badges and the trust verdict instead of a decorative placeholder.</item-1>
@@ -19,13 +19,13 @@
     <item-1>packages/mygrace-status-panel: private host plugin + browser card, installed by install-dsh --panel only.</item-1>
     <item-2>.github/workflows/release.yml with tag/version consistency check and trusted-publishing credentials path.</item-2>
     <item-3>scripts/publish-dry-run.ts wired as `bun run publish:dry` and `bun run release:full`.</item-3>
-    <item-4>CONTRIBUTING.md "### Releasing mygrace-cli (npm)": semver policy, tag flow, trusted publisher setup, provenance and the token fallback.</item-4>
-    <item-5>Published npm version 1.3.0 with provenance (pending owner action).</item-5>
+    <item-4>CONTRIBUTING.md "### Releasing mygrace-cli (GitHub Releases, no npm)": semver policy, tag flow, release gates and artifact creation.</item-4>
+    <item-5>GitHub Release with the packed CLI tarball (npm publication cancelled by the owner).</item-5>
   </deliverables>
 
   <acceptance-gates>
     <item-1>`bun run release:check` and `bun run publish:dry` pass locally before any tag is cut.</item-1>
-    <item-2>`npm publish --dry-run` reports the expected file list (~58 files, ~155 kB tarball) and needs no network credentials.</item-2>
+    <item-2>`bun run publish:dry` reports the expected file list and verifies the packed CLI offline; no registry credentials exist.</item-2>
     <item-3>release.yml refuses to publish when the tag differs from the package.json version.</item-3>
     <item-4>install-dsh --uninstall removes the panel row byte-for-byte; a broken panel never breaks the GUI.</item-4>
     <item-5>README keeps "from source/tarball" installation until the owner publishes, then switches to npm.</item-5>
@@ -39,14 +39,14 @@
 
   <risks>
     <item-1>npm publication is irreversible for a version: the tag/version gate and publish:dry must run first.</item-1>
-    <item-2>Trusted publishing needs a public GitHub repository and npm CLI >= 11.5.1; the NPM_TOKEN fallback must be removed once OIDC is proven.</item-2>
+    <item-2>No npm publication: distribution is the GitHub Release tarball; registry credentials are intentionally absent from CI.</item-2>
     <item-3>The panel depends on DSH 0.2.x APIs; a DSH upgrade must be re-verified against the real loader.</item-3>
     <item-4>The version must be bumped in package.json and CHANGELOG before tagging, or release.yml stops the release.</item-4>
   </risks>
 
   <dependencies>
     <item-1>Phase-3 gate: all 25 modules verified, `mygrace ci --path .` PASS, validators green.</item-1>
-    <item-2>Owner controls the npm account/package `mygrace-cli`, the trusted publisher configuration and the GitHub tag push.</item-2>
+    <item-2>Owner controls the GitHub tag/release; npm publication is cancelled (no registry account involved).</item-2>
     <item-3>Release gates in CONTRIBUTING.md §"Releasing" describe the exact hand-off sequence.</item-3>
   </dependencies>
 </Phase-4>

@@ -19,7 +19,7 @@ body:
     attributes:
       label: MyGRACE version
       description: Output of `mygrace --version`, or the commit hash when running from a checkout.
-      placeholder: "1.7.1 (or commit 1a2b3c4)"
+      placeholder: "1.7.2 (or commit 1a2b3c4)"
     validations:
       required: true
 
