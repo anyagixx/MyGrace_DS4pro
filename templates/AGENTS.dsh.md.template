@@ -27,6 +27,10 @@ Project-declared commands (`<module-checks>` in the canonical
 - `"allowCommands": true` is set in `mygrace.config.json`;
 - the invocation passes `--allow-commands`.
 
+Dangerous command patterns are refused even in a trusted project unless
+`--allow-unsafe-commands` is explicit; execution attempts are audited in
+`.mygrace/audit.log` (local, gitignored).
+
 `.mygrace/` is local state: **never commit it** (add it to `.gitignore`). Editing
 `docs/modules/`, `docs/verification/` or the config invalidates the record — run
 `mygrace trust` again. If a command is refused, report the refusal; do not
@@ -110,7 +114,7 @@ When `docs/graph-index.xml` approaches `indexCaps.graph`, shard it: `mygrace mod
 - `mygrace integrations status --path .` — detect optional external tools (Octocode/Archify) and tested versions; advisory only
 - `mygrace diagram [--kind architecture|workflow|tree] [--format json|mermaid|html] [--check]` — render the docs graph as the module graph, the delivery plan or the capability hierarchy (IR/Mermaid always; HTML via optional Archify); `--check` verifies every committed IR
 - `mygrace capsule list|validate|qualify|run|continue` — experimental allowlisted routines with replay qualification and judgment hand-back (disabled unless `integrations.capsules.enabled`)
-- `mygrace trust --path .` — review + record project commands (before test/verify)
+- `mygrace trust --path .` — review + record project commands; `--check`/`--revoke`; audit log + deny list
 - `mygrace test --module M-XXX` / `mygrace verify --module M-XXX` — scoped tests
 - `mygrace projects --path .` — monorepo health; `mygrace module index|find|show|list`, `mygrace phase index|show`, `mygrace verification index`
 - `mygrace packet M-XXX` / `mygrace focus M-XXX` / `mygrace context-cost --path .` — worker prompt / set / budget; `mygrace doctor --path .` — environment

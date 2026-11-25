@@ -246,6 +246,23 @@ temperature, seeds, primary metrics, kill criterion (see D3), exclusions.
 
 ---
 
+## Review priorities (post-v1.7.2)
+
+Status of the three priorities from the project review (2026-11-25):
+
+- **Trust-model hardening — ✅ v1.8.0.** Static deny list for dangerous commands
+  (refused even behind trust, explicit `--allow-unsafe-commands` override), JSONL
+  audit log in `.mygrace/audit.log`, `trust --check`/`--revoke`, MCP coverage,
+  docs/tests. Honest limitation: defense in depth, not an OS sandbox.
+- **Benchmarks — ✅ v1.8.0 (core commands).** `scripts/benchmark.ts` +
+  `analysis/benchmark.md`: `ci` ≈ 380 ms / 109 MB on 29 modules and ≈ 419 ms /
+  94 MB on a generated 70-module project; `status`/`lint` ≈ 155–260 ms. Still
+  missing: external OSS repositories and agent-task/token benchmarks.
+- **Surface simplification — 🟡 started.** `docs/quickstart.md`, two-command
+  guidance (`next` + `ci`), measured-performance section and docs trim. Removing
+  public commands/tools/skills is a breaking-major change and remains planned,
+  not done.
+
 ## E. Sequencing, releases, and ownership
 
 | Order | Work | Owner | Effort | Output |

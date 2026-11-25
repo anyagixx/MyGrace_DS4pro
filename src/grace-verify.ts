@@ -93,6 +93,11 @@ export const verifyCommand = defineCommand({
       default: false,
       description: "Execute project-declared commands for this run without a trust record (also enables shell-style commands; opt-in only)",
     },
+    allowUnsafeCommands: {
+      type: "boolean",
+      default: false,
+      description: "One-off opt-in for deny-listed dangerous command patterns (privilege escalation, network tools, destructive commands)",
+    },
   },
   run: async ({ args }) => {
     const format = parseOutputFormat(args.format);
@@ -133,7 +138,7 @@ export const verifyCommand = defineCommand({
         return { envelope, print: () => lines.forEach((line) => console.log(line)) };
       }
 
-      const batch = runModulePlans(root, plans, authorization, true);
+      const batch = runModulePlans(root, plans, authorization, true, args.allowUnsafeCommands === true);
       findings.push(...batch.findings);
 
       let reportNote = "";

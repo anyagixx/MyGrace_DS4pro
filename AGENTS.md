@@ -1,5 +1,7 @@
 # MyGRACE — Index-First Engineering Harness (DeepSeek Harness)
 
+> New here? Read `docs/quickstart.md` first; the two commands that matter are `mygrace next` and `mygrace ci`.
+
 This project is governed by **MyGRACE**: a small, enforced repository map plus a
 contract-first workflow. Navigate with **indexes first**; read only what you need.
 
@@ -23,9 +25,15 @@ Project-declared commands (`<module-checks>` in the canonical
 `docs/verification/V-M-XXX.xml`) are **untrusted input**. `mygrace test` /
 `mygrace verify` execute them only when one of these holds:
 
-- `.mygrace/trust.json` is current — created by `mygrace trust` after review;
+- `.mygrace/trust.json` is current — created by `mygrace trust` after review
+  (`mygrace trust --check` inspects it without writing, `--revoke` removes it);
 - `"allowCommands": true` is set in `mygrace.config.json`;
 - the invocation passes `--allow-commands`.
+
+Even then, dangerous command patterns (privilege escalation, network tools,
+destructive removal, eval/encoded payloads, device writes, publishing, out-of-tree
+redirects) are refused unless `--allow-unsafe-commands` is passed explicitly.
+Every execution/refusal is appended to `.mygrace/audit.log` (local, gitignored).
 
 `.mygrace/` is local state: **never commit it** (add it to `.gitignore`). Editing
 `docs/modules/`, `docs/verification/` or the config invalidates the record — run
@@ -110,7 +118,7 @@ When `docs/graph-index.xml` approaches `indexCaps.graph`, shard it: `mygrace mod
 - `mygrace integrations status --path .` — detect optional external tools (Octocode/Archify) and tested versions; advisory only
 - `mygrace diagram [--kind architecture|workflow|tree] [--format json|mermaid|html] [--check]` — render the docs graph as the module graph, the delivery plan or the capability hierarchy (IR/Mermaid always; HTML via optional Archify); `--check` verifies every committed IR
 - `mygrace capsule list|validate|qualify|run|continue` — experimental allowlisted routines with replay qualification and judgment hand-back (disabled unless `integrations.capsules.enabled`)
-- `mygrace trust --path .` — review + record project commands (before test/verify)
+- `mygrace trust --path .` — review + record project commands (before test/verify); `--check` inspects, `--revoke` removes; dangerous patterns need `--allow-unsafe-commands`; `.mygrace/audit.log` records every run/refusal
 - `mygrace test --module M-XXX` / `mygrace verify --module M-XXX` — scoped tests
 - `mygrace projects --path .` — monorepo health; `mygrace module index|find|show|list`, `mygrace phase index|show`, `mygrace verification index`
 - `mygrace packet M-XXX` / `mygrace focus M-XXX` / `mygrace context-cost --path .` — worker prompt / set / budget; `mygrace doctor --path .` — environment

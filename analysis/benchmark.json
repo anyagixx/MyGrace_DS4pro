@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-25T19:10:59.102Z",
+  "command": "bun run scripts/benchmark.ts --runs 7",
+  "runs": 7,
+  "timeBinary": "/usr/bin/time",
+  "limitations": [
+    "CLI/index performance only; not agent-task success or token usage.",
+    "No external OSS repository with MyGRACE artifacts yet; targets are this repo, demo-store and a generated valid 70-module project.",
+    "GNU time reports the child's peak RSS; wall time includes bun startup."
+  ],
+  "rows": [
+    {
+      "target": "repo (29 modules)",
+      "command": "status",
+      "runs": 7,
+      "medianWallMs": 253,
+      "p95WallMs": 310,
+      "medianRssMb": 90,
+      "failures": 0
+    },
+    {
+      "target": "repo (29 modules)",
+      "command": "lint --strict",
+      "runs": 7,
+      "medianWallMs": 260,
+      "p95WallMs": 297,
+      "medianRssMb": 87.8,
+      "failures": 0
+    },
+    {
+      "target": "repo (29 modules)",
+      "command": "ci",
+      "runs": 7,
+      "medianWallMs": 380,
+      "p95WallMs": 422,
+      "medianRssMb": 108.6,
+      "failures": 0
+    },
+    {
+      "target": "demo-store (3 modules)",
+      "command": "status",
+      "runs": 7,
+      "medianWallMs": 159,
+      "p95WallMs": 171,
+      "medianRssMb": 76.8,
+      "failures": 0
+    },
+    {
+      "target": "demo-store (3 modules)",
+      "command": "lint --strict",
+      "runs": 7,
+      "medianWallMs": 155,
+      "p95WallMs": 170,
+      "medianRssMb": 77.3,
+      "failures": 0
+    },
+    {
+      "target": "demo-store (3 modules)",
+      "command": "ci",
+      "runs": 7,
+      "medianWallMs": 183,
+      "p95WallMs": 227,
+      "medianRssMb": 80.3,
+      "failures": 0
+    },
+    {
+      "target": "synthetic (70 modules)",
+      "command": "status",
+      "runs": 7,
+      "medianWallMs": 258,
+      "p95WallMs": 296,
+      "medianRssMb": 87,
+      "failures": 0
+    },
+    {
+      "target": "synthetic (70 modules)",
+      "command": "lint --strict",
+      "runs": 7,
+      "medianWallMs": 258,
+      "p95WallMs": 296,
+      "medianRssMb": 87.7,
+      "failures": 0
+    },
+    {
+      "target": "synthetic (70 modules)",
+      "command": "ci",
+      "runs": 7,
+      "medianWallMs": 419,
+      "p95WallMs": 430,
+      "medianRssMb": 93.7,
+      "failures": 0
+    }
+  ]
+}

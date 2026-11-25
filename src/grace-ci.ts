@@ -223,7 +223,7 @@ function runTestsGate(
 
   const moduleIds = resolveModuleIds(root, options.module, undefined, "ci");
   for (const moduleId of moduleIds) {
-    const result = runModuleTests(root, moduleId, { config, authorization, compact: true });
+    const result = runModuleTests(root, moduleId, { config, authorization, compact: true, allowUnsafeCommands: options.allowUnsafeCommands === true });
     report.modules += 1;
     if (result.ok) {
       report.passed += 1;
@@ -258,6 +258,8 @@ export interface CiOptions {
   module?: string;
   /** Explicit shell/command opt-in forwarded to the trust check. */
   allowCommands?: boolean;
+  /** Explicit one-off opt-in for deny-listed dangerous command patterns. */
+  allowUnsafeCommands?: boolean;
 }
 
 export interface CiResult {
@@ -390,6 +392,11 @@ export const ciCommand = defineCommand({
       default: false,
       description: "Explicitly allow project-declared commands for this run (shell/metacharacter opt-in)",
     },
+    allowUnsafeCommands: {
+      type: "boolean",
+      default: false,
+      description: "One-off opt-in for deny-listed dangerous command patterns",
+    },
   },
   run: async ({ args }) => {
     const root = tryFindProjectRoot(args.path);
@@ -404,6 +411,7 @@ export const ciCommand = defineCommand({
       ...(typeof args.module === "string" ? { module: args.module } : {}),
       tests: args.tests === true,
       allowCommands: args.allowCommands === true,
+      allowUnsafeCommands: args.allowUnsafeCommands === true,
     });
 
     if (format === "json") {

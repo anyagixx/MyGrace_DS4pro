@@ -5,11 +5,14 @@ line-capped XML indexes, one contract file per module, and verification files
 that connect intent → modules → tests. Agents read the index first and only the
 entity they need, instead of re-reading the tree.
 
+**Start here:** [`docs/quickstart.md`](docs/quickstart.md) — the two commands you need
+and a five-minute path. Full reference is below.
+
 It is a CLI (`mygrace`, 23 commands) plus an agent methodology (15 skills) and
 an MCP server (25 tools). It does not generate code, call a model, or send telemetry — it
 enforces traceability and context discipline for the agent you already use.
 
-Current version: `1.7.2`
+Current version: `1.8.0`
 
 > Distribution is **GitHub Releases + source**: there is no npm publication
 > (decision 2026-11-25). `@osovv` is a third-party scope (the project's starting
@@ -72,6 +75,21 @@ Commands run argv-only (never through a shell), shell-style commands need an
 extra explicit opt-in, and `.mygrace/` is local state: add it to your project's
 `.gitignore` (a fresh `init-dsh` project has none; `mygrace trust` warns when the
 record is not ignored).
+
+Defense in depth beyond trust:
+
+- **dangerous-command deny list** — commands matching privilege escalation,
+  destructive removal, network/download tools, `eval`/`exec`, encoded payloads,
+  permission changes, device writes, publishing or out-of-tree redirects are
+  refused even in a trusted project; `--allow-unsafe-commands` is a one-off,
+  explicit override (also available on `test`, `verify`, `ci` and MCP tools);
+- **audit log** — every executed command (and every policy/shell refusal) appends
+  a JSONL record to `.mygrace/audit.log` (timestamp, module, command, exit,
+  authorization source, duration); the log is local and gitignored;
+- **inspection commands** — `mygrace trust --check` verifies the record without
+  writing (exit 1 when missing/stale) and warns about deny-listed declarations;
+  `mygrace trust --revoke` deletes it.
+
 The full threat model and the agent guidance for untrusted repositories are in
 [`SECURITY.md`](SECURITY.md).
 
@@ -161,6 +179,7 @@ bun run src/grace.ts init-dsh --path /tmp/my-project --name MyProject
 bun run src/grace.ts ci --path /tmp/my-project
 
 # 4. review the declared <module-checks>, then record trust
+#    (use `trust --check` to inspect, `trust --revoke` to remove)
 bun run src/grace.ts trust --path /tmp/my-project
 
 # 5. scoped verification, then the full gate including trust-gated tests
@@ -188,7 +207,7 @@ of this repository (Bun 1.4.5): `init-dsh`, `ci`, `trust`, `verify`,
 is environment-dependent: in a bare checkout without a DeepSeek Harness
 integration it reports the missing DSH pieces and exits 1, with hints for each.
 
-## CLI commands (21)
+## CLI commands (23)
 
 | Command | What it does |
 |---|---|
@@ -199,9 +218,9 @@ integration it reports the missing DSH pieces and exits 1, with hints for each.
 | `mygrace phase` | `index` (phase index), `show <Phase-N>` |
 | `mygrace verification` | `index` with `--priority`/`--format` filters |
 | `mygrace file` | `show <path>`: file-local contracts, maps, blocks |
-| `mygrace test` | Run verification-scoped tests; trust-gated, `--module`, `--compact` |
+| `mygrace test` | Run verification-scoped tests; trust-gated, `--module`, `--compact`, `--allow-unsafe-commands` |
 | `mygrace verify` | Agent-loop digest; writes `.mygrace/last-failures.md` on failure |
-| `mygrace trust` | Review declared commands and write `.mygrace/trust.json` |
+| `mygrace trust` | Review declared commands and write `.mygrace/trust.json`; `--check` verifies without writing, `--revoke` deletes the record |
 | `mygrace packet` | Self-contained worker prompt for one module |
 | `mygrace focus` | Minimal working set for one module |
 | `mygrace context-cost` | Read budget per operation (lines/bytes/estimate) |
@@ -324,6 +343,16 @@ warnings. On this repository: MyGRACE clean, DemoStore clean, TestProject clean.
 scopes a run to git changes (or explicit files without git): index changes run
 the full index checks, entity changes check that entity, source changes check
 markup only. It prints the scope line and adds `data.scope` to the JSON envelope.
+
+## Measured performance
+
+Core command benchmarks (median wall time / peak RSS, 7 runs after a warm-up) on
+this repository, `examples/demo-store` and a generated lint-clean 70-module
+project: `mygrace ci` ≈ 380 ms / 109 MB on 29 modules and ≈ 419 ms / 94 MB on 70
+modules; `status` and `lint --strict` ≈ 155–260 ms. Full table, method and
+limitations: [`analysis/benchmark.md`](analysis/benchmark.md). This is CLI/index
+performance only — agent-task success and token usage are measured separately
+(capsule pilot: [`analysis/capsule-eval/report.md`](analysis/capsule-eval/report.md)).
 
 ## Diagrams (optional)
 

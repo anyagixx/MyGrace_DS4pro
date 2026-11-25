@@ -9,6 +9,50 @@ release time (see `ROADMAP.md` §6, gate G10).
 
 Nothing yet.
 
+## [1.8.0] — 2026-11-25
+
+### Added
+
+- **Trust-model defense in depth.** Project commands matching dangerous patterns
+  (privilege escalation, network/download tools, destructive removal,
+  `eval`/`exec`, encoded payloads, permission changes, device writes, publishing,
+  out-of-tree redirects) are refused even behind a current trust record;
+  `--allow-unsafe-commands` is an explicit one-off override on `test`, `verify`,
+  `ci` and the matching MCP tools. Every execution attempt and policy/shell
+  refusal appends a JSONL record to `.mygrace/audit.log` (local, gitignored).
+- **Trust inspection without mutation:** `mygrace trust --check` verifies the
+  record, lists every declared command and warns about deny-listed declarations
+  (exit 1 when missing/stale); `--revoke` deletes the local record. The MCP
+  `mygrace_trust` tool exposes `check`/`revoke`.
+- **Measured core-command benchmarks:** `scripts/benchmark.ts` measures
+  `status`, `lint --strict` and `ci` (7 runs, GNU time) on this repository,
+  `examples/demo-store` and a generated lint-clean 70-module project. Median
+  `ci` ≈ 380 ms / 109 MB (29 modules) and ≈ 419 ms / 94 MB (70 modules);
+  `status`/`lint` ≈ 155–260 ms. Report: `analysis/benchmark.md`; method and
+  limitations are stated explicitly (no external OSS repo or agent-task claim).
+- **Quickstart and surface guidance:** `docs/quickstart.md` (five-minute path and
+  the two commands that matter), README/AGENTS links, measured-performance
+  section, and a note that real CLI-surface consolidation is a separate,
+  breaking-change task.
+
+### Changed
+
+- Trust contracts/docs (M-TEST, V-M-TEST, README, AGENTS, SECURITY) now describe
+  the deny list, audit log and inspection commands.
+- Tests: **733 tests / 35 files** (6 new trust/policy/audit/check/revoke tests);
+  CLI/MCP counts unchanged (23 commands, 25 tools).
+
+### Limitations
+
+- The deny list is static defense in depth, **not an OS sandbox**: commands still
+  run with the invoking user's privileges. Audit logging is best-effort and local.
+- Benchmarks are CLI/index latency and peak RSS only, on generated/self-owned
+  projects; they are not agent-task success or token-usage measurements.
+- Broad surface consolidation (fewer commands/tools/skills) is **not** done here;
+  the quickstart is the first step, and removing public commands would be a
+  breaking-major change.
+
+
 ## [1.7.2] — 2026-11-25
 
 ### Changed

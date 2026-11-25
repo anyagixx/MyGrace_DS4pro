@@ -1,10 +1,10 @@
 # MyGRACE Roadmap — from audit findings to a professional agent engineering harness
 
-> Status: **v1.7.2 shipped 2026-11-25** — distribution is GitHub Releases + source (npm publication cancelled), Octocode graph mode verified against the real binary, capsule pilot measured (inconclusive, capsules stay experimental). Baseline: v1.0.1 as audited on 2026-11-22
+> Status: **v1.8.0 shipped 2026-11-25** — trust-model hardening (deny list, audit log, check/revoke), measured core benchmarks and a quickstart; remaining review priorities: broader surface consolidation and external-repo/agent benchmarks. Baseline: v1.0.1 as audited on 2026-11-22
 > (see `analysis/00-EXECUTIVE-ASSESSMENT.md` and appendices 01–04).
 > Target: a tool that AI coding agents can use with confidence on software of **any complexity** —
 > from a 3-module script to a 500-module monorepo, on repos you do not fully trust.
-> **v1.7.2 shipped evidence:** `bun run release:check` green (typecheck 0, **727 tests / 35 files**,
+> **v1.8.0 shipped evidence:** `bun run release:check` green (typecheck 0, **727 tests / 35 files**,
 > demo lint, doc-truth gates, pack-smoke, **diagram IR freshness for all three kinds**, capsule validation),
 > `mygrace ci --path .` PASS on this repository (**29 modules / 4 phases / 29 verifications /
 > 39 declared test files**), and `bun run publish:dry` proves the publish artifact (68 files, 259 kB, 29 shipped src files, 137 relative + 28 bare imports). G13 green with
@@ -14,12 +14,14 @@
 > the capsule lifecycle is covered by fake-CLI tests. Real Octocode 0.29.2 graph session verified
 > (warm FastEmbed cache: MCP initialize ~2.1 s; `trace --code` 8/9 symbols; `impact --code-graph`
 > 4 module edges); the adapter now matches the real `graphrag` API.
-> Surface: **23 CLI commands · 25 MCP tools · 15 skills**. Committed deterministic diagram IRs for
+> Surface: **23 CLI commands · 25 MCP tools · 15 skills** (quickstart narrows the daily path to `next` + `ci`; consolidation is a future major-change task). Committed deterministic diagram IRs for
 > three kinds; experimental capsules with allowlisted read-only programs, replay qualification,
 > judgment hand-back and deopt-to-skill (no token-savings claims; a 12-session
 > pre-registered pilot was inconclusive, see analysis/capsule-eval/report.md).
 > Distribution is GitHub Releases + source; npm publication is intentionally not
-> used (owner decision 2026-11-25).
+> used (owner decision 2026-11-25). v1.8.0 adds a deny-listed dangerous-command
+> policy, `.mygrace/audit.log`, `trust --check/--revoke`, a benchmark harness
+> (`analysis/benchmark.md`) and `docs/quickstart.md`.
 
 ## 1. Vision
 

@@ -396,6 +396,49 @@ describe("trustCommand", () => {
     }
   });
 
+  test("--check reports a missing/stale record (exit 1) without writing one", async () => {
+    const root = makeProject();
+    try {
+      const { stdout, exit } = await capture(() => trustCommand.run!({ args: { path: root, check: true, format: "json" } } as never));
+      expect(exit).toBe(1);
+      const envelope = JSON.parse(stdout);
+      expect(envelope.data.trusted).toBe(false);
+      expect(envelope.findings.some((item: { code: string }) => item.code === "TRUST_RECORD_STALE")).toBe(true);
+      expect(existsSync(trustFilePath(root))).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("--check passes after a current record and warns about deny-listed commands", async () => {
+    const root = makeProject({ command: "bun --version sudo" });
+    try {
+      await capture(() => trustCommand.run!({ args: { path: root, format: "json" } } as never));
+      const { stdout, exit } = await capture(() => trustCommand.run!({ args: { path: root, check: true, format: "json" } } as never));
+      expect(exit).toBe(0);
+      const envelope = JSON.parse(stdout);
+      expect(envelope.data.trusted).toBe(true);
+      expect(envelope.findings.some((item: { code: string }) => item.code === "UNSAFE_COMMAND_DECLARED")).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("--revoke deletes the record; check and revoke are mutually exclusive", async () => {
+    const root = makeProject();
+    try {
+      await capture(() => trustCommand.run!({ args: { path: root } } as never));
+      expect(existsSync(trustFilePath(root))).toBe(true);
+      const { exit } = await capture(() => trustCommand.run!({ args: { path: root, revoke: true } } as never));
+      expect(exit).toBe(0);
+      expect(existsSync(trustFilePath(root))).toBe(false);
+      const conflict = await capture(() => trustCommand.run!({ args: { path: root, check: true, revoke: true } } as never));
+      expect(conflict.thrown).toBeDefined();
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("--allow-commands persists the shell opt-in", async () => {
     const root = makeProject();
     try {

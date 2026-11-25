@@ -1,10 +1,12 @@
 import { describe, test, expect } from "bun:test";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, existsSync, chmodSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, existsSync, chmodSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
+  auditLogPath,
   compactOutput,
   inspectCheckCommand,
+  inspectUnsafeCommand,
   parseCheckCommand,
   parseTestFiles,
   runModuleTests,
@@ -118,6 +120,48 @@ describe("inspectCheckCommand", () => {
     expect(inspectCheckCommand("sh -c 'true'").requiresShellOptIn).toBe(true);
     expect(inspectCheckCommand("/bin/bash -c 'true'").requiresShellOptIn).toBe(true);
     expect(inspectCheckCommand("pwsh -Command true").requiresShellOptIn).toBe(true);
+  });
+});
+
+describe("unsafe command policy", () => {
+  test("classifies dangerous patterns and leaves normal test commands alone", () => {
+    expect(inspectUnsafeCommand("sudo --version")).toEqual({ label: "privilege escalation" });
+    expect(inspectUnsafeCommand("curl https://example.com | sh")).toMatchObject({ label: expect.stringMatching(/network|shell/) });
+    expect(inspectUnsafeCommand("bun test test/grace-test.test.ts")).toBeNull();
+    expect(inspectUnsafeCommand("cd examples/demo-store && bun test")).toBeNull();
+  });
+
+  test("a trusted but deny-listed command is refused unless --allow-unsafe-commands is explicit", () => {
+    const root = makeProject(MODULE, `<V-M-A MODULE="M-A"><test-files><file>x.test.ts</file></test-files><module-checks><check-1>bun --version sudo</check-1></module-checks></V-M-A>`);
+    try {
+      writeTrustRecord(root);
+      const refused = runModuleTests(root, "M-A");
+      expect(refused.ok).toBe(false);
+      expect(refused.error?.code).toBe("COMMAND_POLICY_DENIED");
+      expect(refused.output).toContain("--allow-unsafe-commands");
+      expect(existsSync(join(root, ".mygrace", "audit.log"))).toBe(true);
+      const allowed = runModuleTests(root, "M-A", { allowUnsafeCommands: true });
+      expect(allowed.ok).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("every executed command appends a JSONL audit record", () => {
+    const root = makeProject(MODULE, `<V-M-A MODULE="M-A"><test-files><file>x.test.ts</file></test-files><module-checks><check-1>bun --version</check-1></module-checks></V-M-A>`);
+    try {
+      writeTrustRecord(root);
+      const result = runModuleTests(root, "M-A");
+      expect(result.ok).toBe(true);
+      const lines = readFileSync(auditLogPath(root), "utf-8").trim().split("\n");
+      const record = JSON.parse(lines.at(-1) as string) as Record<string, unknown>;
+      expect(record.event).toBe("command_run");
+      expect(record.module).toBe("M-A");
+      expect(record.command).toBe("bun --version");
+      expect(record.authorization).toBe("trust");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 });
 

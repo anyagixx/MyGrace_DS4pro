@@ -42,6 +42,8 @@
 //   commandSourceFiles()/computeTrustHashes() — files covered by the trust record (sorted rel paths)
 //   checkTrust()                 — hash comparison with actionable stale/missing details
 //   authorizeCommands()          — one place that answers "may this run?"
+//   inspectUnsafeCommand()       — static deny policy for dangerous command patterns (defense in depth)
+//   auditLogPath()/appendAuditRecord() — local .mygrace/audit.log JSONL for every execution attempt
 //   runCommandOutcome()/parseOutputFormat()/envelopeErrorFor() — shared ADR-3/ADR-8 CLI contract
 //   testCommand                  — `mygrace test [--module M-X] [--allow-commands] [--format json]`
 //   trustCommand                 — `mygrace trust [--path .] [--format json]` (wired by grace.ts)
@@ -50,7 +52,7 @@
 import { defineCommand } from "citty";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, sep } from "node:path";
 import { findProjectRoot, readFileOrNull, readIndexFileSafe, walkFiles } from "./grace-common";
 import { loadGraphIndexStrict } from "./grace-shard";
@@ -328,6 +330,28 @@ export function inspectCheckCommand(command: string): CommandPolicy {
     return { requiresShellOptIn: true, reason: `launches a shell interpreter (${executable})` };
   }
   return { requiresShellOptIn: false };
+}
+
+/** One dangerous command pattern; `inspectUnsafeCommand` returns the first match. */
+export const UNSAFE_COMMAND_RULES: ReadonlyArray<{ label: string; pattern: RegExp }> = [
+  { label: "privilege escalation", pattern: /\b(?:sudo|doas|pkexec)\b/i },
+  { label: "destructive file removal", pattern: /\brm\s+(?:-[a-z]*[rf]|--recursive|--force)\b/i },
+  { label: "network/download tool", pattern: /\b(?:curl|wget|nc|ncat|netcat|ssh|scp|socat|ftp)\b/i },
+  { label: "dynamic shell evaluation", pattern: /\beval\b|\bexec\b|\$\(|`/i },
+  { label: "encoded payload", pattern: /\bbase64\s+(?:-d|--decode|-D)\b/i },
+  { label: "permission change", pattern: /\b(?:chmod|chown|chgrp|setfacl)\b/i },
+  { label: "filesystem/device write", pattern: /\b(?:mkfs(?:\.[a-z0-9]+)?|fdisk|parted|dd|mount|umount)\b/i },
+  { label: "system service control", pattern: /\b(?:systemctl|service|launchctl)\b/i },
+  { label: "publishing/remote write", pattern: /\b(?:git\s+push|npm\s+publish|gh\s+release|docker\s+push)\b/i },
+  { label: "out-of-tree redirect", pattern: />\s*(?:\/|~|\.\.\/)/i },
+];
+
+/** True when the declared command matches a deny-listed pattern (static defense in depth). */
+export function inspectUnsafeCommand(command: string): { label: string } | null {
+  for (const rule of UNSAFE_COMMAND_RULES) {
+    if (rule.pattern.test(command)) return { label: rule.label };
+  }
+  return null;
 }
 
 /** Resolve the executable command for a module without needing a full plan. */
@@ -615,6 +639,21 @@ export interface TrustCheck {
   generatedAt?: string;
   allowCommands?: boolean;
   error?: TrustLoadFailure;
+}
+
+/** Absolute path of the local execution audit log (`<root>/.mygrace/audit.log`). */
+export function auditLogPath(projectRoot: string): string {
+  return join(projectRoot, MYGRACE_STATE_DIR, "audit.log");
+}
+
+/** Append one JSONL audit record; best effort — auditing must never break a run. */
+export function appendAuditRecord(projectRoot: string, record: Record<string, unknown>): void {
+  try {
+    mkdirSync(join(projectRoot, MYGRACE_STATE_DIR), { recursive: true });
+    appendFileSync(auditLogPath(projectRoot), `${JSON.stringify({ ts: new Date().toISOString(), ...record })}\n`);
+  } catch {
+    // Local audit is advisory; a read-only checkout must still run tests.
+  }
 }
 
 /** Absolute path of `<root>/.mygrace/trust.json`. */
@@ -952,6 +991,8 @@ export interface ModuleTestResult {
 export interface ExecutePlanOptions {
   compact?: boolean;
   authorization: CommandAuthorization;
+  /** Explicit one-off opt-in for deny-listed dangerous command patterns. */
+  allowUnsafeCommands?: boolean;
 }
 
 function resultFromPlan(plan: ModulePlan): ModuleTestResult {
@@ -993,11 +1034,26 @@ export function executeModulePlan(root: string, plan: ModulePlan, options: Execu
     const hint =
       `The check command for ${plan.module} ${reason}; argv-only execution is the default. ` +
       `Pass --allow-commands to run it (review the command first).`;
+    appendAuditRecord(root, { event: "shell_refused", module: plan.module, command: plan.command, reason: "shell-opt-in-required" });
     return {
       ...base,
       error: { code: "SHELL_COMMAND_REFUSED", message: hint },
       output: hint,
     };
+  }
+  if (options.allowUnsafeCommands !== true) {
+    const unsafe = inspectUnsafeCommand(plan.command);
+    if (unsafe !== null) {
+      const hint =
+        `Refusing dangerous command for ${plan.module}: it matches "${unsafe.label}". ` +
+        `Review it; pass --allow-unsafe-commands only if you really need it.`;
+      appendAuditRecord(root, { event: "policy_refused", module: plan.module, command: plan.command, reason: unsafe.label });
+      return {
+        ...base,
+        error: { code: "COMMAND_POLICY_DENIED", message: hint },
+        output: hint,
+      };
+    }
   }
 
   const startedAt = Date.now();
@@ -1030,10 +1086,20 @@ export function executeModulePlan(root: string, plan: ModulePlan, options: Execu
     };
   }
 
+  const durationMs = Date.now() - startedAt;
+  appendAuditRecord(root, {
+    event: "command_run",
+    module: plan.module,
+    command: plan.command,
+    exitCode: result.status,
+    durationMs,
+    authorization: options.authorization.via,
+    shellOptIn: options.authorization.shellOptIn,
+  });
   return {
     ...base,
     ok: result.status === 0,
-    durationMs: Date.now() - startedAt,
+    durationMs,
     output: options.compact === true ? compactOutput(output) : output,
   };
 }
@@ -1067,6 +1133,8 @@ export interface RunModuleTestsOptions {
   compact?: boolean;
   /** Explicit per-invocation opt-in (`--allow-commands`). */
   allowCommands?: boolean;
+  /** Explicit one-off opt-in for deny-listed dangerous command patterns. */
+  allowUnsafeCommands?: boolean;
   config?: MyGraceConfig;
   /** Precomputed authorization, so a multi-module run hashes files only once. */
   authorization?: CommandAuthorization;
@@ -1076,7 +1144,11 @@ export function runModuleTests(root: string, moduleId: string, options: RunModul
   const config = options.config ?? loadConfig(root).config;
   const authorization = options.authorization ?? authorizeCommands(root, config, options.allowCommands === true);
   const plan = planModuleTest(root, moduleId, config);
-  return executeModulePlan(root, plan, { compact: options.compact === true, authorization });
+  return executeModulePlan(root, plan, {
+    compact: options.compact === true,
+    authorization,
+    allowUnsafeCommands: options.allowUnsafeCommands === true,
+  });
 }
 
 /** Run a batch of plans and aggregate the ADR-3 findings. */
@@ -1090,9 +1162,10 @@ export function runModulePlans(
   root: string,
   plans: readonly ModulePlan[],
   authorization: CommandAuthorization,
-  compact: boolean
+  compact: boolean,
+  allowUnsafeCommands = false
 ): BatchRunResult {
-  const results = plans.map((plan) => executeModulePlan(root, plan, { compact, authorization }));
+  const results = plans.map((plan) => executeModulePlan(root, plan, { compact, authorization, allowUnsafeCommands }));
   const findings: Finding[] = [];
   for (const result of results) {
     if (result.ok) continue;
@@ -1286,6 +1359,11 @@ export const testCommand = defineCommand({
       default: false,
       description: "Execute project-declared commands for this run without a trust record (also enables shell-style commands; opt-in only)",
     },
+    allowUnsafeCommands: {
+      type: "boolean",
+      default: false,
+      description: "One-off opt-in for deny-listed dangerous command patterns (privilege escalation, network tools, destructive commands)",
+    },
   },
   run: async ({ args }) => {
     const format = parseOutputFormat(args.format);
@@ -1328,7 +1406,7 @@ export const testCommand = defineCommand({
         return { envelope, print: () => lines.forEach((line) => console.log(line)) };
       }
 
-      const batch = runModulePlans(root, plans, authorization, args.compact === true);
+      const batch = runModulePlans(root, plans, authorization, args.compact === true, args.allowUnsafeCommands === true);
       const lines = textForResults(batch.results);
       lines.push(`Summary: ${batch.results.length} module(s), ${batch.failed} failed`);
       const envelope = createEnvelope({
@@ -1362,15 +1440,100 @@ export const trustCommand = defineCommand({
       default: false,
       description: "Persist shell-command opt-in in the trust record (enables metacharacter/sh -c commands until re-trusted)",
     },
+    check: {
+      type: "boolean",
+      default: false,
+      description: "Check whether the current trust record is valid without writing anything (exit 1 when missing/stale)",
+    },
+    revoke: {
+      type: "boolean",
+      default: false,
+      description: "Delete the local trust record so project commands are refused again",
+    },
   },
   run: async ({ args }) => {
     const format = parseOutputFormat(args.format);
     await runCommandOutcome<unknown>(format, { command: "trust" }, (): CommandOutcome<unknown> => {
       const root = findProjectRoot(args.path ?? ".");
+      if (args.check === true && args.revoke === true) {
+        throw new UsageError("--check and --revoke are mutually exclusive.", {
+          hint: "Use --check to inspect the record or --revoke to delete it.",
+        });
+      }
+      if (args.revoke === true) {
+        const recordPath = trustFilePath(root);
+        if (existsSync(recordPath)) {
+          unlinkSync(recordPath);
+          appendAuditRecord(root, { event: "trust_revoked", recordPath });
+        }
+        const lines = [
+          existsSync(recordPath) ? "Could not revoke the trust record." : `Revoked ${recordPath}`,
+          "Project commands are refused again until `mygrace trust` is re-run.",
+        ];
+        const envelope = createEnvelope({
+          data: { root, recordPath, revoked: true },
+          findings: [],
+          meta: { command: "trust", root },
+        });
+        return { envelope, print: () => lines.forEach((line) => console.log(line)) };
+      }
       const gathered = collectDeclaredCommands(root);
+      if (args.check === true) {
+        const trust = checkTrust(root);
+        const findings: Finding[] = [...gathered.findings];
+        for (const declared of gathered.commands) {
+          const unsafe = inspectUnsafeCommand(declared.command);
+          if (unsafe !== null) {
+            findings.push(
+              finding("warning", "UNSAFE_COMMAND_DECLARED", `${declared.file}: command matches "${unsafe.label}" and will require --allow-unsafe-commands.`, {
+                file: declared.file,
+                hint: "Edit the command or review it before running with the unsafe opt-in.",
+              })
+            );
+          }
+        }
+        if (!trust.trusted) {
+          findings.push(
+            finding("error", "TRUST_RECORD_STALE", `Trust record is not current: ${trust.reason}.`, {
+              hint: "Review declared commands, then run `mygrace trust` to record hashes.",
+            })
+          );
+        }
+        const lines = [
+          "MyGRACE trust --check",
+          "=====================",
+          "",
+          `Record: ${trust.recordPath}`,
+          `Status: ${trust.trusted ? "current" : "MISSING/STALE"} — ${trust.reason}`,
+          `Command sources: ${trust.fileCount} file(s)`,
+          "",
+          ...(gathered.commands.length === 0
+            ? ["  (no <module-checks> declared — default testRunner will be used)"]
+            : gathered.commands.map((declared) => `  ${declared.file} — ${declared.module ?? "config"}: ${declared.command}`)),
+          "",
+          ...findings.map((item) => `${item.severity === "error" ? "✗" : "⚠"} [${item.code}] ${item.message}`),
+        ];
+        const envelope = createEnvelope({
+          data: { root, trusted: trust.trusted, reason: trust.reason, recordPath: trust.recordPath, commands: gathered.commands },
+          findings,
+          meta: { command: "trust", root },
+        });
+        return { envelope, print: () => lines.forEach((line) => console.log(line)) };
+      }
       const record = writeTrustRecord(root, { allowCommands: args.allowCommands === true });
       const gitignore = trustRecordGitignoreStatus(root);
       const findings = [...gathered.findings];
+      for (const declared of gathered.commands) {
+        const unsafe = inspectUnsafeCommand(declared.command);
+        if (unsafe !== null) {
+          findings.push(
+            finding("warning", "UNSAFE_COMMAND_DECLARED", `${declared.file}: command matches "${unsafe.label}"; execution will require --allow-unsafe-commands.`, {
+              file: declared.file,
+              hint: "Edit the command or review it before using the unsafe opt-in.",
+            })
+          );
+        }
+      }
       if (!gitignore.exists) {
         findings.push(
           finding("warning", "TRUST_RECORD_NOT_GITIGNORED", "no .gitignore found — make sure .mygrace/ is never committed.", {

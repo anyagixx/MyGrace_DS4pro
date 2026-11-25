@@ -11,6 +11,8 @@
     <fn-parseCheckCommand PURPOSE="First declared check command with a config fallback." />
     <fn-tokenizeCommand PURPOSE="Quote-aware argv splitter; no shell." />
     <fn-inspectCheckCommand PURPOSE="Flags shell-style commands that need explicit opt-in." />
+    <fn-inspectUnsafeCommand PURPOSE="Static deny list for dangerous command patterns (privilege escalation, network tools, destructive removal, eval, device writes, publishing)." />
+    <fn-appendAuditRecord PURPOSE="Best-effort JSONL audit of every execution attempt and refusal in .mygrace/audit.log." />
     <fn-planModuleTest PURPOSE="Pure plan: files, command, argv, source and validation errors." />
     <fn-executeModulePlan PURPOSE="Authorize then spawn one plan; never throws for findings." />
     <fn-runModuleTests PURPOSE="Plan plus execute convenience used by verify and tests." />
@@ -18,6 +20,7 @@
     <fn-writeTrustRecord PURPOSE="Atomically write the trust record (0600)." />
     <fn-computeTrustHashes PURPOSE="sha256 of docs/modules, docs/verification and the config." />
     <fn-checkTrust PURPOSE="Hash comparison with actionable stale/missing details." />
+    <fn-auditLogPath PURPOSE="Absolute path of the local execution audit log." />
   </annotations>
 
   <CrossLink to="M-PATHS" relation="validates ids and test-file entries" />
@@ -37,12 +40,16 @@
       <error code="UNTRUSTED_PROJECT" description="No valid trust record and no opt-in (exit 2)." />
       <error code="INVALID_TEST_FILE" description="Test-file entry escapes the project or starts with -." />
       <error code="INVALID_PLAN" description="No usable command/test files." />
+      <error code="SHELL_COMMAND_REFUSED" description="Shell-style command without --allow-commands." />
+      <error code="COMMAND_POLICY_DENIED" description="Dangerous command pattern refused; requires explicit --allow-unsafe-commands." />
     </errors>
   </contract>
 
   <notes>
-    <note-1>No shell interpolation: argv-only spawnSync with shell false.</note-1>
+    <note-1>No shell interpolation: argv-only spawnSync with shell false. Defense in depth: a static deny list (`UNSAFE_COMMAND_RULES`) refuses dangerous patterns even behind a valid trust record; explicit `--allow-unsafe-commands` is required to override.</note-1>
     <note-2>Trust is content-based: editing docs/modules, docs/verification or the config invalidates the record.</note-2>
     <note-3>Command source precedence is documentation: verification file (canonical), module file (deprecated), config testRunner.</note-3>
+    <note-4>Audit: every executed command and every policy/shell refusal appends one JSONL line to `.mygrace/audit.log` (local, never committed); auditing is best-effort and cannot fail a run.</note-4>
+    <note-5>`mygrace trust --check` reports record validity and deny-listed declarations without writing; `--revoke` deletes the record.</note-5>
   </notes>
 </M-TEST>

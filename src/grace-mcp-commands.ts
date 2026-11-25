@@ -304,6 +304,11 @@ export const TOOLS: readonly ToolDefinition[] = [
       properties: {
         module: { type: "string", pattern: MODULE_ID_PATTERN, description: "Module ID (e.g. M-AUTH); omit to run all modules in graph-index.xml." },
         compact: { type: "boolean", default: true, description: "Print only failures and the summary." },
+        allowUnsafeCommands: {
+          type: "boolean",
+          default: false,
+          description: "One-off opt-in for deny-listed dangerous command patterns (requires an explicit review).",
+        },
         path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
       },
     },
@@ -313,6 +318,7 @@ export const TOOLS: readonly ToolDefinition[] = [
       const moduleId = stringArg(args, "module");
       if (moduleId !== undefined) cmd.push("--module", moduleId);
       if (booleanFlag(args, "compact")) cmd.push("--compact");
+      if (booleanFlag(args, "allowUnsafeCommands")) cmd.push("--allow-unsafe-commands");
       return cmd;
     },
   },
@@ -381,6 +387,11 @@ export const TOOLS: readonly ToolDefinition[] = [
       type: "object",
       properties: {
         module: { type: "string", pattern: MODULE_ID_PATTERN, description: "Module ID (e.g. M-AUTH); omit = all modules in graph-index.xml." },
+        allowUnsafeCommands: {
+          type: "boolean",
+          default: false,
+          description: "One-off opt-in for deny-listed dangerous command patterns (requires an explicit review).",
+        },
         path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
       },
     },
@@ -389,6 +400,7 @@ export const TOOLS: readonly ToolDefinition[] = [
       const cmd = ["verify", "--path", root];
       const moduleId = stringArg(args, "module");
       if (moduleId !== undefined) cmd.push("--module", moduleId);
+      if (booleanFlag(args, "allowUnsafeCommands")) cmd.push("--allow-unsafe-commands");
       return cmd;
     },
   },
@@ -488,6 +500,8 @@ export const TOOLS: readonly ToolDefinition[] = [
       type: "object",
       properties: {
         path: { type: "string", description: "Project root to trust (optional).", minLength: 1 },
+        check: { type: "boolean", default: false, description: "Only verify the current trust record (exit 1 when missing/stale)." },
+        revoke: { type: "boolean", default: false, description: "Delete the local trust record so project commands are refused again." },
         format: {
           type: "string",
           enum: ["text", "json"],
@@ -499,6 +513,8 @@ export const TOOLS: readonly ToolDefinition[] = [
     rootArg: "path",
     buildArgs(args, root) {
       const cmd = ["trust", "--path", root];
+      if (args.check === true) cmd.push("--check");
+      if (args.revoke === true) cmd.push("--revoke");
       if (wantsJson(args)) cmd.push("--format", "json");
       return cmd;
     },
@@ -529,6 +545,11 @@ export const TOOLS: readonly ToolDefinition[] = [
           default: false,
           description: "Explicitly allow project-declared commands for this run (shell/metacharacter opt-in).",
         },
+        allowUnsafeCommands: {
+          type: "boolean",
+          default: false,
+          description: "One-off opt-in for deny-listed dangerous command patterns (requires an explicit review).",
+        },
         format: { type: "string", enum: ["text", "json"], default: "text", description: "Output format." },
       },
     },
@@ -539,6 +560,7 @@ export const TOOLS: readonly ToolDefinition[] = [
       const module = stringArg(args, "module");
       if (module !== undefined) cmd.push("--module", module);
       if (args.allowCommands === true) cmd.push("--allow-commands");
+      if (args.allowUnsafeCommands === true) cmd.push("--allow-unsafe-commands");
       if (wantsJson(args)) cmd.push("--format", "json");
       return cmd;
     },
