@@ -26,7 +26,7 @@ files; caps and budgets are configurable in `mygrace.config.json` and enforced b
 - **Sharded indexes (ADR-6, implemented in Wave 3.1):** past the root index cap
   the root holds `<Shard href="modules/shard-<slug>.xml" count="N" />` references
   and each shard file starts with `<ModuleShard project=… group=… count=…>` plus
-  normal `<M-…/>` lines. `mygrace module shard` plans deterministically (dry run
+  normal `<M-…/>` lines. `mygrace inspect module shard` plans deterministically (dry run
   by default; `--apply` writes atomically with a timestamped backup and is
   idempotent). `list`/`find`/`status`/`ci`/`test`/`verify` read the union
   transparently; `module show` reads the entity file directly.

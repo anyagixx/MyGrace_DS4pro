@@ -1,10 +1,10 @@
 # MyGRACE Roadmap — from audit findings to a professional agent engineering harness
 
-> Status: **v2.1.0 shipped 2026-11-25** — external express benchmark (CLI + agent sessions, honest mixed result) and the v2.0 validator self-test CI fix; surface consolidation shipped in v2.0.0. Remaining: larger/curated external agent benchmark. Baseline: v1.0.1 as audited on 2026-11-22
+> Status: **v3.0.0 shipped 2026-11-25** — `inspect` grouping (15 top-level commands) and a two-repository external agent benchmark with curated artifacts. The benchmark reports a negative token/effort result; governance value remains unproven by measurement. Baseline: v1.0.1 as audited on 2026-11-22
 > (see `analysis/00-EXECUTIVE-ASSESSMENT.md` and appendices 01–04).
 > Target: a tool that AI coding agents can use with confidence on software of **any complexity** —
 > from a 3-module script to a 500-module monorepo, on repos you do not fully trust.
-> **v2.1.0 shipped evidence:** `bun run release:check` green (typecheck 0, **727 tests / 35 files**,
+> **v3.0.0 shipped evidence:** `bun run release:check` green (typecheck 0, **727 tests / 35 files**,
 > demo lint, doc-truth gates, pack-smoke, **diagram IR freshness for all three kinds**, capsule validation),
 > `mygrace ci --path .` PASS on this repository (**29 modules / 4 phases / 29 verifications /
 > 39 declared test files**), and `bun run publish:dry` proves the publish artifact (68 files, 259 kB, 29 shipped src files, 137 relative + 28 bare imports). G13 green with
@@ -14,7 +14,7 @@
 > the capsule lifecycle is covered by fake-CLI tests. Real Octocode 0.29.2 graph session verified
 > (warm FastEmbed cache: MCP initialize ~2.1 s; `trace --code` 8/9 symbols; `impact --code-graph`
 > 4 module edges); the adapter now matches the real `graphrag` API.
-> Surface: **18 CLI commands · 21 MCP tools · 12 skills** (v2.0 breaking consolidation; migration guide in `docs/migrations/v2.0.md`; quickstart keeps the daily path to `next` + `ci`). Committed deterministic diagram IRs for
+> Surface: **15 CLI commands · 21 MCP tools · 12 skills** (v2.0 breaking consolidation; migration guide in `docs/migrations/v2.0.md`; quickstart keeps the daily path to `next` + `ci`). Committed deterministic diagram IRs for
 > three kinds; experimental capsules with allowlisted read-only programs, replay qualification,
 > judgment hand-back and deopt-to-skill (no token-savings claims; a 12-session
 > pre-registered pilot was inconclusive, see analysis/capsule-eval/report.md).

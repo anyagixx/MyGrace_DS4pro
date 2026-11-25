@@ -9,6 +9,44 @@ release time (see `ROADMAP.md` §6, gate G10).
 
 Nothing yet.
 
+## [3.0.0] — 2026-11-25
+
+### Breaking changes
+
+- **CLI: 18 → 15 top-level commands.** The four lazy reader commands are grouped
+  under `mygrace inspect`:
+  `inspect module index|find|show|list|shard`, `inspect phase index|show`,
+  `inspect verification index`, `inspect file show <path>`. No aliases; migration:
+  [`docs/migrations/v3.0.md`](docs/migrations/v3.0.md). MCP tool names are
+  unchanged; only their internal CLI mapping moved. Validators now resolve
+  three-level commands (`inspect module index`) correctly.
+
+### Added
+
+- **Expanded external benchmark:** two real OSS repositories
+  (expressjs/express, psf/requests), curated MyGRACE artifacts (6 modules each,
+  real upstream test files), 3 tasks per repo × 2 arms × 2 reps = 24 headless
+  agent sessions plus CLI measurements. CLI: 138–218 ms / 65–82 MB on both
+  repos. Agent: correctness 2/2 everywhere; cost was higher with MyGRACE in 4/6
+  tasks (express routing was −22 %), so the report documents a **negative
+  result** for token/effort savings — no productivity claim. Harness:
+  `scripts/external-benchmark.ts`; report: `analysis/external-benchmark.md`.
+
+### Changed
+
+- README/AGENTS/templates/skills updated to the 15-command surface; quickstart
+  and migration guides kept truthful (two commands for daily work: `next`, `ci`).
+- Tests: 729 tests / 35 files; docs validators, marketplace self-test and
+  three-level command resolution updated.
+
+### Limitations
+
+- Benchmark tasks are shallow and keyword-graded; N=2/arm/task; one model/host;
+  artifacts are curated for the benchmark, not produced by users. A definitive
+  productivity claim needs larger N, deeper tasks and hand-curated project docs.
+- The `inspect` grouping is intentionally breaking; old spellings fail.
+
+
 ## [2.1.0] — 2026-11-25
 
 ### Added

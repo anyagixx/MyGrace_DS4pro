@@ -6,7 +6,7 @@
   <step-2 module="M-TRACE" description="mygrace trace: requirement → module → verification → test → command → phases → dependents traceability with coded gaps." status="done" />
   <step-3 module="M-IMPACT" description="mygrace impact: git diff/--files → direct modules → transitive dependents → verification blast radius → suggested commands." status="done" />
   <step-4 module="M-NEXT" description="mygrace next: deterministic nine-code next-step ladder driven by the same gates CI uses." status="done" />
-  <step-5 module="M-SHARD" description="mygrace module shard: sharded indexes beyond the root index cap (ADR-6), transparent union reads, idempotent generator." status="done" />
+  <step-5 module="M-SHARD" description="mygrace inspect module shard: sharded indexes beyond the root index cap (ADR-6), transparent union reads, idempotent generator." status="done" />
   <step-6 module="M-PROJECTS" description="mygrace projects: bounded monorepo discovery with per-project counts, lint and coverage." status="done" />
   <step-7 module="M-LINT" description="mygrace lint --changed: incremental scope from git diff/--files (index → full checks, entity → that entity, source → markup only)." status="done" />
   <step-8 module="M-MCP" description="MCP tools for ci/trace/impact/next/projects: catalog grew to 21 tools with one shared schema source." status="done" />
@@ -23,7 +23,7 @@
     <item-2>mygrace trace (landed): requirement → module → verification → test traceability report with stable gap codes.</item-2>
     <item-3>mygrace impact (landed): changed files → affected modules, dependents, phases and proving commands.</item-3>
     <item-4>mygrace next (landed): deterministic next actionable step for an agent.</item-4>
-    <item-5>mygrace module shard (landed): transparent sharded indexes with root index references.</item-5>
+    <item-5>mygrace inspect module shard (landed): transparent sharded indexes with root index references.</item-5>
     <item-6>mygrace projects (landed): monorepo sub-project discovery with per-project health.</item-6>
     <item-7>mygrace lint --changed (landed): incremental lint scope for fast local/CI runs.</item-7>
   </deliverables>

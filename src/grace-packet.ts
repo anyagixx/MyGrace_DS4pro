@@ -80,7 +80,7 @@ export function loadModuleDocument(root: string, moduleId: string): ModuleDocume
   const content = readFileOrNull(entityPath(root, "module", module));
   if (content === null) {
     throw new UsageError(`Module "${module}" not found (${file} is missing).`, {
-      hint: "Run `mygrace module list` to see indexed modules and `mygrace lint` to find drift.",
+      hint: "Run `mygrace inspect module list` to see indexed modules and `mygrace lint` to find drift.",
       file,
     });
   }

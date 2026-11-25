@@ -44,9 +44,9 @@ from `mygrace-init` (three indexes + per-entity directories). If missing, run th
 When `sizeBudgets`/`indexCaps` are respected but the flat module count approaches
 `indexCaps.graph` (default 100 lines), plan shards instead of deleting entries:
 
-- preview the deterministic plan with `mygrace module shard --path <root>` (dry run;
+- preview the deterministic plan with `mygrace inspect module shard --path <root>` (dry run;
   `--group-by type|status|prefix` changes the grouping);
-- write it with `mygrace module shard --apply --path <root>`: it generates
+- write it with `mygrace inspect module shard --apply --path <root>`: it generates
   `docs/modules/shard-<slug>.xml`, rewrites the root index atomically, keeps a
   timestamped backup, and is idempotent on re-run;
 - keep the root index as `<Shard href="modules/shard-<slug>.xml" count="N" />`

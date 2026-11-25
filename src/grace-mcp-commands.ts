@@ -177,7 +177,7 @@ export const TOOLS: readonly ToolDefinition[] = [
     },
     rootArg: "path",
     buildArgs(args, root) {
-      const cmd = ["module", "show", requiredStringArg("mygrace_show_module", args, "id"), "--path", root];
+      const cmd = ["inspect", "module", "show", requiredStringArg("mygrace_show_module", args, "id"), "--path", root];
       if (booleanFlag(args, "withVerification")) cmd.push("--with-verification");
       return cmd;
     },
@@ -198,7 +198,7 @@ export const TOOLS: readonly ToolDefinition[] = [
     },
     rootArg: "path",
     buildArgs(args, root) {
-      return ["phase", "show", requiredStringArg("mygrace_show_phase", args, "name"), "--path", root];
+      return ["inspect", "phase", "show", requiredStringArg("mygrace_show_phase", args, "name"), "--path", root];
     },
   },
   {
@@ -219,7 +219,7 @@ export const TOOLS: readonly ToolDefinition[] = [
     },
     rootArg: "path",
     buildArgs(args, root) {
-      const cmd = ["module", "find"];
+      const cmd = ["inspect", "module", "find"];
       const query = stringArg(args, "query");
       if (query !== undefined) cmd.push(query);
       cmd.push("--path", root);
@@ -243,7 +243,7 @@ export const TOOLS: readonly ToolDefinition[] = [
     },
     rootArg: "path",
     buildArgs(_args, root) {
-      return ["phase", "index", "--path", root];
+      return ["inspect", "phase", "index", "--path", root];
     },
   },
   {
@@ -329,7 +329,7 @@ export const TOOLS: readonly ToolDefinition[] = [
     },
     rootArg: "path",
     buildArgs(args, root) {
-      const cmd = ["verification", "index", "--path", root];
+      const cmd = ["inspect", "verification", "index", "--path", root];
       const priority = stringArg(args, "priority");
       if (priority !== undefined) cmd.push("--priority", priority);
       if (wantsJson(args)) cmd.push("--format", "json");
@@ -377,7 +377,7 @@ export const TOOLS: readonly ToolDefinition[] = [
     },
     rootArg: "projectRoot",
     buildArgs(args, root) {
-      const cmd = ["file", "show", requiredStringArg("mygrace_show_file", args, "path"), "--root", root];
+      const cmd = ["inspect", "file", "show", requiredStringArg("mygrace_show_file", args, "path"), "--root", root];
       if (booleanFlag(args, "contracts")) cmd.push("--contracts");
       if (booleanFlag(args, "blocks")) cmd.push("--blocks");
       return cmd;

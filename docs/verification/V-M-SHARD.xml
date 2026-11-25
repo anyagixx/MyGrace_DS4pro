@@ -21,6 +21,6 @@
   <notes>
     <note-1>Covered by test/grace-shard.test.ts (10 tests: 150-module/3-shard proof + timings, five negative shard-validation cases, generator dry-run/apply/idempotency, strict loader semantics).</note-1>
     <note-2>Finding codes: SHARD_COUNT_MISMATCH, DUPLICATE_INDEX_ENTRY (cross-shard), PATH_UNSAFE (href traversal), SHARD_FILE_MISSING, SHARD_ROOT_INVALID, INDEX_TOO_LARGE (per-shard cap), XML_INVALID.</note-2>
-    <note-3>CLI surface: mygrace module shard [--group-by type|status|prefix] [--apply | --dry-run] [--path .] [--format text|json].</note-3>
+    <note-3>CLI surface: mygrace inspect module shard [--group-by type|status|prefix] [--apply | --dry-run] [--path .] [--format text|json].</note-3>
   </notes>
 </V-M-SHARD>

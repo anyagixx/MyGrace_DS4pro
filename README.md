@@ -9,11 +9,11 @@ entity they need, instead of re-reading the tree.
 and a five-minute path. Upgrading from v1.x? See
 [`docs/migrations/v2.0.md`](docs/migrations/v2.0.md). Full reference is below.
 
-It is a CLI (`mygrace`, 18 commands) plus an agent methodology (12 skills) and
+It is a CLI (`mygrace`, 15 commands) plus an agent methodology (12 skills) and
 an MCP server (21 tools). It does not generate code, call a model, or send telemetry — it
 enforces traceability and context discipline for the agent you already use.
 
-Current version: `2.1.0`
+Current version: `3.0.0`
 
 > Distribution is **GitHub Releases + source**: there is no npm publication
 > (decision 2026-11-25). `@osovv` is a third-party scope (the project's starting
@@ -208,7 +208,7 @@ of this repository (Bun 1.4.5): `setup init`, `ci`, `trust`, `verify`,
 is environment-dependent: in a bare checkout without a DeepSeek Harness
 integration it reports the missing DSH pieces and exits 1, with hints for each.
 
-## CLI commands (18)
+## CLI commands (15)
 
 | Command | What it does |
 |---|---|
@@ -217,10 +217,7 @@ integration it reports the missing DSH pieces and exits 1, with hints for each.
 | `mygrace status` | Health snapshot from the three indexes + lint summary; `--format json` |
 | `mygrace verify` | Run verification-scoped tests with a compact digest; writes `.mygrace/last-failures.md` on failure; `--module`, `--allow-unsafe-commands` |
 | `mygrace trust` | Review declared commands and write `.mygrace/trust.json`; `--check` verifies without writing, `--revoke` deletes the record |
-| `mygrace module` | `index` (with shard summary), `find`, `show <id>`, `list` with `--status`/`--type`, `shard` (generate index shards; dry-run default) |
-| `mygrace phase` | `index` (phase index), `show <Phase-N>` |
-| `mygrace verification` | `index` with `--priority`/`--format` filters |
-| `mygrace file` | `show <path>`: file-local contracts, maps, blocks |
+| `mygrace inspect` | Index/entity readers: `module index|find|show|list|shard`, `phase index|show`, `verification index`, `file show <path>` |
 | `mygrace context` | Worker context: `packet M-X` (self-contained prompt), `focus M-X` (minimal set), `cost` (read budget per operation) |
 | `mygrace setup` | Setup: `init` (scaffold), `install` (DSH skills + MCP row), `doctor` (environment health) |
 | `mygrace trace` | Trace one module end-to-end: verification → test files → command → phases → dependents, with coded gaps (`<ID>` = module or verification id); `--code` adds the optional MODULE_MAP↔symbol check (`--strict-contracts` fails on gaps) |
@@ -343,8 +340,9 @@ markup only. It prints the scope line and adds `data.scope` to the JSON envelope
 Core command benchmarks (median wall time / peak RSS, 7 runs after a warm-up) on
 this repository, `examples/demo-store` and a generated lint-clean 70-module
 project: `mygrace ci` ≈ 380 ms / 109 MB on 29 modules and ≈ 419 ms / 94 MB on 70
-modules; `status` and `lint --strict` ≈ 155–260 ms. On a real external repo
-(expressjs/express) the same commands are 105–169 ms / 65–83 MB. Full table, method and
+modules; `status` and `lint --strict` ≈ 155–260 ms. On two real external repos (expressjs/express, psf/requests) the same
+commands are 138–218 ms / 65–83 MB; generated/curated agent sessions showed no
+consistent token benefit (negative result documented in the report). Full table, method and
 limitations: [`analysis/benchmark.md`](analysis/benchmark.md). This is CLI/index
 performance only — agent-task success and token usage are measured separately
 (capsule pilot: [`analysis/capsule-eval/report.md`](analysis/capsule-eval/report.md);
@@ -448,7 +446,7 @@ still reads `docs/modules/M-XXX.xml` directly.
 Generate shards deterministically:
 
 ```
-mygrace module shard [--group-by type|status|prefix] [--apply] [--path <root>] [--format text|json]
+mygrace inspect module shard [--group-by type|status|prefix] [--apply] [--path <root>] [--format text|json]
 ```
 
 - **dry run is the default** — it prints the plan and writes nothing;

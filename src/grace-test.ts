@@ -392,7 +392,7 @@ export function resolveDeclaredCommand(root: string, moduleId: string, config: M
   const moduleContent = readFileOrNull(modulePath);
   if (moduleContent === null) {
     throw new UsageError(`Module file ${moduleRelative} not found.`, {
-      hint: "Run `mygrace module list` to see indexed modules and `mygrace lint` to find drift.",
+      hint: "Run `mygrace inspect module list` to see indexed modules and `mygrace lint` to find drift.",
       file: moduleRelative,
     });
   }
@@ -496,7 +496,7 @@ export function planModuleTest(root: string, moduleId: string, config: MyGraceCo
     return invalidPlan(plan, {
       code: "MODULE_FILE_MISSING",
       message: `docs/modules/${module}.xml not found.`,
-      hint: "Run `mygrace module list` to see indexed modules, and `mygrace lint` to find drift.",
+      hint: "Run `mygrace inspect module list` to see indexed modules, and `mygrace lint` to find drift.",
       file: plan.moduleFile,
     });
   }

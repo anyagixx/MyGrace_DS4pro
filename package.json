@@ -1,6 +1,6 @@
 {
   "name": "mygrace-cli",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "description": "MyGRACE — index-first engineering harness for AI coding agents: enforced contracts, lazy-loading knowledge graph, verification traceability, MCP/skills integration.",
   "license": "MIT",
   "homepage": "https://github.com/anyagixx/MyGrace_DS4pro#readme",

@@ -28,11 +28,11 @@ From the index, match on `NAME`, `TYPE`, `PATH`, `DEPENDS`. Note module ids
 
 ## 4. Use the CLI/MCP for structured reads
 
-- `mygrace module find <query> --path <root>` — resolve ids by name/path/type/status/dependency
-- `mygrace module show <id> --path <root>` — structured module view
-- `mygrace module show <id> --with-verification --path <root>` — plus its verification file
-- `mygrace phase show <Phase-N> --path <root>`, `mygrace verification index --path <root>`
-- `mygrace file show <path> --root <root> --contracts --blocks` — file-local markup
+- `mygrace inspect module find <query> --path <root>` — resolve ids by name/path/type/status/dependency
+- `mygrace inspect module show <id> --path <root>` — structured module view
+- `mygrace inspect module show <id> --with-verification --path <root>` — plus its verification file
+- `mygrace inspect phase show <Phase-N> --path <root>`, `mygrace inspect verification index --path <root>`
+- `mygrace inspect file show <path> --root <root> --contracts --blocks` — file-local markup
 
 Prefer the MCP equivalents (`mygrace_find_modules`, `mygrace_show_module`,
 `mygrace_show_phase`, `mygrace_show_file`) when connected.

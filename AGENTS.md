@@ -104,9 +104,9 @@ AGENTS.md                  # this file
 
 ## Scaling and languages
 
-When `docs/graph-index.xml` approaches `indexCaps.graph`, shard it: `mygrace module shard` is a dry run, `--apply` writes `docs/modules/shard-<slug>.xml` + `<Shard href=.../>` refs and a backup; reads are shard-transparent except `module show`. `sourceDirs`/`markupExts` replace defaults, `testRunner` is only the no-`<module-checks>` fallback; `mygrace projects` covers monorepos.
+When `docs/graph-index.xml` approaches `indexCaps.graph`, shard it: `mygrace inspect module shard` is a dry run, `--apply` writes `docs/modules/shard-<slug>.xml` + `<Shard href=.../>` refs and a backup; reads are shard-transparent except `module show`. `sourceDirs`/`markupExts` replace defaults, `testRunner` is only the no-`<module-checks>` fallback; `mygrace projects` covers monorepos.
 
-## Commands (18 CLI)
+## Commands (15 CLI)
 
 - `mygrace status --path .` / `mygrace ci --path .` / `mygrace next --path .` — snapshot / one-command gate / deterministic next action
 - `mygrace lint --strict --path .` — integrity gate; add `--changed --base <ref>` (or `--files`) for incremental scope
@@ -118,7 +118,7 @@ When `docs/graph-index.xml` approaches `indexCaps.graph`, shard it: `mygrace mod
 - `mygrace verify --module M-XXX` — scoped tests/digest (the old `test` command was merged here in v2.0)
 - `mygrace context packet M-XXX` / `mygrace context focus M-XXX` / `mygrace context cost --path .` — worker prompt / set / budget
 - `mygrace setup init|install|doctor` — scaffold / DSH integration / environment health
-- `mygrace projects --path .`; `mygrace module index|find|show|list`; `mygrace phase index|show`; `mygrace verification index`; `mygrace file show`
+- `mygrace projects --path .`; `mygrace inspect module index|find|show|list`; `mygrace inspect phase index|show`; `mygrace inspect verification index`; `mygrace inspect file show`
 
 ## Editing Rules
 

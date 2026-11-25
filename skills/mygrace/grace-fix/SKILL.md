@@ -21,7 +21,7 @@ Do not read all modules.
 ## 3. Navigate to the block
 
 From a log line `[Module][function][BLOCK_NAME]`, find `START_BLOCK_BLOCK_NAME`
-in the source at `PATH`. `mygrace file show <path> --root <root> --contracts --blocks`
+in the source at `PATH`. `mygrace inspect file show <path> --root <root> --contracts --blocks`
 lists the file's contracts and blocks compactly. Read the enclosing function's
 contract.
 

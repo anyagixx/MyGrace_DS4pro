@@ -183,17 +183,17 @@ describe("collectLintIssues", () => {
 describe("buildToolCommand", () => {
   test("mygrace_show_module maps to module show", () => {
     expect(buildToolCommand("mygrace_show_module", { id: "M-AUTH", path: P, withVerification: true }))
-      .toEqual(["module", "show", "M-AUTH", "--path", P, "--with-verification"]);
+      .toEqual(["inspect", "module", "show", "M-AUTH", "--path", P, "--with-verification"]);
   });
 
   test("mygrace_show_phase maps to phase show (regression: was module show --phase)", () => {
     expect(buildToolCommand("mygrace_show_phase", { name: "Phase-1", path: P }))
-      .toEqual(["phase", "show", "Phase-1", "--path", P]);
+      .toEqual(["inspect", "phase", "show", "Phase-1", "--path", P]);
   });
 
   test("mygrace_list_verifications maps to verification index with filters", () => {
     expect(buildToolCommand("mygrace_list_verifications", { path: P, priority: "high", format: "json" }))
-      .toEqual(["verification", "index", "--path", P, "--priority", "high", "--format", "json"]);
+      .toEqual(["inspect", "verification", "index", "--path", P, "--priority", "high", "--format", "json"]);
   });
 
   test("mygrace_lint maps to lint", () => {
@@ -203,7 +203,7 @@ describe("buildToolCommand", () => {
 
   test("mygrace_show_file maps to file show with --root (regression: was --path)", () => {
     expect(buildToolCommand("mygrace_show_file", { path: "src/a.ts", projectRoot: P, contracts: true, blocks: true }))
-      .toEqual(["file", "show", "src/a.ts", "--root", P, "--contracts", "--blocks"]);
+      .toEqual(["inspect", "file", "show", "src/a.ts", "--root", P, "--contracts", "--blocks"]);
   });
 
   test("mygrace_status maps to status --format json", () => {
@@ -214,15 +214,15 @@ describe("buildToolCommand", () => {
   test("mygrace_find_modules maps to module find with filters", () => {
     expect(
       buildToolCommand("mygrace_find_modules", { path: P, query: "auth", status: "wip", type: "CORE_LOGIC", format: "json" })
-    ).toEqual(["module", "find", "auth", "--path", P, "--status", "wip", "--type", "CORE_LOGIC", "--format", "json"]);
+    ).toEqual(["inspect", "module", "find", "auth", "--path", P, "--status", "wip", "--type", "CORE_LOGIC", "--format", "json"]);
   });
 
   test("mygrace_find_modules without query omits the positional", () => {
-    expect(buildToolCommand("mygrace_find_modules", { path: P })).toEqual(["module", "find", "--path", P]);
+    expect(buildToolCommand("mygrace_find_modules", { path: P })).toEqual(["inspect", "module", "find", "--path", P]);
   });
 
   test("mygrace_phase_index maps to phase index", () => {
-    expect(buildToolCommand("mygrace_phase_index", { path: P })).toEqual(["phase", "index", "--path", P]);
+    expect(buildToolCommand("mygrace_phase_index", { path: P })).toEqual(["inspect", "phase", "index", "--path", P]);
   });
 
   test("mygrace_doctor maps to doctor", () => {

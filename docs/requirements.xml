@@ -18,7 +18,7 @@
       <Action>Reads the three small index files before any per-entity file.</Action>
       <Goal>Learn the module/phase/verification map with bounded context cost.</Goal>
       <Preconditions>docs/graph-index.xml exists and is under its configured cap.</Preconditions>
-      <AcceptanceCriteria>mygrace module list, phase index and verification index answer from the indexes alone.</AcceptanceCriteria>
+      <AcceptanceCriteria>mygrace inspect module list, phase index and verification index answer from the indexes alone.</AcceptanceCriteria>
       <Priority>high</Priority>
       <RelatedModules>M-COMMON,M-MODULE</RelatedModules>
     </UC-001>
@@ -122,7 +122,7 @@
 
   <OpenQuestions>
     <question-1>Which tokenizer should back the honest token metric instead of the labelled line model?</question-1>
-    <question-2>Should sharded indexes be generated automatically by mygrace module shard or maintained by agents?</question-2>
+    <question-2>Should sharded indexes be generated automatically by mygrace inspect module shard or maintained by agents?</question-2>
     <question-3>What is the minimum Node runtime matrix for the dual-runtime release gate?</question-3>
   </OpenQuestions>
 </RequirementsAnalysis>

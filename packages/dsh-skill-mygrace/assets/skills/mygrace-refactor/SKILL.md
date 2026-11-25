@@ -32,7 +32,7 @@ entries that reference them.
 3. `docs/verification-index.xml` — verification entries (module/priority/status).
 4. Verification files — test paths and `<module-checks>` if they moved.
 5. If the refactor changes the module count, re-check the root index cap and
-   re-shard (`mygrace module shard --path <root>` dry run, then `--apply`); old
+   re-shard (`mygrace inspect module shard --path <root>` dry run, then `--apply`); old
    generated shards are removed with a backup and the operation is idempotent.
 
 ## 5. Verify by blast radius

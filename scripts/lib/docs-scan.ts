@@ -133,21 +133,14 @@ export function loadCommandTree(): CommandTree {
 /** Resolve the documented command path against the tree; undefined when unknown. */
 export function resolveCommand(tree: CommandTree, commandPath: readonly string[]): CommandInfo | undefined {
   if (commandPath.length === 0) return undefined;
-  const full = commandPath.join(" ");
-  const exact = tree.commands.get(full);
-  if (exact !== undefined) return exact;
-
-  const root = tree.roots.get(commandPath[0]!);
-  if (root === undefined) return undefined;
-  if (commandPath.length === 1) return root;
-
-  const twoTokens = tree.commands.get(commandPath.slice(0, 2).join(" "));
-  if (twoTokens !== undefined) return twoTokens;
-
-  // `mygrace context packet M-XXX` / `mygrace find auth`: the extra token is a positional
-  // of a leaf command, not a subcommand.
-  if (!root.group) return root;
-  return undefined;
+  // Try the longest documented path first: v3.0 has three-level commands
+  // (`mygrace inspect module index`). Extra tokens after a leaf command are
+  // positionals (ids, queries), so fall back to the longest matching prefix.
+  for (let length = commandPath.length; length >= 1; length -= 1) {
+    const exact = tree.commands.get(commandPath.slice(0, length).join(" "));
+    if (exact !== undefined) return exact;
+  }
+  return tree.roots.get(commandPath[0]!);
 }
 
 /** True when the flag is declared by the command (kebab or camel form). */
@@ -197,7 +190,8 @@ export function extractCommandRefs(content: string, file = "<memory>"): CommandR
         }
         if (/^[a-z][a-z0-9-]*$/.test(token) && !token.startsWith("-")) {
           commandPath.push(token);
-          break; // at most command + one subcommand is documented in this dialect
+          if (commandPath.length >= 4) break; // command + up to three subcommands (v3.0 inspect)
+          continue;
         }
         break;
       }

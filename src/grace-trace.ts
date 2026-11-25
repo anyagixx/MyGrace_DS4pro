@@ -385,7 +385,7 @@ function findModuleEntry(loaded: GraphLoadResult, moduleId: string): IndexEntry 
   const entry = loaded.entries.find((candidate) => candidate.tag === moduleId);
   if (entry === undefined) {
     throw new UsageError(`Module "${moduleId}" is not present in docs/graph-index.xml.`, {
-      hint: "Run `mygrace module list` to see indexed ids, and `mygrace lint` to find index drift.",
+      hint: "Run `mygrace inspect module list` to see indexed ids, and `mygrace lint` to find index drift.",
     });
   }
   return entry;

@@ -258,22 +258,22 @@ Status of the three priorities from the project review (2026-11-25):
   `analysis/benchmark.md`: `ci` ≈ 380 ms / 109 MB on 29 modules and ≈ 419 ms /
   94 MB on a generated 70-module project; `status`/`lint` ≈ 155–260 ms. Still
   missing: external OSS repositories and agent-task/token benchmarks.
-- **Surface simplification — ✅ v2.0.0 (breaking).** CLI 23→18 (`test`→`verify`,
-  `context` group, `setup` group), MCP 25→21 (test→verify, context modes,
-  list→find), skills 15→12 (token-budget→cli, setup-subagents→multiagent,
-  refresh→reviewer). No aliases; migration guide `docs/migrations/v2.0.md`.
-  Remaining: further reduction of the `module`/`phase`/`verification`/`file`
-  readers is a later major decision.
+- **Surface simplification — ✅ v3.0.0 (breaking).** v2.0 cut CLI 23→18 / MCP
+  25→21 / skills 15→12; v3.0 grouped the four reader commands under
+  `mygrace inspect` (18→15 top-level). No aliases; migration guides
+  `docs/migrations/v2.0.md` and `v3.0.md`. Further reduction is not planned:
+  the remaining 15 commands each carry a distinct capability.
 
 ## Review priority B — external + agent benchmark (v2.1.0)
 
-- **Done:** `scripts/external-benchmark.ts` on expressjs/express (CLI + 8
-  headless agent sessions). CLI 105–169 ms / 65–83 MB. Agent results are mixed:
-  simple lookup slightly cheaper with MyGRACE, routing task more expensive; both
-  arms correct. N=2/arm/task, generated docs, keyword grading — reported as a
-  first data point, not a claim.
-- **Remaining:** curated external artifacts, more tasks, larger N, blinded
-  grading; ideally a second repository and language.
+- **Done (v3.0.0):** two repositories (expressjs/express, psf/requests),
+  curated artifacts, 3 tasks/repo × 2 arms × 2 reps = 24 headless sessions,
+  automated (blind) keyword grading. CLI 138–218 ms / 65–82 MB. Agent:
+  correctness 2/2 everywhere; cost higher with MyGRACE in 4/6 tasks (express
+  routing −22 %). Reported as a **negative result** for token/effort savings.
+- **Remaining:** larger N, deeper tasks, hand-curated project docs authored by
+  real users, more languages; measure governance outcomes (defects, review time)
+  rather than only tokens.
 
 ## E. Sequencing, releases, and ownership
 

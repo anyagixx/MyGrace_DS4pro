@@ -18,7 +18,7 @@
  * - `loadGraphIndexStrict()` — throwing reader for CLI paths that must fail
  *   loudly instead of silently seeing a partial index.
  * - `buildShardPlan()` / `applyShardPlan()` — deterministic generator used by
- *   `mygrace module shard` (atomic writes, timestamped backups, idempotent).
+ *   `mygrace inspect module shard` (atomic writes, timestamped backups, idempotent).
  *
  * No imports from `grace-common` on purpose: foundation call sites
  * (status/ci/test/packet/context) can import this module without a cycle.
@@ -362,7 +362,7 @@ function readShardRef(
         SHARD_FINDING_CODES.fileMissing,
         `Shard file ${fileRel} does not exist (referenced by docs/graph-index.xml).`,
         fileRel,
-        "Regenerate shards with `mygrace module shard --apply` or fix the href."
+        "Regenerate shards with `mygrace inspect module shard --apply` or fix the href."
       )
     );
     return null;
@@ -424,7 +424,7 @@ function readShardRef(
         SHARD_FINDING_CODES.countMismatch,
         `Shard reference to ${fileRel} declares count="${attrs.count ?? ""}" but the shard contains ${entries.length} ${entryWord}.`,
         "docs/graph-index.xml",
-        "Fix the <Shard> count attribute or regenerate shards with `mygrace module shard --apply`."
+        "Fix the <Shard> count attribute or regenerate shards with `mygrace inspect module shard --apply`."
       )
     );
   }
@@ -434,7 +434,7 @@ function readShardRef(
         SHARD_FINDING_CODES.countMismatch,
         `Shard ${fileRel} declares count="${parsed.document.root.attrs.count ?? ""}" but contains ${entries.length} ${entryWord}.`,
         fileRel,
-        "Restore the count attribute or regenerate shards with `mygrace module shard --apply`."
+        "Restore the count attribute or regenerate shards with `mygrace inspect module shard --apply`."
       )
     );
   }
@@ -698,7 +698,7 @@ function writeAtomic(file: string, content: string): void {
 export function applyShardPlan(plan: ShardPlan): ShardApplyResult {
   if (plan.errors.length > 0) {
     throw new UsageError(`Cannot shard: ${plan.errors.join("; ")}`, {
-      hint: "Run `mygrace module shard` without --apply to inspect the plan.",
+      hint: "Run `mygrace inspect module shard` without --apply to inspect the plan.",
     });
   }
 

@@ -40,7 +40,7 @@ export const fileShowCmd = defineCommand({
   run: async ({ args }) => {
     if (typeof args.path !== "string" || args.path.trim() === "") {
       throw new UsageError("Missing file path to inspect.", {
-        hint: "Usage: mygrace file show <path> [--root <project-root>]",
+        hint: "Usage: mygrace inspect file show <path> [--root <project-root>]",
       });
     }
     const root = typeof args.root === "string" && args.root !== "" ? args.root : ".";

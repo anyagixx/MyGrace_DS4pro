@@ -28,7 +28,7 @@ status report; the indexes are the source of truth for counts and status.
 
 1. **Counts** — modules (by status), phases (by status), verifications (by
    status/priority); index caps from `mygrace.config.json` if the project sets
-   them. When the module index is sharded, `mygrace module index --path <root>`
+   them. When the module index is sharded, `mygrace inspect module index --path <root>`
    prints the shard summary; counts still come from the transparent union.
 2. **Integrity** — `lint --strict` result: error/warning counts + finding codes
    (`ORPHANED_INDEX_ENTRY`, `STATUS_DRIFT`, `PATH_MISSING`, `XML_INVALID`, …).

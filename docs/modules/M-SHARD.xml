@@ -42,7 +42,7 @@
 
   <notes>
     <note-1>Shards are index shards, not per-entity files: module show still reads docs/modules/M-XXX.xml directly.</note-1>
-    <note-2>Generator: mygrace module shard --group-by type|status|prefix; dry-run is the default, --apply writes atomically and keeps a timestamped backup under .mygrace/backups/.</note-2>
+    <note-2>Generator: mygrace inspect module shard --group-by type|status|prefix; dry-run is the default, --apply writes atomically and keeps a timestamped backup under .mygrace/backups/.</note-2>
     <note-3>Re-running --apply on an already sharded project is a byte-identical no-op (idempotent), and stale shard-*.xml files are removed with a backup.</note-3>
     <note-4>No imports from grace-common on purpose so status/ci/test/packet/context can import this module without cycles.</note-4>
   </notes>

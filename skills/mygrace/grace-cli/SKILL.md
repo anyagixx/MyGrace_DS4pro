@@ -1,6 +1,6 @@
 ---
 name: mygrace-cli
-description: "Reference for the mygrace CLI (18 commands) and MCP server (21 tools): quality gate, trust, index reads, verification and JSON envelopes. Use when you need the exact command/flag/tool for a MyGRACE operation."
+description: "Reference for the mygrace CLI (15 commands) and MCP server (21 tools): quality gate, trust, index reads, verification and JSON envelopes. Use when you need the exact command/flag/tool for a MyGRACE operation."
 whenToUse: "You need a concrete CLI command or MCP tool — flags, exit codes, trust behaviour or JSON output."
 ---
 
@@ -31,11 +31,11 @@ but explicit paths are required for correctness across multiple projects.
 
 - `mygrace ci --path <root> [--tests] [--allow-commands] [--format json]` — one-command quality gate (strict lint + status + coverage; `--tests` adds trust-gated tests)
 - `mygrace status --path <root> [--format json]` — counts + lint summary
-- `mygrace module index --path <root>` (prints a shard summary when the index is sharded) · `mygrace module find <query> --path <root>` · `mygrace module show <id> --path <root>` (add `--with-verification`) · `mygrace module list --status=<s> --type=<t> --path <root>`
-- `mygrace module shard --path <root>` — dry-run shard plan (`--apply` writes `docs/modules/shard-<slug>.xml` + `<Shard/>` refs with a backup; dry run is the default; `--group-by type|status|prefix`). Reads are shard-transparent except `module show`.
-- `mygrace phase index --path <root>` · `mygrace phase show <Phase-N> --path <root>`
-- `mygrace verification index --priority <p> --format json --path <root>`
-- `mygrace file show <path> --root <root> [--contracts] [--blocks]`
+- `mygrace inspect module index --path <root>` (prints a shard summary when the index is sharded) · `mygrace inspect module find <query> --path <root>` · `mygrace inspect module show <id> --path <root>` (add `--with-verification`) · `mygrace inspect module list --status=<s> --type=<t> --path <root>`
+- `mygrace inspect module shard --path <root>` — dry-run shard plan (`--apply` writes `docs/modules/shard-<slug>.xml` + `<Shard/>` refs with a backup; dry run is the default; `--group-by type|status|prefix`). Reads are shard-transparent except `module show`.
+- `mygrace inspect phase index --path <root>` · `mygrace inspect phase show <Phase-N> --path <root>`
+- `mygrace inspect verification index --priority <p> --format json --path <root>`
+- `mygrace inspect file show <path> --root <root> [--contracts] [--blocks]`
 - `mygrace context cost --path <root>` — read budget per operation
 - `mygrace setup doctor --path <root> [--format json]` — environment + DSH integration
 

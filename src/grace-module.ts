@@ -3,13 +3,13 @@
  * MyGRACE Module Command
  *
  * Read-only navigation over the lazy-loading indexes:
- *   mygrace module index              — show graph-index.xml
- *   mygrace module find <query>       — search modules from the index
- *   mygrace module show <id>          — show per-module file from docs/modules/
- *   mygrace module list [--status=X]  — list modules with filters
- *   mygrace phase index               — show plan-index.xml
- *   mygrace phase show <name>         — show per-phase file from docs/plans/
- *   mygrace verification index        — show verification-index.xml (with optional filters)
+ *   mygrace inspect module index              — show graph-index.xml
+ *   mygrace inspect module find <query>       — search modules from the index
+ *   mygrace inspect module show <id>          — show per-module file from docs/modules/
+ *   mygrace inspect module list [--status=X]  — list modules with filters
+ *   mygrace inspect phase index               — show plan-index.xml
+ *   mygrace inspect phase show <name>         — show per-phase file from docs/plans/
+ *   mygrace inspect verification index        — show verification-index.xml (with optional filters)
  *
  * Since v2 every id that reaches the filesystem is validated through
  * `grace-paths` (ADR-4: `..`, `/`, `\`, absolute and malformed ids are rejected)
@@ -143,7 +143,7 @@ const moduleIndexCmd = defineCommand({
         const actual = loaded.entries.length;
         console.log(`  ${shard.href} — ${declared} declared module(s); ${actual} total entries in the union`);
       }
-      console.log("Read modules transparently with `mygrace module list` (flat + shard entries).");
+      console.log("Read modules transparently with `mygrace inspect module list` (flat + shard entries).");
     }
   },
 });

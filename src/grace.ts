@@ -7,8 +7,7 @@
  * (ROADMAP ADR-3) instead of a stack trace.
  *
  * Command surface (v2.0, see `mygrace <cmd> --help`):
- *   ci, lint, status, verify, trust, module {index,find,shard,show,list},
- *   phase {index,show}, verification {index}, file show,
+ *   ci, lint, status, verify, trust, inspect {module,phase,verification,file},
  *   context {packet,focus,cost}, setup {init,install,doctor},
  *   trace, impact, next, projects, integrations, diagram, capsule
  */
@@ -94,6 +93,17 @@ function guard<A extends ArgsDef>(command: CommandDef<A>): CommandDef<A> {
   return wrapped;
 }
 
+/** `mygrace inspect` — lazy index/entity readers (module, phase, verification, file). */
+const inspectCommand = defineCommand({
+  meta: { name: "inspect", description: "Index and entity readers: module, phase, verification, file" },
+  subCommands: {
+    module: moduleCommand,
+    phase: phaseCommand,
+    verification: verificationCommand,
+    file: fileCommand,
+  },
+});
+
 /** `mygrace context` — worker-context commands (packet, focus, cost). */
 const contextCommand = defineCommand({
   meta: { name: "context", description: "Worker context: packet M-X, focus M-X, cost" },
@@ -126,10 +136,7 @@ export const main = defineCommand({
     status: guard(statusCommand),
     verify: guard(verifyCommand),
     trust: guard(trustCommand),
-    module: guard(moduleCommand),
-    phase: guard(phaseCommand),
-    verification: guard(verificationCommand),
-    file: guard(fileCommand),
+    inspect: guard(inspectCommand),
     context: guard(contextCommand),
     setup: guard(setupCommand),
     trace: guard(traceCommand),
