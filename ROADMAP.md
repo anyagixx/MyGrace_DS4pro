@@ -1,6 +1,6 @@
 # MyGRACE Roadmap — from audit findings to a professional agent engineering harness
 
-> Status: **v3.1.0 shipped 2026-11-26** — optional MWG detection, trust-gated external lint providers (ADR-11) and guidance packs (ADR-12); `inspect` grouping/benchmark shipped in v3.0.0. The benchmark still reports no measured token/effort gain from docs or guidance. Baseline: v1.0.1 as audited on 2026-11-22
+> Status: **v3.1.1 shipped 2026-11-26** — optional MWG detection, trust-gated external lint providers (ADR-11) and guidance packs (ADR-12); `inspect` grouping/benchmark shipped in v3.0.0. The benchmark still reports no measured token/effort gain from docs or guidance. Baseline: v1.0.1 as audited on 2026-11-22
 > (see `analysis/00-EXECUTIVE-ASSESSMENT.md` and appendices 01–04).
 > Target: a tool that AI coding agents can use with confidence on software of **any complexity** —
 > from a 3-module script to a 500-module monorepo, on repos you do not fully trust.

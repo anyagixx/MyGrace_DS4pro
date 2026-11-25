@@ -13,7 +13,7 @@ It is a CLI (`mygrace`, 15 commands) plus an agent methodology (12 skills) and
 an MCP server (21 tools). It does not generate code, call a model, or send telemetry — it
 enforces traceability and context discipline for the agent you already use.
 
-Current version: `3.1.0`
+Current version: `3.1.1`
 
 > Distribution is **GitHub Releases + source**: there is no npm publication
 > (decision 2026-11-25). `@osovv` is a third-party scope (the project's starting

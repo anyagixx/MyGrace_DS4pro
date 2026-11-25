@@ -6,6 +6,9 @@
  */
 
 import { describe, expect, test } from "bun:test";
+
+const POSIX_ONLY = process.platform !== "win32";
+const posixTest = test.skipIf(!POSIX_ONLY);
 import { chmodSync, cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -112,7 +115,7 @@ describe("runLintProviders", () => {
     }
   });
 
-  test("runs an authorized legacy-scan provider and appends an audit record", () => {
+  posixTest("runs an authorized legacy-scan provider and appends an audit record", () => {
     const root = makeRoot();
     try {
       const scanner = join(root, "scanner.sh");
@@ -149,7 +152,7 @@ describe("runLintProviders", () => {
     }
   });
 
-  test("invalid JSON becomes a warning, never a crash", () => {
+  posixTest("invalid JSON becomes a warning, never a crash", () => {
     const root = makeRoot();
     try {
       const scanner = join(root, "bad.sh");
@@ -165,7 +168,7 @@ describe("runLintProviders", () => {
 });
 
 describe("ci integration", () => {
-  test("ci merges authorized provider findings into the gate", () => {
+  posixTest("ci merges authorized provider findings into the gate", () => {
     const fixture = join(import.meta.dir, "fixtures", "mygrace-project");
     const root = mkdtempSync(join(tmpdir(), "mygrace-ci-provider-"));
     try {

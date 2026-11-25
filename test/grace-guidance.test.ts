@@ -7,6 +7,9 @@
  */
 
 import { describe, expect, test } from "bun:test";
+
+const POSIX_ONLY = process.platform !== "win32";
+const posixTest = test.skipIf(!POSIX_ONLY);
 import { chmodSync, cpSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -90,7 +93,7 @@ describe("CLI guidance packs", () => {
     return config;
   }
 
-  test("searches and retrieves through a trust-gated CLI pack", () => {
+  posixTest("searches and retrieves through a trust-gated CLI pack", () => {
     const root = makeRoot();
     try {
       const cli = join(root, "guide.sh");

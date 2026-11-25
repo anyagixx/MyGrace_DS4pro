@@ -9,6 +9,16 @@ release time (see `ROADMAP.md` §6, gate G10).
 
 Nothing yet.
 
+## [3.1.1] — 2026-11-26
+
+### Fixed
+
+- Windows CI: the new guidance CLI-pack and external-provider tests use POSIX
+  shell fixtures; they are now skipped on `win32` like the existing POSIX-only
+  tests. No runtime behavior changed; the v3.1.0 GitHub Release stays valid and
+  this patch makes the tag CI green.
+
+
 ## [3.1.0] — 2026-11-26
 
 ### Added
