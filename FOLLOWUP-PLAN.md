@@ -40,6 +40,21 @@ Residual risk: someone manually runs `npm publish` from a laptop. There is no
 registry credential in CI and no repository variable to enable it; the packaged
 tarball is verified offline by `publish:dry`.
 
+## Modern Web Guidance integration (v3.1.0)
+
+- ✅ P0: MWG CLI detection in `integrations`/`doctor`; docs pairing; benchmark
+  `grace+mwg` arm (negative/no-gain result, reported).
+- ✅ P1: ADR-11 external lint providers (`legacy-scan` + generic JSON adapters),
+  trust-gated and audited.
+- ✅ P2: ADR-12 guidance-pack SPI (`context guidance`, MCP mode, local + CLI
+  packs, two example packs).
+- Benchmark: `grace+mwg` dialog arm was 31 455 tokens / 20 tools vs 6 397 / 1
+  (MyGRACE-only) and 11 069 / 0 (plain), all keyword-correct — a negative
+  token-efficiency result; quality was not graded.
+- Remaining: deeper web tasks with quality grading (legacy-scan count,
+  accessibility checks), larger N, and pinned guidance versions for
+  reproducibility.
+
 ## B. Octocode MCP startup diagnosis (upstream)
 
 ### Verified state (2026-11-24)

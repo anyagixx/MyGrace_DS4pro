@@ -273,6 +273,14 @@ describe("loadConfig() integrations", () => {
     });
     expect(DEFAULT_CONFIG.integrations.archify.versionRange).toBe(">=3.2 <4");
     expect(DEFAULT_CONFIG.integrations.archify.outputDir).toBe(join("docs", "diagrams"));
+    expect(DEFAULT_CONFIG.integrations.modernWebGuidance).toEqual({
+      enabled: "auto",
+      bin: null,
+      versionRange: ">=1.0 <2",
+      timeoutMs: 20_000,
+    });
+    expect(DEFAULT_CONFIG.lintProviders).toEqual([]);
+    expect(DEFAULT_CONFIG.guidancePacks).toEqual([]);
     expect(DEFAULT_CONFIG.integrations.capsules).toEqual({
       enabled: false,
       dir: "capsules",
@@ -288,6 +296,7 @@ describe("loadConfig() integrations", () => {
       expect(result.config.integrations.octocode.enabled).toBe("auto");
       expect(result.config.integrations.archify).toEqual(DEFAULT_CONFIG.integrations.archify);
       expect(result.config.integrations.capsules).toEqual(DEFAULT_CONFIG.integrations.capsules);
+      expect(result.config.integrations.modernWebGuidance).toEqual(DEFAULT_CONFIG.integrations.modernWebGuidance);
     });
   });
 
@@ -315,6 +324,7 @@ describe("loadConfig() integrations", () => {
         outputDir: "artifacts/diagrams",
       });
       expect(result.config.integrations.capsules).toEqual({ enabled: "auto", dir: "runbooks", allowMutatingPrograms: true });
+      expect(result.config.integrations.modernWebGuidance).toEqual(DEFAULT_CONFIG.integrations.modernWebGuidance);
     });
   });
 
@@ -325,7 +335,7 @@ describe("loadConfig() integrations", () => {
 
   test("invalid integrations shapes are reported together", () => {
     expectConfigError(JSON.stringify({ integrations: [] }), [
-      '"integrations" must be an object with octocode/archify/capsules entries',
+      '"integrations" must be an object with octocode/archify/capsules/modernWebGuidance entries',
     ]);
     expectConfigError(JSON.stringify({ integrations: { bogus: {} } }), ['unknown integrations key "bogus"']);
     expectConfigError(JSON.stringify({ integrations: { octocode: "yes" } }), ['"integrations.octocode" must be an object']);

@@ -1,0 +1,40 @@
+<!-- Module contract for M-GUIDANCE. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-GUIDANCE NAME="Guidance packs" TYPE="INTEGRATION" STATUS="done">
+  <purpose>Search and retrieve domain guidance from local markdown packs or trust-gated CLI packs (ADR-12).</purpose>
+  <path>src/grace-guidance.ts</path>
+  <depends>M-CONFIG,M-COMMON,M-ERRORS,M-TEST</depends>
+  <verification-ref>V-M-GUIDANCE</verification-ref>
+
+  <annotations>
+    <fn-loadGuidancePacks PURPOSE="Resolve local manifests and CLI availability/trust; skip without crashing." />
+    <fn-searchGuidance PURPOSE="Cross-pack search returning bounded hits; CLI output parsed as untrusted data." />
+    <fn-retrieveGuidance PURPOSE="Path-safe local read or CLI retrieve; content is printed, never executed." />
+    <export-guidanceCommand PURPOSE="mygrace context guidance <query> [--id] [--pack]." />
+  </annotations>
+
+  <CrossLink to="M-CONTEXT" relation="exposed as context guidance (v3.0 grouping)" />
+  <CrossLink to="M-TEST" relation="trust gate, tokenizer and audit log for CLI packs" />
+
+  <contract>
+    <purpose>Search and retrieve domain guidance from local markdown packs or trust-gated CLI packs (ADR-12).</purpose>
+    <inputs>
+      <param name="root" type="string" description="Project root; local packs must live inside it." />
+      <param name="config" type="MyGraceConfig" description="guidancePacks entries and command-trust settings." />
+      <param name="query" type="string" description="Search terms (single positional CLI query)." />
+    </inputs>
+    <outputs>
+      <param name="hits" type="GuidanceHit[]" description="Pack/id/title/description results with skipped-pack reasons." />
+      <param name="content" type="string" description="Retrieved markdown text, tagged local or cli." />
+    </outputs>
+    <errors>
+      <error code="GUIDANCE_PACK_SKIPPED" description="A pack is missing, invalid, disabled or untrusted; reported as info." />
+      <error code="USAGE" description="Unknown pack/id or a local path escaping the project root." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>CLI packs follow the Modern Web Guidance search/retrieve protocol but are not tied to it.</note-1>
+    <note-2>Local guide files are read only inside the pack directory; traversal is rejected.</note-2>
+    <note-3>Guidance text is untrusted input: MyGRACE never executes or persists it automatically.</note-3>
+  </notes>
+</M-GUIDANCE>

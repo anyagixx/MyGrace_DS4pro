@@ -229,6 +229,13 @@ describe("buildToolCommand", () => {
     expect(buildToolCommand("mygrace_doctor", { path: P })).toEqual(["doctor", "--path", P]);
   });
 
+  test("mygrace_context guidance maps query/guide/pack to context guidance", () => {
+    expect(buildToolCommand("mygrace_context", { mode: "guidance", query: "dialog", path: P }))
+      .toEqual(["context", "guidance", "dialog", "--path", P]);
+    expect(buildToolCommand("mygrace_context", { mode: "guidance", query: "dialog", guide: "accessible-dialog", pack: "web-basics", path: P }))
+      .toEqual(["context", "guidance", "dialog", "--path", P, "--id", "accessible-dialog", "--pack", "web-basics"]);
+  });
+
   test("mygrace_context maps packet/focus/cost to the grouped CLI", () => {
     expect(buildToolCommand("mygrace_context", { mode: "packet", id: "M-AUTH", path: P }))
       .toEqual(["context", "packet", "M-AUTH", "--path", P]);

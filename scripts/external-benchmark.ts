@@ -31,7 +31,8 @@ const runs = Math.max(1, Number(args[args.indexOf("--runs") + 1] ?? "3") || 3);
 const dshHome = process.env.DSH_HOME ?? join(process.env.HOME ?? "", ".dsh");
 
 interface ModuleSpec { id: string; name: string; path: string; depends: string[]; tests: string[]; purpose: string }
-interface TaskSpec { id: string; prompt: string; keywords: string[] }
+type Arm = "plain" | "grace" | "grace+mwg";
+interface TaskSpec { id: string; prompt: string; keywords: string[]; arms?: Arm[]; mwgQuery?: string }
 interface RepoSpec {
   slug: string;
   url: string;
@@ -58,6 +59,13 @@ const EXPRESS: RepoSpec = {
     { id: "express-res.send", prompt: "In this repository, where is `res.send` implemented? Report the exact file path and explain in one short paragraph what the function does. Do not modify any files.", keywords: ["lib/response.js", "res.send"] },
     { id: "express-routing", prompt: "In this repository, how does an incoming request reach a user handler registered with `app.get`? Report the exact files involved (including the external router package if relevant) and the call path. Do not modify any files.", keywords: ["lib/application.js", "router"] },
     { id: "express-static", prompt: "How does this repository serve static files? Report the exact file where express.static is defined and the middleware package it delegates to. Do not modify any files.", keywords: ["lib/express.js", "serve-static"] },
+    {
+      id: "express-web-dialog",
+      prompt: "Write a short implementation sketch (do not modify files) for an accessible modal dialog in a web app. Prefer native HTML/CSS/JS, mention focus management, fallbacks and reduced-motion. Report the platform APIs you would use.",
+      keywords: ["dialog", "showmodal", "aria"],
+      arms: ["plain", "grace", "grace+mwg"],
+      mwgQuery: "accessible modal dialog",
+    },
   ],
 };
 
@@ -192,8 +200,8 @@ function generateDocs(repo: RepoSpec, target: string): void {
 }
 
 interface CliRow { repo: string; command: string; medianMs: number; p95Ms: number; medianRssMb: number | null; failures: number }
-interface AgentRow { repo: string; task: string; arm: "grace" | "plain"; n: number; medianCost: number; medianTools: number; medianWall: number; correct: number }
-interface SessionRecord { repo: string; task: string; arm: "grace" | "plain"; rep: number; sessionId: string; costTokens: number; toolCalls: number; cacheRead: number; wallSeconds: number; correct: boolean; finalChars: number }
+interface AgentRow { repo: string; task: string; arm: Arm; n: number; medianCost: number; medianTools: number; medianWall: number; correct: number }
+interface SessionRecord { repo: string; task: string; arm: Arm; rep: number; sessionId: string; costTokens: number; toolCalls: number; cacheRead: number; wallSeconds: number; correct: boolean; finalChars: number }
 
 const timeBinary = existsSync("/usr/bin/time") ? "/usr/bin/time" : null;
 const cliRows: CliRow[] = [];
@@ -271,13 +279,18 @@ for (const repo of REPOS) {
 
   if (API_KEY === "") continue;
   for (const task of repo.tasks) {
-    for (const arm of ["grace", "plain"] as const) {
+    const arms: Arm[] = task.arms ?? ["grace", "plain"];
+    for (const arm of arms) {
       for (let rep = 1; rep <= reps; rep += 1) {
-        const cwd = arm === "grace" ? grace : plain;
+        const cwd = arm === "plain" ? plain : grace;
         const id = `${repo.slug}-${task.id}-${arm}-${rep}`;
         const runJsonl = join(RUNS, `${id}.jsonl`);
         const started = Date.now();
-        const result = spawnSync("dsh", ["--profile", "headless", "--json", task.prompt], {
+        const prompt =
+          arm === "grace+mwg"
+            ? `First consult Modern Web Guidance: run \`npx -y modern-web-guidance@latest search "${task.mwgQuery ?? task.id}"\` and \`retrieve <id>\` for relevant web-platform guidance, then answer.\n\n${task.prompt}`
+            : task.prompt;
+        const result = spawnSync("dsh", ["--profile", "headless", "--json", prompt], {
           cwd,
           env: { ...process.env, DEEPSEEK_API_KEY: API_KEY },
           encoding: "utf8",
@@ -321,8 +334,9 @@ for (const repo of REPOS) {
 const agentRows: AgentRow[] = [];
 for (const repo of REPOS) {
   for (const task of repo.tasks) {
-    for (const arm of ["grace", "plain"] as const) {
+    for (const arm of ["grace", "plain", "grace+mwg"] as const) {
       const items = sessions.filter((session) => session.repo === repo.slug && session.task === task.id && session.arm === arm);
+      if (items.length === 0) continue;
       agentRows.push({
         repo: repo.slug,
         task: task.id,
@@ -346,12 +360,13 @@ const payload = {
   }),
   artifacts: "Curated MyGRACE docs per repository (modules from real source files, real upstream test files); lint + ci clean.",
   cli: cliRows,
-  agent: { model: "dsh headless default (DeepSeek route)", reps, rows: agentRows, sessions },
+  agent: { model: "dsh headless default (DeepSeek route)", reps, arms: ["plain", "grace", "grace+mwg (express dialog only)"], rows: agentRows, sessions },
   limitations: [
     "Curated artifacts are authored for this benchmark, not produced by the project itself.",
-    "Three tasks per repository; keyword grading only; one model/host; small N.",
+    "Three navigation tasks per repository plus one web-dialog task for express; keyword grading only; one model/host; small N.",
     "CLI numbers include bun startup and are not a throughput benchmark.",
     "No blinded human evaluation; grading is automated and therefore blind to the arm.",
+    "The grace+mwg arm runs only for express-web-dialog and uses npx @latest at session time; network and guidance version are not pinned by the harness.",
   ],
 };
 writeFileSync(join(ANALYSIS, "external-benchmark.json"), `${JSON.stringify(payload, null, 2)}\n`);

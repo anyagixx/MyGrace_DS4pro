@@ -266,14 +266,17 @@ export const TOOLS: readonly ToolDefinition[] = [
   {
     name: "mygrace_context",
     description:
-      "Worker context, one tool with a mode: `packet` (self-contained prompt), `focus` (minimal working set) " +
-      "or `cost` (context budget per operation). Use before delegating or when planning a read. " +
+      "Worker context, one tool with a mode: `packet` (self-contained prompt), `focus` (minimal working set), " +
+      "`cost` (context budget per operation) or `guidance` (search domain guidance packs). " +
       ROOT_NOTE,
     inputSchema: {
       type: "object",
       properties: {
-        mode: { type: "string", enum: ["packet", "focus", "cost"], description: "Context mode: packet | focus | cost." },
-        id: { type: "string", pattern: MODULE_ID_PATTERN, description: "Module ID (required for packet/focus; ignored for cost)." },
+        mode: { type: "string", enum: ["packet", "focus", "cost", "guidance"], description: "Context mode: packet | focus | cost | guidance." },
+        id: { type: "string", pattern: MODULE_ID_PATTERN, description: "Module ID for packet/focus." },
+        guide: { type: "string", pattern: "^[a-z0-9][a-z0-9-]*(?:[._-][a-z0-9]+)*$", description: "Guidance guide id (mode=guidance, optional for search)." },
+        query: { type: "string", description: "Guidance search query (required for mode=guidance)." },
+        pack: { type: "string", description: "Guidance pack name to limit search (optional)." },
         path: { type: "string", description: "Absolute session-workspace root; pass it explicitly (see server instructions).", minLength: 1 },
       },
       required: ["mode"],
@@ -282,6 +285,14 @@ export const TOOLS: readonly ToolDefinition[] = [
     buildArgs(args, root) {
       const mode = requiredStringArg("mygrace_context", args, "mode");
       if (mode === "cost") return ["context", "cost", "--path", root, "--format", "json"];
+      if (mode === "guidance") {
+        const cmd = ["context", "guidance", requiredStringArg("mygrace_context", args, "query"), "--path", root];
+        const guide = stringArg(args, "guide");
+        const pack = stringArg(args, "pack");
+        if (guide !== undefined) cmd.push("--id", guide);
+        if (pack !== undefined) cmd.push("--pack", pack);
+        return cmd;
+      }
       if (mode === "packet") return ["context", "packet", requiredStringArg("mygrace_context", args, "id"), "--path", root];
       if (mode === "focus") return ["context", "focus", requiredStringArg("mygrace_context", args, "id"), "--path", root];
       throw new UsageError(`mygrace_context: unsupported mode "${mode}" (expected packet, focus or cost).`);

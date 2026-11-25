@@ -94,6 +94,16 @@
       <Priority>medium</Priority>
       <RelatedModules>M-INSTALL</RelatedModules>
     </UC-009>
+    <UC-006>
+      <Actor>HumanMaintainer</Actor>
+      <Action>Configures optional external lint providers and guidance packs, then reviews their trust-gated output.</Action>
+      <Goal>Add domain-specific quality checks and on-demand guidance without weakening the core offline/trust model.</Goal>
+      <Preconditions>mygrace.config.json declares lintProviders/guidancePacks; project commands are trusted for CLI packs.</Preconditions>
+      <AcceptanceCriteria>Unauthorized providers/packs are skipped with coded findings; authorized scanners are audited; guidance is retrieved as untrusted text and never executed.</AcceptanceCriteria>
+      <Priority>high</Priority>
+      <RelatedModules>M-LINT-PROVIDERS,M-GUIDANCE,M-INTEGRATIONS,M-CONFIG</RelatedModules>
+    </UC-006>
+
   </UseCases>
 
   <NonGoals>

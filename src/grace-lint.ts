@@ -76,6 +76,7 @@ import {
   walkFiles,
 } from "./grace-common";
 import { cloneDefault, tryLoadConfig, type MyGraceConfig } from "./grace-config";
+import { runLintProviders, type LintProviderReport } from "./grace-lint-providers";
 import {
   EXIT,
   MyGraceError,
@@ -1588,6 +1589,21 @@ export const lintCommand = defineCommand({
     changed: { type: "boolean", default: false, description: "Scope findings to files changed since --base (git) or --files" },
     base: { type: "string", description: "Git revision for --changed (default HEAD)" },
     files: { type: "string", description: "Explicit changed files for --changed (comma separated; works without git)" },
+    allowCommands: {
+      type: "boolean",
+      default: false,
+      description: "Explicitly allow configured lint-provider commands for this run (trust-gated)",
+    },
+    allowUnsafeCommands: {
+      type: "boolean",
+      default: false,
+      description: "One-off opt-in for deny-listed dangerous provider command patterns",
+    },
+    withoutProviders: {
+      type: "boolean",
+      default: false,
+      description: "Skip configured external lint providers even when trusted",
+    },
   },
   run: async ({ args }) => {
     const startedAt = Date.now();
@@ -1603,6 +1619,7 @@ export const lintCommand = defineCommand({
     let root: string;
     let issues: Finding[] = [];
     let changedScope: ChangedScope | undefined;
+    let providerReport: LintProviderReport | null = null;
     try {
       try {
         root = findProjectRoot(args.path);
@@ -1620,17 +1637,28 @@ export const lintCommand = defineCommand({
           hint: "Use `mygrace lint --changed --base <git-ref>` (or omit --base to use HEAD).",
         });
       }
+      const loadedConfig = tryLoadConfig(root);
+      if (!loadedConfig.ok) throw loadedConfig.error;
+      const config = loadedConfig.result.config;
+      providerReport =
+        args.withoutProviders === true || config.lintProviders.length === 0
+          ? null
+          : runLintProviders(root, config, {
+              allowCommands: args.allowCommands === true,
+              allowUnsafeCommands: args.allowUnsafeCommands === true,
+            });
       if (changedMode) {
         const resolved = resolveChangedFiles(root, {
           ...(typeof args.base === "string" ? { base: args.base } : {}),
           ...(typeof args.files === "string" ? { files: args.files } : {}),
         });
-        const scoped = collectChangedLintIssues(root, allowMissingDocs, resolved.scope.changed);
+        const scoped = collectChangedLintIssues(root, allowMissingDocs, resolved.scope.changed, config);
         issues = scoped.findings;
         changedScope = scoped.scope;
       } else {
-        issues = collectLintIssues(root, allowMissingDocs);
+        issues = collectLintIssues(root, allowMissingDocs, config);
       }
+      if (providerReport !== null) issues.push(...providerReport.findings);
     } catch (error) {
       const typed = asTypedError(error);
       if (format === "json") {
@@ -1654,6 +1682,24 @@ export const lintCommand = defineCommand({
             errors: issues.filter((issue) => issue.severity === "error").length,
             warnings: issues.filter((issue) => issue.severity === "warning").length,
           },
+          ...(providerReport === null
+            ? {}
+            : {
+                providers: {
+                  authorization: providerReport.authorization,
+                  runs: providerReport.providers.map((run) => ({
+                    name: run.name,
+                    adapter: run.adapter,
+                    ran: run.ran,
+                    authorized: run.authorized,
+                    exitCode: run.exitCode,
+                    durationMs: run.durationMs,
+                    findingCount: run.findingCount,
+                    skippedReason: run.skippedReason,
+                    error: run.error,
+                  })),
+                },
+              }),
         },
         findings: issues,
         strict,
@@ -1680,6 +1726,12 @@ export const lintCommand = defineCommand({
       return `  ${issue.severity === "error" ? "✗" : "⚠"} [${location}] ${issue.message} [${issue.code}]`;
     };
 
+    if (providerReport !== null && providerReport.providers.length > 0) {
+      const ran = providerReport.providers.filter((run) => run.ran).length;
+      const skipped = providerReport.providers.length - ran;
+      console.log(`Providers: ${ran} ran, ${skipped} skipped (trust: ${providerReport.authorization.authorized ? "authorized" : "not authorized"})`);
+      console.log();
+    }
     if (errors.length > 0) {
       console.log("Errors:");
       for (const issue of errors) console.log(formatFinding(issue));

@@ -55,6 +55,7 @@ import { doctorCommand } from "./grace-doctor";
 import { trustCommand } from "./grace-test";
 import { packetCommand, focusCommand } from "./grace-packet";
 import { contextCostCommand } from "./grace-context";
+import { guidanceCommand } from "./grace-guidance";
 import { verifyCommand } from "./grace-verify";
 
 /**
@@ -104,13 +105,14 @@ const inspectCommand = defineCommand({
   },
 });
 
-/** `mygrace context` — worker-context commands (packet, focus, cost). */
+/** `mygrace context` — worker-context commands (packet, focus, cost, guidance). */
 const contextCommand = defineCommand({
-  meta: { name: "context", description: "Worker context: packet M-X, focus M-X, cost" },
+  meta: { name: "context", description: "Worker context: packet, focus, cost, guidance" },
   subCommands: {
     packet: packetCommand,
     focus: focusCommand,
     cost: contextCostCommand,
+    guidance: guidanceCommand,
   },
 });
 

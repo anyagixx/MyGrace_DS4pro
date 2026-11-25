@@ -3,7 +3,7 @@
   "diagram_type": "architecture",
   "meta": {
     "title": "MyGRACE — MyGRACE",
-    "subtitle": "29 modules · 127 dependencies · 29 verifications",
+    "subtitle": "31 modules · 135 dependencies · 31 verifications",
     "output": "architecture.html",
     "quality_profile": "standard"
   },
@@ -174,6 +174,21 @@
       ]
     },
     {
+      "id": "M-GUIDANCE",
+      "type": "external",
+      "label": "Guidance packs",
+      "sublabel": "INTEGRATION · done",
+      "tag": "V-M-GUIDANCE",
+      "pos": [
+        1700,
+        484
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
       "id": "M-IMPACT",
       "type": "backend",
       "label": "Change impact analysis",
@@ -226,7 +241,7 @@
       "tag": "V-M-INTEGRATIONS",
       "pos": [
         1700,
-        484
+        636
       ],
       "size": [
         265,
@@ -242,6 +257,21 @@
       "pos": [
         1315,
         332
+      ],
+      "size": [
+        265,
+        72
+      ]
+    },
+    {
+      "id": "M-LINT-PROVIDERS",
+      "type": "external",
+      "label": "External lint providers",
+      "sublabel": "INTEGRATION · done",
+      "tag": "V-M-LINT-PROVIDERS",
+      "pos": [
+        2085,
+        788
       ],
       "size": [
         265,
@@ -316,7 +346,7 @@
       "tag": "V-M-PACKET",
       "pos": [
         1700,
-        636
+        788
       ],
       "size": [
         265,
@@ -376,7 +406,7 @@
       "tag": "V-M-STATUS",
       "pos": [
         1700,
-        788
+        940
       ],
       "size": [
         265,
@@ -421,7 +451,7 @@
       "tag": "V-M-VERIFY",
       "pos": [
         1700,
-        940
+        1092
       ],
       "size": [
         265,
@@ -483,8 +513,10 @@
       "wraps": [
         "M-CODE-GRAPH",
         "M-DIAGRAM",
+        "M-GUIDANCE",
         "M-INSTALL",
         "M-INTEGRATIONS",
+        "M-LINT-PROVIDERS",
         "M-MCP",
         "M-MCP-COMMANDS"
       ]
@@ -563,6 +595,11 @@
       "to": "M-LINT"
     },
     {
+      "id": "M-GUIDANCE-to-M-TEST",
+      "from": "M-GUIDANCE",
+      "to": "M-TEST"
+    },
+    {
       "id": "M-IMPACT-to-M-CODE-GRAPH",
       "from": "M-IMPACT",
       "to": "M-CODE-GRAPH"
@@ -586,6 +623,11 @@
       "id": "M-LINT-to-M-COMMON",
       "from": "M-LINT",
       "to": "M-COMMON"
+    },
+    {
+      "id": "M-LINT-PROVIDERS-to-M-INTEGRATIONS",
+      "from": "M-LINT-PROVIDERS",
+      "to": "M-INTEGRATIONS"
     },
     {
       "id": "M-MCP-to-M-MCP-COMMANDS",
@@ -658,16 +700,16 @@
       "dot": "cyan",
       "title": "Graph",
       "items": [
-        "29 modules · 127 declared dependencies",
-        "28 primary edges drawn · 4 phases · 29 verifications"
+        "31 modules · 135 declared dependencies",
+        "30 primary edges drawn · 4 phases · 31 verifications"
       ]
     },
     {
       "dot": "emerald",
       "title": "Verification",
       "items": [
-        "29/29 modules reference a verification file",
-        "39 declared test files"
+        "31/31 modules reference a verification file",
+        "41 declared test files"
       ]
     },
     {

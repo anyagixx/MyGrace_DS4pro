@@ -1,0 +1,22 @@
+{
+  "name": "security-basics",
+  "version": "1.0.0",
+  "license": "MIT",
+  "description": "Second example pack: output encoding and cookie safety guidance for web projects.",
+  "guides": [
+    {
+      "id": "output-encoding",
+      "title": "Encode untrusted output",
+      "description": "Avoid innerHTML with untrusted data; prefer textContent or a context-aware sanitizer.",
+      "file": "guides/output-encoding.md",
+      "tags": ["xss", "html", "security"]
+    },
+    {
+      "id": "secure-cookies",
+      "title": "Secure session cookies",
+      "description": "Use HttpOnly, Secure, SameSite and a narrow Path/scope for session cookies.",
+      "file": "guides/secure-cookies.md",
+      "tags": ["cookies", "session", "security"]
+    }
+  ]
+}

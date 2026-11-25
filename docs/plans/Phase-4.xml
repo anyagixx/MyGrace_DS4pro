@@ -7,6 +7,7 @@
   <step-3 module="M-INSTALL" description="publish:dry artifact gate: pack → extract → static import completeness → packaged CLI smoke → offline install." status="done" />
   <step-4 module="M-INSTALL" description="CI OS matrix: typecheck/tests on ubuntu-latest, windows-latest and macos-latest; multi-language job stays separate." status="done" />
   <step-5 module="M-INSTALL" description="npm publication cancelled by the owner (2026-11-25): distribution is GitHub Releases + source; release.yml packs the tarball and creates the GitHub Release, with no registry credentials." status="done" />
+  <step-6 module="M-GUIDANCE" description="v3.1 optional external inputs: MWG detection, ADR-11 lint providers and ADR-12 guidance packs with trust-gated CLI execution and example packs." status="done" />
 
   <outcome>
     <item-1>The DSH web sidebar shows real project counts, lint badges and the trust verdict instead of a decorative placeholder.</item-1>

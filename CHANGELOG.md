@@ -9,6 +9,55 @@ release time (see `ROADMAP.md` §6, gate G10).
 
 Nothing yet.
 
+## [3.1.0] — 2026-11-26
+
+### Added
+
+- **Modern Web Guidance detection (P0).** `mygrace integrations status` and
+  `mygrace doctor` now probe the optional `modern-web-guidance` CLI
+  (`>=1.0 <2`) and report it with actionable hints; no new top-level command or
+  MCP tool. Detection accepts config `integrations.modernWebGuidance`, the
+  `MYGRACE_MODERN_WEB_GUIDANCE_BIN` env override and PATH.
+- **External lint providers (ADR-11, P1).** `mygrace.config.json` may declare up
+  to 16 trust-gated scanners (`lintProviders`) with `legacy-scan` or generic
+  `json-findings` adapters, `{path}` command templates, `timeoutMs` and
+  `failOn: error|warning|none`. They run only under the existing trust model,
+  pass the dangerous-command deny list, are audited in `.mygrace/audit.log`, and
+  map to coded findings. `mygrace lint`/`mygrace ci` gained
+  `--allow-commands`/`--allow-unsafe-commands` (lint) and skip providers
+  cleanly when unauthorized.
+- **Guidance packs (ADR-12, P2).** New `mygrace context guidance "<query>"`
+  command and `mygrace_context` MCP `mode: "guidance"` search/retrieve guidance
+  from local markdown packs or trust-gated CLI packs implementing
+  `search "<query>" --json` / `retrieve "<id>"`. Local files are path-confined;
+  external text is untrusted and never executed or persisted automatically.
+  Two original example packs ship in `examples/guidance-packs/`, and
+  `docs/guidance-packs.md` documents the SPI.
+- **Third benchmark arm.** The external express benchmark now includes a
+  `grace+mwg` arm on a web-platform dialog task. Result: 31 455 median tokens /
+  20 tool calls / 81.2 s vs MyGRACE-only 6 397 / 1 / 20.5 s and plain
+  11 069 / 0 / 47.4 s, all keyword-correct. It is a **negative result for token
+  efficiency** (quality of the resulting design was not graded); reported in
+  `analysis/external-benchmark.md`.
+
+### Docs
+
+- README/AGENTS/architecture updated; ADR-11 and ADR-12 added; config reference
+  includes `lintProviders`/`guidancePacks`; module docs M-LINT-PROVIDERS and
+  M-GUIDANCE with verifications.
+- Tests: 746 tests / 37 files (new lint-provider and guidance suites, MWG
+  detection, MCP guidance mapping, CI provider integration).
+
+### Limitations
+
+- MWG detection sees a CLI on PATH/config/env; an npx-only install is not
+  auto-detected (use a `guidancePacks` CLI entry or a wrapper binary).
+- External providers/CLI packs are supply-chain surfaces: pin versions, review
+  commands, keep the trust gate.
+- The benchmark's guidance arm is small and did not demonstrate a productivity
+  gain; treat guidance as quality input, not a measured token saver.
+
+
 ## [3.0.0] — 2026-11-25
 
 ### Breaking changes

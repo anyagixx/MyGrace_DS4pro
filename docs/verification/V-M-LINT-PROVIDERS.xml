@@ -1,0 +1,24 @@
+<!-- Canonical verification entry. <module-checks> is read by mygrace verify; commands are trust-gated (run `mygrace trust` after review). -->
+<V-M-LINT-PROVIDERS MODULE="M-LINT-PROVIDERS" PRIORITY="high" STATUS="done">
+  <test-files>
+    <file>test/grace-lint-providers.test.ts</file>
+  </test-files>
+
+  <module-checks>
+    <check-1>bun test</check-1>
+  </module-checks>
+
+  <scenarios>
+    <scenario-1 kind="success">An authorized legacy-scan provider produces warnings with file/line and an audit record.</scenario-1>
+    <scenario-2 kind="failure">Untrusted or denied providers do not run and produce coded refusal/denial findings.</scenario-2>
+    <scenario-3 kind="failure">Malformed provider JSON becomes LINT_PROVIDER_INVALID_OUTPUT, never a crash.</scenario-3>
+  </scenarios>
+
+  <required-log-markers>
+    <marker-1>No runtime markers are emitted; tests assert findings, severity and audit-log JSONL.</marker-1>
+  </required-log-markers>
+
+  <notes>
+    <note-1>Covered by test/grace-lint-providers.test.ts.</note-1>
+  </notes>
+</V-M-LINT-PROVIDERS>

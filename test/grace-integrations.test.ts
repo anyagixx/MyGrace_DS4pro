@@ -157,6 +157,7 @@ describe("resolveIntegration", () => {
         root,
         octocode: status,
         archify: resolveIntegration("archify", cloneDefault(), root, emptyEnv()),
+        modernWebGuidance: resolveIntegration("modern-web-guidance", cloneDefault(), root, emptyEnv()),
       });
       expect(findings.some((item) => item.message.includes("octocode"))).toBe(false);
       expect(findings.some((item) => item.message.includes("archify"))).toBe(true);
@@ -178,6 +179,7 @@ describe("resolveIntegration", () => {
         root,
         octocode: status,
         archify: resolveIntegration("archify", cloneDefault(), root, emptyEnv()),
+        modernWebGuidance: resolveIntegration("modern-web-guidance", cloneDefault(), root, emptyEnv()),
       });
       expect(findings.map((item) => item.code)).toContain("INTEGRATION_UNSUPPORTED_VERSION");
       expect(findings.find((item) => item.code === "INTEGRATION_UNSUPPORTED_VERSION")?.severity).toBe("warning");
@@ -212,6 +214,7 @@ describe("resolveIntegration", () => {
         root,
         octocode: status,
         archify: resolveIntegration("archify", cloneDefault(), root, emptyEnv()),
+        modernWebGuidance: resolveIntegration("modern-web-guidance", cloneDefault(), root, emptyEnv()),
       });
       expect(findings.find((item) => item.code === "INTEGRATION_UNAVAILABLE")?.severity).toBe("warning");
     } finally {
@@ -230,6 +233,7 @@ describe("resolveIntegration", () => {
         root,
         octocode: status,
         archify: resolveIntegration("archify", cloneDefault(), root, emptyEnv({ [INTEGRATION_ENV.killSwitch]: "off" })),
+        modernWebGuidance: resolveIntegration("modern-web-guidance", cloneDefault(), root, emptyEnv({ [INTEGRATION_ENV.killSwitch]: "off" })),
       });
       expect(findings).toEqual([]);
     } finally {
@@ -245,6 +249,42 @@ describe("resolveIntegration", () => {
       const status = resolveIntegration("archify", config, root, emptyEnv());
       expect(status.enabled).toBe(false);
       expect(status.hint).toContain("enabled=false");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+// ─── Modern Web Guidance detection (v3.1) ─────────────────────────────
+
+describe("modern-web-guidance integration", () => {
+  posixTest("detects the CLI version and supports the tested range", () => {
+    const dir = makeDir();
+    const root = makeDir();
+    try {
+      const bin = join(dir, "modern-web-guidance");
+      writeFileSync(bin, "#!/bin/sh\necho modern-web-guidance 1.0.2\n", { mode: 0o755 });
+      const config = cloneDefault();
+      config.integrations.modernWebGuidance.bin = bin;
+      const status = resolveIntegration("modern-web-guidance", config, root, emptyEnv());
+      expect(status.available).toBe(true);
+      expect(status.supported).toBe(true);
+      expect(status.version).toBe("1.0.2");
+      expect(status.source).toBe("config");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("missing MWG is optional and carries an install hint", () => {
+    const root = makeDir();
+    try {
+      const status = resolveIntegration("modern-web-guidance", cloneDefault(), root, emptyEnv());
+      expect(status.available).toBe(false);
+      expect(status.hint).toContain("Modern Web Guidance");
+      const data = buildIntegrationsStatus(root, cloneDefault(), emptyEnv());
+      expect(data.modernWebGuidance.id).toBe("modern-web-guidance");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

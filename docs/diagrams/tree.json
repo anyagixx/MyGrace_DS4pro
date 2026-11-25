@@ -3,7 +3,7 @@
   "diagram_type": "tree",
   "meta": {
     "title": "MyGRACE — MyGRACE module tree",
-    "subtitle": "29 modules · 6 capability groups",
+    "subtitle": "31 modules · 6 capability groups",
     "output": "tree.html"
   },
   "layout": {
@@ -16,7 +16,7 @@
     {
       "id": "root",
       "label": "MyGRACE",
-      "sublabel": "29 modules"
+      "sublabel": "31 modules"
     },
     {
       "id": "group-core-logic",
@@ -40,7 +40,7 @@
       "id": "group-integration",
       "label": "Integrations",
       "parent": "root",
-      "sublabel": "6 modules"
+      "sublabel": "8 modules"
     },
     {
       "id": "group-orchestrator",
@@ -121,6 +121,12 @@
       "sublabel": "M-FILE · src/grace-file.ts"
     },
     {
+      "id": "M-GUIDANCE",
+      "label": "Guidance packs",
+      "parent": "group-integration",
+      "sublabel": "M-GUIDANCE · src/grace-guidance.ts"
+    },
+    {
       "id": "M-IMPACT",
       "label": "Change impact analysis",
       "parent": "group-core-logic",
@@ -149,6 +155,12 @@
       "label": "Enforced invariants (lint)",
       "parent": "group-core-logic",
       "sublabel": "M-LINT · src/grace-lint.ts"
+    },
+    {
+      "id": "M-LINT-PROVIDERS",
+      "label": "External lint providers",
+      "parent": "group-integration",
+      "sublabel": "M-LINT-PROVIDERS · src/grace-lint-providers.ts"
     },
     {
       "id": "M-MCP",
@@ -235,15 +247,15 @@
       "title": "Tree",
       "items": [
         "6 capability groups",
-        "29 modules"
+        "31 modules"
       ]
     },
     {
       "dot": "emerald",
       "title": "Verification",
       "items": [
-        "29/29 modules verified",
-        "39 declared test files"
+        "31/31 modules verified",
+        "41 declared test files"
       ]
     }
   ]

@@ -1,0 +1,41 @@
+<!-- Module contract for M-LINT-PROVIDERS. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-LINT-PROVIDERS NAME="External lint providers" TYPE="INTEGRATION" STATUS="done">
+  <purpose>Run optional trust-gated external scanners in lint/ci and adapt their JSON to coded MyGRACE findings (ADR-11).</purpose>
+  <path>src/grace-lint-providers.ts</path>
+  <depends>M-CONFIG,M-ERRORS,M-TEST,M-INTEGRATIONS</depends>
+  <verification-ref>V-M-LINT-PROVIDERS</verification-ref>
+
+  <annotations>
+    <fn-runLintProviders PURPOSE="Authorize, execute and audit every enabled provider; never throws on provider failure." />
+    <fn-adaptLegacyScan PURPOSE="Flatten Modern Web Guidance legacy-scan JSON into findings." />
+    <fn-adaptJsonFindings PURPOSE="Generic adapter for scanners emitting an array or {findings}." />
+    <type-LintProviderRun PURPOSE="Per-provider execution summary for the JSON data payload." />
+  </annotations>
+
+  <CrossLink to="M-TEST" relation="shared trust gate, tokenizer, deny list and audit log" />
+  <CrossLink to="M-INTEGRATIONS" relation="scrubbed child environment; optional-tool policy" />
+
+  <contract>
+    <purpose>Run optional trust-gated external scanners in lint/ci and adapt their JSON to coded MyGRACE findings (ADR-11).</purpose>
+    <inputs>
+      <param name="root" type="string" description="Project root; provider commands run with this cwd." />
+      <param name="config" type="MyGraceConfig" description="lintProviders entries, allowCommands and trust inputs." />
+      <param name="allowCommands" type="boolean" description="One-off authorization flag." />
+      <param name="allowUnsafeCommands" type="boolean" description="One-off deny-list override." />
+    </inputs>
+    <outputs>
+      <param name="report" type="LintProviderReport" description="Authorization, per-provider runs and adapted findings." />
+    </outputs>
+    <errors>
+      <error code="LINT_PROVIDER_REFUSED" description="Commands are untrusted; nothing was executed." />
+      <error code="LINT_PROVIDER_DENIED" description="Dangerous command pattern; nothing was executed." />
+      <error code="LINT_PROVIDER_INVALID_OUTPUT" description="Provider output is not valid JSON for its adapter." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>Provider findings default to warning; failOn error/warning/none controls severity.</note-1>
+    <note-2>Every invocation is appended to .mygrace/audit.log; external output is parsed as data, never executed.</note-2>
+    <note-3>Providers are opt-in via config; the core lint gate stays deterministic and offline.</note-3>
+  </notes>
+</M-LINT-PROVIDERS>

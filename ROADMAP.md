@@ -1,10 +1,10 @@
 # MyGRACE Roadmap — from audit findings to a professional agent engineering harness
 
-> Status: **v3.0.0 shipped 2026-11-25** — `inspect` grouping (15 top-level commands) and a two-repository external agent benchmark with curated artifacts. The benchmark reports a negative token/effort result; governance value remains unproven by measurement. Baseline: v1.0.1 as audited on 2026-11-22
+> Status: **v3.1.0 shipped 2026-11-26** — optional MWG detection, trust-gated external lint providers (ADR-11) and guidance packs (ADR-12); `inspect` grouping/benchmark shipped in v3.0.0. The benchmark still reports no measured token/effort gain from docs or guidance. Baseline: v1.0.1 as audited on 2026-11-22
 > (see `analysis/00-EXECUTIVE-ASSESSMENT.md` and appendices 01–04).
 > Target: a tool that AI coding agents can use with confidence on software of **any complexity** —
 > from a 3-module script to a 500-module monorepo, on repos you do not fully trust.
-> **v3.0.0 shipped evidence:** `bun run release:check` green (typecheck 0, **727 tests / 35 files**,
+> **v3.1.0 shipped evidence:** `bun run release:check` green (typecheck 0, **727 tests / 35 files**,
 > demo lint, doc-truth gates, pack-smoke, **diagram IR freshness for all three kinds**, capsule validation),
 > `mygrace ci --path .` PASS on this repository (**29 modules / 4 phases / 29 verifications /
 > 39 declared test files**), and `bun run publish:dry` proves the publish artifact (68 files, 259 kB, 29 shipped src files, 137 relative + 28 bare imports). G13 green with

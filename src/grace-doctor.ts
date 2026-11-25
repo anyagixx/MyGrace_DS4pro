@@ -163,7 +163,7 @@ function buildIntegrationsCheck(
 ): { check: DoctorCheck; status: IntegrationsData | null } {
   try {
     const status = buildIntegrationsStatus(root, config);
-    const entries = [status.octocode, status.archify];
+    const entries = [status.octocode, status.archify, status.modernWebGuidance];
     const requiredProblems = entries.filter((entry) => entry.enabled && entry.required && (!entry.available || !entry.supported));
     const hint = requiredProblems
       .map((entry) => entry.hint)

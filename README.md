@@ -13,7 +13,7 @@ It is a CLI (`mygrace`, 15 commands) plus an agent methodology (12 skills) and
 an MCP server (21 tools). It does not generate code, call a model, or send telemetry — it
 enforces traceability and context discipline for the agent you already use.
 
-Current version: `3.0.0`
+Current version: `3.1.0`
 
 > Distribution is **GitHub Releases + source**: there is no npm publication
 > (decision 2026-11-25). `@osovv` is a third-party scope (the project's starting
@@ -218,13 +218,13 @@ integration it reports the missing DSH pieces and exits 1, with hints for each.
 | `mygrace verify` | Run verification-scoped tests with a compact digest; writes `.mygrace/last-failures.md` on failure; `--module`, `--allow-unsafe-commands` |
 | `mygrace trust` | Review declared commands and write `.mygrace/trust.json`; `--check` verifies without writing, `--revoke` deletes the record |
 | `mygrace inspect` | Index/entity readers: `module index|find|show|list|shard`, `phase index|show`, `verification index`, `file show <path>` |
-| `mygrace context` | Worker context: `packet M-X` (self-contained prompt), `focus M-X` (minimal set), `cost` (read budget per operation) |
+| `mygrace context` | Worker context: `packet M-X` (self-contained prompt), `focus M-X` (minimal set), `cost` (read budget), `guidance <query>` (domain guidance packs) |
 | `mygrace setup` | Setup: `init` (scaffold), `install` (DSH skills + MCP row), `doctor` (environment health) |
 | `mygrace trace` | Trace one module end-to-end: verification → test files → command → phases → dependents, with coded gaps (`<ID>` = module or verification id); `--code` adds the optional MODULE_MAP↔symbol check (`--strict-contracts` fails on gaps) |
 | `mygrace impact` | Map changed files (git, `--staged`, `--since`, or `--files`) to affected modules, dependents, verification blast radius and phases; `--code-graph` adds real import edges via optional Octocode |
 | `mygrace next` | Deterministic nine-code advice ladder: init → index → lint → coverage → trust → verify → warnings → next phase |
 | `mygrace projects` | Monorepo discovery: per-project counts, lint and coverage under a tree (`--depth`, `--strict`) |
-| `mygrace integrations` | Detect optional external tools (`status`), their versions and tested ranges; advisory, never fails the core gates |
+| `mygrace integrations` | Detect optional external tools (Octocode, Archify, Modern Web Guidance), versions and tested ranges; advisory, never fails the core gates |
 | `mygrace diagram` | Export the docs graph as deterministic Archify IR — `--kind architecture\|workflow\|tree` — as JSON, Mermaid (architecture) or standalone HTML (needs optional Archify); `--check` guards every committed IR |
 | `mygrace capsule` | Local allowlisted routines: `list`/`show`/`validate`, `qualify` (replay + hash), `run` with judgment hand-back, `continue`; execution disabled by default (`integrations.capsules.enabled`) |
 
@@ -247,18 +247,38 @@ quality gate is `mcp__mygrace__ci`.
 
 ### Optional integrations (ADR-9)
 
-The core gates are deterministic, offline and dependency-free. Two external tools
+The core gates are deterministic, offline and dependency-free. Three external tools
 can add depth when they are installed — never required, always opt-in:
 
 | Tool | Used for | Commands | Tested range |
 |---|---|---|---|
 | [Octocode](https://github.com/Muvon/octocode) | real import edges + MODULE_MAP↔symbol checks (read-only MCP graph; no index, no LLM) | `impact --code-graph`, `trace --code`, `integrations status` | `>=0.29 <0.30` |
 | [Archify](https://github.com/tt-a1i/archify) | deterministic diagram rendering from the docs graph | `mygrace diagram`, `--check` | `>=3.2 <4` |
+| [Modern Web Guidance](https://github.com/GoogleChrome/modern-web-guidance) | up-to-date web-platform guidance for agents (optional CLI guidance pack) | `integrations status`, `context guidance` (when configured as a pack) | `>=1.0 <2` |
+
+MWG detection probes a `modern-web-guidance` executable on PATH (or `MYGRACE_MODERN_WEB_GUIDANCE_BIN`); npx-only users can still configure it as a `guidancePacks` CLI entry, which needs no global install.
 
 Unavailable, disabled or unsupported tools produce `INTEGRATION_UNAVAILABLE` /
 `INTEGRATION_UNSUPPORTED_VERSION` info/warning findings and the command keeps its
 normal output and exit code. `MYGRACE_INTEGRATIONS=off` disables every adapter for
 reproducible CI. Versions are pinned and checked; nothing is downloaded or sent.
+
+### External lint providers (ADR-11)
+
+Projects can declare trust-gated external scanners in `lintProviders` (for
+example Modern Web Guidance `legacy-scan --json`). They run only with a current
+trust record or `--allow-commands`, pass the same dangerous-command deny list and
+are audited in `.mygrace/audit.log`; findings are ordinary MyGRACE findings with
+`failOn: warning|error|none`. See
+[`docs/guidance-packs.md`](docs/guidance-packs.md) and
+[ADR-11](docs/adr/ADR-11-guidance-and-lint-providers.md).
+
+### Guidance packs (ADR-12)
+
+`guidancePacks` wires local markdown packs or a CLI pack (Modern Web Guidance
+implements the protocol) into `mygrace context guidance "<query>"` and the
+existing `mygrace_context` MCP mode `guidance`. Remote text is untrusted data,
+never executed; see [`docs/guidance-packs.md`](docs/guidance-packs.md).
 ### Octocode setup (graph mode)
 
 Octocode starts a **local FastEmbed/ONNX embedding model before it answers MCP
@@ -341,8 +361,9 @@ Core command benchmarks (median wall time / peak RSS, 7 runs after a warm-up) on
 this repository, `examples/demo-store` and a generated lint-clean 70-module
 project: `mygrace ci` ≈ 380 ms / 109 MB on 29 modules and ≈ 419 ms / 94 MB on 70
 modules; `status` and `lint --strict` ≈ 155–260 ms. On two real external repos (expressjs/express, psf/requests) the same
-commands are 138–218 ms / 65–83 MB; generated/curated agent sessions showed no
-consistent token benefit (negative result documented in the report). Full table, method and
+commands are 105–237 ms / 65–83 MB; curated agent sessions still show no
+consistent token benefit, and the MyGRACE+MWG arm was more expensive
+(negative results documented in the report). Full table, method and
 limitations: [`analysis/benchmark.md`](analysis/benchmark.md). This is CLI/index
 performance only — agent-task success and token usage are measured separately
 (capsule pilot: [`analysis/capsule-eval/report.md`](analysis/capsule-eval/report.md);
@@ -408,6 +429,8 @@ once; defaults reproduce the classic layout.
 | `testRunner` | `"bun test"` | fallback when no `<module-checks>` is declared |
 | `allowCommands` | `false` | trust model: project-wide command opt-in |
 | `language` | `"typescript"` | generated docs and diagnostics |
+| `lintProviders` | `[]` | optional trust-gated external scanners (ADR-11) |
+| `guidancePacks` | `[]` | optional local/CLI guidance packs (ADR-12) |
 
 Semantics that matter when adapting MyGRACE to another layout:
 
@@ -604,6 +627,7 @@ same gates plus an OS matrix (Ubuntu, Windows, macOS).
 - [`docs/architecture.md`](docs/architecture.md) — module graph, ADRs, enforcement table
 - [`ROADMAP.md`](ROADMAP.md) — vision, ADRs, waves and release gates
 - [`CHANGELOG.md`](CHANGELOG.md) — released and unreleased changes
+- [`docs/guidance-packs.md`](docs/guidance-packs.md) — guidance-pack SPI and examples
 - [`AGENTS.md`](AGENTS.md) — the agent-facing instruction file (`setup init` writes it)
 
 ## License

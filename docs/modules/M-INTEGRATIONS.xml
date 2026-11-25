@@ -1,6 +1,6 @@
 <!-- Module contract for M-INTEGRATIONS. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
 <M-INTEGRATIONS NAME="Optional integrations registry" TYPE="INTEGRATION" STATUS="done">
-  <purpose>Detect, version-check and describe optional external tools (Octocode, Archify) behind ADR-9, so core gates stay deterministic, offline and dependency-free while adapters can add depth.</purpose>
+  <purpose>Detect, version-check and describe optional external tools (Octocode, Archify, Modern Web Guidance) behind ADR-9, so core gates stay deterministic, offline and dependency-free while adapters can add depth.</purpose>
   <path>src/grace-integrations.ts</path>
   <depends>M-CONFIG,M-COMMON,M-ERRORS,M-TEST</depends>
   <verification-ref>V-M-INTEGRATIONS</verification-ref>

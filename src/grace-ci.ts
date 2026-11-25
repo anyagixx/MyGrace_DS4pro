@@ -41,6 +41,7 @@ import { EXIT, MyGraceError, TrustError, UsageError, createEnvelope, exitCodeFor
 import type { ExitCode, Finding } from "./grace-errors";
 import { listEntityFiles, readFileOrNull, readIndexFileSafe, tryFindProjectRoot } from "./grace-common";
 import { collectLintIssues } from "./grace-lint";
+import { runLintProviders } from "./grace-lint-providers";
 import { loadGraphIndex } from "./grace-shard";
 import { buildStatusSnapshot, statusFindings } from "./grace-status";
 import type { StatusSnapshot } from "./grace-status";
@@ -281,6 +282,14 @@ export function runCiGate(root: string, options: CiOptions = {}): CiResult {
 
   const findings: Finding[] = [];
   findings.push(...collectLintIssues(root, false, config));
+
+  if (config.lintProviders.length > 0) {
+    const providerReport = runLintProviders(root, config, {
+      allowCommands: options.allowCommands === true,
+      allowUnsafeCommands: options.allowUnsafeCommands === true,
+    });
+    findings.push(...providerReport.findings);
+  }
 
   const coverageResult = collectCoverage(root, config);
   findings.push(...coverageResult.findings);

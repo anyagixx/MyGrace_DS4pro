@@ -1,0 +1,29 @@
+{
+  "name": "web-basics",
+  "version": "1.0.0",
+  "license": "MIT",
+  "description": "Small, original guidance pack used by MyGRACE tests and docs: native HTML semantics, accessible dialogs, cancellable requests.",
+  "guides": [
+    {
+      "id": "semantic-html",
+      "title": "Prefer native semantic HTML",
+      "description": "Use native elements (button, dialog, details, label) before ARIA roles or JavaScript reimplementations.",
+      "file": "guides/semantic-html.md",
+      "tags": ["html", "accessibility", "semantics"]
+    },
+    {
+      "id": "accessible-dialog",
+      "title": "Accessible modal dialog",
+      "description": "Use the native dialog element with showModal(), a labelled heading and explicit close controls.",
+      "file": "guides/accessible-dialog.md",
+      "tags": ["dialog", "modal", "accessibility", "focus"]
+    },
+    {
+      "id": "fetch-cancellation",
+      "title": "Cancel stale fetch requests",
+      "description": "Abort superseded requests with AbortController instead of ignoring late responses.",
+      "file": "guides/fetch-cancellation.md",
+      "tags": ["fetch", "abort", "performance", "javascript"]
+    }
+  ]
+}

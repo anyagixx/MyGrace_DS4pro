@@ -14,7 +14,7 @@
  */
 
 // START_MODULE_CONTRACT
-//   PURPOSE: Detect, version-check and describe optional external tools (Octocode, Archify) for the CLI, MCP and doctor surfaces.
+//   PURPOSE: Detect, version-check and describe optional external tools (Octocode, Archify, Modern Web Guidance) for the CLI, MCP and doctor surfaces.
 //   SCOPE: read-only probes — PATH scan, `<bin> --version`; no project writes, no network, no execution of integration features.
 //   DEPENDS: grace-config, grace-common, grace-errors, grace-test (output format/run outcome), node:child_process, node:fs, node:path
 //   LINKS: ROADMAP.md (ADR-9), INTEGRATION-PLAN.md (Wave 5/6)
@@ -62,6 +62,8 @@ export const INTEGRATION_ENV = {
   octocodeBin: "MYGRACE_OCTOCODE_BIN",
   /** Explicit Archify CLI entry (node script or executable; overrides config and PATH). */
   archifyBin: "MYGRACE_ARCHIFY_BIN",
+  /** Explicit Modern Web Guidance CLI entry (overrides config and PATH). */
+  modernWebGuidanceBin: "MYGRACE_MODERN_WEB_GUIDANCE_BIN",
 } as const;
 
 /** Stable finding codes emitted by the integration layer. */
@@ -72,7 +74,7 @@ export const INTEGRATION_FINDING_CODES = {
   timeout: "INTEGRATION_TIMEOUT",
 } as const;
 
-export type IntegrationId = "octocode" | "archify";
+export type IntegrationId = "octocode" | "archify" | "modern-web-guidance";
 
 export type IntegrationSource = "config" | "env" | "path";
 
@@ -103,6 +105,7 @@ export interface IntegrationsData {
   root: string;
   octocode: IntegrationStatus;
   archify: IntegrationStatus;
+  modernWebGuidance: IntegrationStatus;
 }
 // END_BLOCK_TYPES
 
@@ -269,6 +272,36 @@ function archifyHint(settings: IntegrationSettings): string {
   );
 }
 
+function modernWebGuidanceHint(settings: IntegrationSettings, error: string | null): string {
+  if (error !== null && error.includes("--version")) {
+    return `Modern Web Guidance was found but its version could not be read; MyGRACE expects ${settings.versionRange}.`;
+  }
+  return (
+    `Optional: install Modern Web Guidance ${settings.versionRange} ` +
+    `(https://github.com/GoogleChrome/modern-web-guidance) with ` +
+    `\`npx modern-web-guidance@latest install\` or put its CLI on PATH; ` +
+    `set ${INTEGRATION_ENV.modernWebGuidanceBin} for a custom entry point.`
+  );
+}
+
+function settingsFor(id: IntegrationId, config: MyGraceConfig): IntegrationSettings {
+  if (id === "octocode") return config.integrations.octocode;
+  if (id === "archify") return config.integrations.archify;
+  return config.integrations.modernWebGuidance;
+}
+
+function envBinFor(id: IntegrationId, env: NodeJS.ProcessEnv): string | undefined {
+  if (id === "octocode") return env[INTEGRATION_ENV.octocodeBin];
+  if (id === "archify") return env[INTEGRATION_ENV.archifyBin];
+  return env[INTEGRATION_ENV.modernWebGuidanceBin];
+}
+
+function hintFor(id: IntegrationId, settings: IntegrationSettings, error: string | null): string {
+  if (id === "octocode") return octocodeHint(settings, error);
+  if (id === "archify") return archifyHint(settings);
+  return modernWebGuidanceHint(settings, error);
+}
+
 /**
  * Resolve one integration: enabled state, executable, version and supported range.
  *
@@ -281,7 +314,7 @@ export function resolveIntegration(
   root: string,
   env: NodeJS.ProcessEnv = process.env
 ): IntegrationStatus {
-  const settings: IntegrationSettings = id === "octocode" ? config.integrations.octocode : config.integrations.archify;
+  const settings: IntegrationSettings = settingsFor(id, config);
   const required = settings.enabled === true;
   const killSwitch = isKillSwitchOn(env);
   const enabled = killSwitch ? false : settings.enabled !== false;
@@ -316,7 +349,7 @@ export function resolveIntegration(
     source = "config";
   }
   if (bin === null) {
-    const envBin = id === "octocode" ? env[INTEGRATION_ENV.octocodeBin] : env[INTEGRATION_ENV.archifyBin];
+    const envBin = envBinFor(id, env);
     if (typeof envBin === "string" && envBin.trim() !== "") {
       bin = configBinPath(envBin.trim(), root, env);
       source = "env";
@@ -329,11 +362,11 @@ export function resolveIntegration(
   if (bin === null) {
     return {
       ...base,
-      hint: id === "octocode" ? octocodeHint(settings, null) : archifyHint(settings),
+      hint: hintFor(id, settings, null),
     };
   }
 
-  if (id === "octocode") {
+  if (id !== "archify") {
     const probe = probeVersion(bin, settings.timeoutMs);
     const supported = probe.version !== null && versionSatisfies(probe.version, settings.versionRange);
     return {
@@ -347,8 +380,8 @@ export function resolveIntegration(
       hint: supported
         ? null
         : probe.version === null
-          ? octocodeHint(settings, probe.error)
-          : `Detected Octocode ${probe.version.join(".")} but the tested range is ${settings.versionRange}; pin a supported version.`,
+          ? hintFor(id, settings, probe.error)
+          : `Detected ${id} ${probe.version.join(".")} but the tested range is ${settings.versionRange}; pin a supported version.`,
     };
   }
 
@@ -377,13 +410,14 @@ export function buildIntegrationsStatus(
     root,
     octocode: resolveIntegration("octocode", config, root, env),
     archify: resolveIntegration("archify", config, root, env),
+    modernWebGuidance: resolveIntegration("modern-web-guidance", config, root, env),
   };
 }
 
 /** ADR-3 findings for the status payload (info by default, warning when required). */
 export function integrationFindings(data: IntegrationsData): Finding[] {
   const findings: Finding[] = [];
-  for (const entry of [data.octocode, data.archify] as const) {
+  for (const entry of [data.octocode, data.archify, data.modernWebGuidance] as const) {
     if (!entry.enabled) continue;
     if (!entry.available) {
       findings.push(
@@ -421,7 +455,7 @@ export const integrationsCommand = defineCommand({
   meta: {
     name: "integrations",
     description:
-      "Detect optional external tools (Octocode, Archify), check tested version ranges and print actionable hints (text or json; never fails the core gates)",
+      "Detect optional external tools (Octocode, Archify, Modern Web Guidance), check tested version ranges and print actionable hints (text or json; never fails the core gates)",
   },
   args: {
     path: { type: "string", default: ".", description: "Project root (optional; defaults to the nearest MyGRACE project)" },
@@ -451,6 +485,7 @@ export const integrationsCommand = defineCommand({
         "",
         `octocode  ${describeEntry(data.octocode)}`,
         `archify   ${describeEntry(data.archify)}`,
+        `modern-web-guidance  ${describeEntry(data.modernWebGuidance)}`,
       ];
       if (findings.length > 0) {
         lines.push("");

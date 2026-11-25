@@ -75,6 +75,40 @@ export interface IntegrationsConfig {
   octocode: IntegrationSettings;
   archify: ArchifyIntegrationSettings;
   capsules: CapsuleIntegrationSettings;
+  /** Optional web-platform guidance CLI (Modern Web Guidance); advisory detection only. */
+  modernWebGuidance: IntegrationSettings;
+}
+
+/** Provider adapter shape for an external lint scanner (ADR-11). */
+export type LintProviderAdapter = "legacy-scan" | "json-findings";
+
+/** One optional external lint provider. */
+export interface LintProviderSettings {
+  /** Stable unique name used in findings and audit logs. */
+  name: string;
+  /** "auto"/true runs the provider when authorized; false disables it. */
+  enabled: IntegrationEnabled;
+  adapter: LintProviderAdapter;
+  /** Command template; `{path}` is replaced with the project root (tokenized, no shell). */
+  command: string;
+  timeoutMs: number;
+  /** Severity of provider findings: error fails lint, warning needs --strict, none reports info. */
+  failOn: "error" | "warning" | "none";
+}
+
+/** Provider shape for a guidance pack (ADR-12). */
+export type GuidancePackKind = "local" | "cli";
+
+/** One optional guidance pack. */
+export interface GuidancePackSettings {
+  name: string;
+  enabled: IntegrationEnabled;
+  kind: GuidancePackKind;
+  /** Local pack directory (contains guidance-pack.json); null for CLI packs. */
+  path: string | null;
+  /** CLI command prefix for search/retrieve; null for local packs. */
+  command: string | null;
+  timeoutMs: number;
 }
 
 export interface MyGraceConfig {
@@ -99,6 +133,10 @@ export interface MyGraceConfig {
   language: string;
   /** Optional external integrations (ADR-9); all default to disabled-by-detection. */
   integrations: IntegrationsConfig;
+  /** Optional trust-gated external lint providers (ADR-11); empty by default. */
+  lintProviders: LintProviderSettings[];
+  /** Optional guidance packs (ADR-12); empty by default. */
+  guidancePacks: GuidancePackSettings[];
 }
 
 /** Defaults reproduce v1 behaviour so existing projects keep working. */
@@ -141,7 +179,10 @@ export const DEFAULT_CONFIG: MyGraceConfig = {
       outputDir: join("docs", "diagrams"),
     },
     capsules: { enabled: false, dir: "capsules", allowMutatingPrograms: false },
+    modernWebGuidance: { enabled: "auto", bin: null, versionRange: ">=1.0 <2", timeoutMs: 20_000 },
   },
+  lintProviders: [],
+  guidancePacks: [],
 };
 
 /** Absolute path of the config file for a project root. */
@@ -229,7 +270,10 @@ export function cloneDefault(): MyGraceConfig {
       octocode: { ...DEFAULT_CONFIG.integrations.octocode },
       archify: { ...DEFAULT_CONFIG.integrations.archify },
       capsules: { ...DEFAULT_CONFIG.integrations.capsules },
+      modernWebGuidance: { ...DEFAULT_CONFIG.integrations.modernWebGuidance },
     },
+    lintProviders: [],
+    guidancePacks: [],
   };
 }
 
@@ -244,6 +288,8 @@ const KNOWN_KEYS = new Set<keyof MyGraceConfig>([
   "allowCommands",
   "language",
   "integrations",
+  "lintProviders",
+  "guidancePacks",
 ]);
 
 function applyUserConfig(raw: Record<string, unknown>, issues: string[]): MyGraceConfig {
@@ -294,21 +340,24 @@ function applyUserConfig(raw: Record<string, unknown>, issues: string[]): MyGrac
   applyIndexCaps(raw.indexCaps, config, issues);
   applySizeBudgets(raw.sizeBudgets, config, issues);
   applyIntegrations(raw.integrations, config, issues);
+  applyLintProviders(raw.lintProviders, config, issues);
+  applyGuidancePacks(raw.guidancePacks, config, issues);
 
   return config;
 }
 
 // START_BLOCK_INTEGRATIONS
 const VERSION_RANGE_RE = /^(\s*(>=|<=|>|<|=)?\s*v?\d+(?:\.\d+){0,2})*\s*$/;
-const INTEGRATION_KEYS = new Set(["octocode", "archify", "capsules"]);
+const INTEGRATION_KEYS = new Set(["octocode", "archify", "capsules", "modernWebGuidance"]);
 const OCTOCODE_KEYS = new Set(["enabled", "bin", "versionRange", "timeoutMs"]);
 const ARCHIFY_KEYS = new Set(["enabled", "bin", "versionRange", "timeoutMs", "outputDir"]);
 const CAPSULE_KEYS = new Set(["enabled", "dir", "allowMutatingPrograms"]);
+const MWG_KEYS = new Set(["enabled", "bin", "versionRange", "timeoutMs"]);
 
 function applyIntegrations(value: unknown, config: MyGraceConfig, issues: string[]): void {
   if (value === undefined) return;
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
-    issues.push('"integrations" must be an object with octocode/archify/capsules entries');
+    issues.push('"integrations" must be an object with octocode/archify/capsules/modernWebGuidance entries');
     return;
   }
   const sections = value as Record<string, unknown>;
@@ -316,7 +365,7 @@ function applyIntegrations(value: unknown, config: MyGraceConfig, issues: string
     if (!INTEGRATION_KEYS.has(key)) issues.push(`unknown integrations key "${key}"`);
   }
   const readSection = (
-    name: "octocode" | "archify" | "capsules",
+    name: "octocode" | "archify" | "capsules" | "modernWebGuidance",
     allowed: Set<string>
   ): Record<string, unknown> | undefined => {
     const entry = sections[name];
@@ -398,6 +447,14 @@ function applyIntegrations(value: unknown, config: MyGraceConfig, issues: string
     }
   }
 
+  const modernWebGuidance = readSection("modernWebGuidance", MWG_KEYS);
+  if (modernWebGuidance !== undefined) {
+    enabledFor(modernWebGuidance, "modernWebGuidance");
+    binFor(modernWebGuidance, config.integrations.modernWebGuidance, "modernWebGuidance");
+    rangeFor(modernWebGuidance, config.integrations.modernWebGuidance, "modernWebGuidance");
+    timeoutFor(modernWebGuidance, config.integrations.modernWebGuidance, "modernWebGuidance");
+  }
+
   const capsules = readSection("capsules", CAPSULE_KEYS);
   if (capsules !== undefined) {
     enabledFor(capsules, "capsules");
@@ -413,6 +470,142 @@ function applyIntegrations(value: unknown, config: MyGraceConfig, issues: string
     }
   }
 }
+
+function applyLintProviders(value: unknown, config: MyGraceConfig, issues: string[]): void {
+  if (value === undefined) return;
+  if (!Array.isArray(value)) {
+    issues.push('"lintProviders" must be an array');
+    return;
+  }
+  if (value.length > 16) {
+    issues.push('"lintProviders" may contain at most 16 entries');
+    return;
+  }
+  const names = new Set<string>();
+  const providers: LintProviderSettings[] = [];
+  value.forEach((raw, index) => {
+    const label = `lintProviders[${index}]`;
+    if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
+      issues.push(`"${label}" must be an object`);
+      return;
+    }
+    const entry = raw as Record<string, unknown>;
+    const allowed = new Set(["name", "enabled", "adapter", "command", "timeoutMs", "failOn"]);
+    for (const key of Object.keys(entry)) if (!allowed.has(key)) issues.push(`unknown ${label} key "${key}"`);
+    const name = entry.name;
+    const adapter = entry.adapter;
+    const command = entry.command;
+    if (typeof name !== "string" || !/^[a-z0-9][a-z0-9-]{1,39}$/.test(name)) {
+      issues.push(`"${label}.name" must be a lowercase kebab-case name (2-40 chars)`);
+      return;
+    }
+    if (names.has(name)) {
+      issues.push(`duplicate lint provider name "${name}"`);
+      return;
+    }
+    names.add(name);
+    if (adapter !== "legacy-scan" && adapter !== "json-findings") {
+      issues.push(`"${label}.adapter" must be "legacy-scan" or "json-findings"`);
+      return;
+    }
+    if (typeof command !== "string" || command.trim() === "" || command.includes("\u0000")) {
+      issues.push(`"${label}.command" must be a non-empty command template`);
+      return;
+    }
+    const enabled = entry.enabled;
+    if (enabled !== undefined && enabled !== true && enabled !== false && enabled !== "auto") {
+      issues.push(`"${label}.enabled" must be "auto", true or false`);
+      return;
+    }
+    const timeoutMs = entry.timeoutMs === undefined ? 30_000 : entry.timeoutMs;
+    if (typeof timeoutMs !== "number" || !Number.isInteger(timeoutMs) || timeoutMs < 100 || timeoutMs > 600_000) {
+      issues.push(`"${label}.timeoutMs" must be an integer between 100 and 600000`);
+      return;
+    }
+    const failOn = entry.failOn === undefined ? "warning" : entry.failOn;
+    if (failOn !== "error" && failOn !== "warning" && failOn !== "none") {
+      issues.push(`"${label}.failOn" must be "error", "warning" or "none"`);
+      return;
+    }
+    providers.push({
+      name,
+      enabled: enabled === undefined ? "auto" : enabled,
+      adapter,
+      command: command.trim(),
+      timeoutMs,
+      failOn,
+    });
+  });
+  config.lintProviders = providers;
+}
+
+function applyGuidancePacks(value: unknown, config: MyGraceConfig, issues: string[]): void {
+  if (value === undefined) return;
+  if (!Array.isArray(value)) {
+    issues.push('"guidancePacks" must be an array');
+    return;
+  }
+  if (value.length > 8) {
+    issues.push('"guidancePacks" may contain at most 8 entries');
+    return;
+  }
+  const names = new Set<string>();
+  const packs: GuidancePackSettings[] = [];
+  value.forEach((raw, index) => {
+    const label = `guidancePacks[${index}]`;
+    if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
+      issues.push(`"${label}" must be an object`);
+      return;
+    }
+    const entry = raw as Record<string, unknown>;
+    const allowed = new Set(["name", "enabled", "kind", "path", "command", "timeoutMs"]);
+    for (const key of Object.keys(entry)) if (!allowed.has(key)) issues.push(`unknown ${label} key "${key}"`);
+    const name = entry.name;
+    const kind = entry.kind;
+    if (typeof name !== "string" || !/^[a-z0-9][a-z0-9-]{1,39}$/.test(name)) {
+      issues.push(`"${label}.name" must be a lowercase kebab-case name (2-40 chars)`);
+      return;
+    }
+    if (names.has(name)) {
+      issues.push(`duplicate guidance pack name "${name}"`);
+      return;
+    }
+    names.add(name);
+    if (kind !== "local" && kind !== "cli") {
+      issues.push(`"${label}.kind" must be "local" or "cli"`);
+      return;
+    }
+    const path = entry.path;
+    const command = entry.command;
+    if (kind === "local") {
+      if (typeof path !== "string" || path.trim() === "") issues.push(`"${label}.path" must be a non-empty string for local packs`);
+      if (command !== undefined && command !== null) issues.push(`"${label}.command" is only valid for cli packs`);
+    } else {
+      if (typeof command !== "string" || command.trim() === "") issues.push(`"${label}.command" must be a non-empty string for cli packs`);
+      if (path !== undefined && path !== null) issues.push(`"${label}.path" is only valid for local packs`);
+    }
+    const enabled = entry.enabled;
+    if (enabled !== undefined && enabled !== true && enabled !== false && enabled !== "auto") {
+      issues.push(`"${label}.enabled" must be "auto", true or false`);
+      return;
+    }
+    const timeoutMs = entry.timeoutMs === undefined ? 30_000 : entry.timeoutMs;
+    if (typeof timeoutMs !== "number" || !Number.isInteger(timeoutMs) || timeoutMs < 100 || timeoutMs > 600_000) {
+      issues.push(`"${label}.timeoutMs" must be an integer between 100 and 600000`);
+      return;
+    }
+    packs.push({
+      name,
+      enabled: enabled === undefined ? "auto" : enabled,
+      kind,
+      path: kind === "local" ? (path as string).trim() : null,
+      command: kind === "cli" ? (command as string).trim() : null,
+      timeoutMs,
+    });
+  });
+  config.guidancePacks = packs;
+}
+
 // END_BLOCK_INTEGRATIONS
 
 function positiveInteger(value: unknown): value is number {
