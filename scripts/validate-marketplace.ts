@@ -643,7 +643,7 @@ function normalizeBaselineCopy(root: string): void {
   const readme = readText(readmePath);
   if (readme === undefined) return;
   const normalized = readme
-    .replace(/Skills \(\d+/g, "Skills (15")
+    .replace(/Skills \(\d+/g, "Skills (12")
     .replace(/\b\d+ skills\b/g, "12 skills")
     .replace(/\b\d+ MCP tools\b/g, `${TOOL_NAMES.length} MCP tools`);
   writeFileSync(readmePath, `${normalized}\n<!-- validator self-test tool catalogue: ${TOOL_NAMES.join(" ")} -->\n`);
@@ -661,7 +661,7 @@ function runSelfTest(options: Options): number {
       mutate: (root) => rmSync(join(root, "skills", "mygrace", "grace-status"), { recursive: true, force: true }),
     },
     {
-      name: "extra (16th) skill directory is detected",
+      name: "extra (13th) skill directory is detected",
       expected: /Expected exactly 12 skills/,
       mutate: (root) => {
         const dir = join(root, "skills", "mygrace", "grace-extra");
@@ -674,10 +674,10 @@ function runSelfTest(options: Options): number {
     },
     {
       name: "README skill count drift is detected",
-      expected: /claims 16 skills/,
+      expected: /claims 13 skills/,
       mutate: (root) => {
         const readmePath = join(root, "README.md");
-        writeFileSync(readmePath, readText(readmePath)!.replace("Skills (15", "Skills (16"));
+        writeFileSync(readmePath, readText(readmePath)!.replace("Skills (12", "Skills (13"));
       },
     },
     {
