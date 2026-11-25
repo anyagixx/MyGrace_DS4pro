@@ -53,6 +53,7 @@ export const LINT_PROVIDER_CODES = {
   failed: "LINT_PROVIDER_FAILED",
   invalidOutput: "LINT_PROVIDER_INVALID_OUTPUT",
   truncated: "LINT_PROVIDER_TRUNCATED",
+  unpinned: "LINT_PROVIDER_UNPINNED",
   finding: "LINT_PROVIDER_FINDING",
 } as const;
 
@@ -65,6 +66,7 @@ export interface LintProviderRun {
   exitCode: number | null;
   durationMs: number;
   findingCount: number;
+  pinned: boolean;
   skippedReason: string | null;
   error: string | null;
 }
@@ -86,6 +88,16 @@ function severityFor(settings: LintProviderSettings): Finding["severity"] {
 
 function providerFinding(settings: LintProviderSettings, message: string, extra: Partial<Finding> = {}): Finding {
   return finding(severityFor(settings), LINT_PROVIDER_CODES.finding, `${settings.name}: ${message}`, extra);
+}
+
+/** True when a provider command pins its package spec (no `@latest`/bare npx package). */
+export function providerCommandPinned(command: string): boolean {
+  if (/@latest\b/i.test(command)) return false;
+  const match = /(?:^|\s)(?:npx|pnpx|bunx)\s+(?:-y\s+|--yes\s+)?([^\s-][^\s]*)/.exec(command);
+  if (match === null) return true;
+  const spec = match[1] ?? "";
+  if (spec.startsWith(".") || spec.startsWith("/") || spec.startsWith("~")) return true;
+  return /@\d/.test(spec) || /^[a-z][a-z0-9-]*$/i.test(spec) === false && /@\d/.test(spec);
 }
 
 function asString(value: unknown): string | null {
@@ -212,6 +224,7 @@ export function runLintProviders(
       exitCode: null,
       durationMs: 0,
       findingCount: 0,
+      pinned: providerCommandPinned(settings.command),
       skippedReason: null,
       error: null,
     };
@@ -227,6 +240,13 @@ export function runLintProviders(
       continue;
     }
 
+    if (!base.pinned) {
+      findings.push(
+        finding("warning", LINT_PROVIDER_CODES.unpinned, `Lint provider "${settings.name}" uses an unpinned command; pin the package version for reproducible CI.`, {
+          hint: "Replace @latest/bare npx specs with an exact version and re-run `mygrace trust`.",
+        })
+      );
+    }
     const expanded = settings.command.replaceAll("{path}", root);
     let argv: string[];
     try {

@@ -55,6 +55,30 @@ tarball is verified offline by `publish:dry`.
   accessibility checks), larger N, and pinned guidance versions for
   reproducibility.
 
+## Review priority C — guidance professionalization (v3.2.x)
+
+Three limitations from the v3.1 review, with acceptance criteria:
+
+- **C1 — npx-only MWG detection.** ✅ **closed v3.2.0**: `resolveIntegration` falls back to
+  `npx --no-install modern-web-guidance --version` when no global binary exists;
+  reports `runner: "npx"` and the cached version. Remaining: a `--version`-free
+  path for sandboxes where npx itself is unavailable.
+- **C2 — artifact quality benchmark.** 🟡 v3.2.0 pilot (rubric saturated 6/6):
+  `scripts/web-quality-benchmark.ts` asks plain/MyGRACE/MyGRACE+MWG agents to
+  create `dialog-demo.html`, then grades a six-point static rubric plus tokens,
+  tools and wall time. Remaining: harder multi-file/a11y rubric (the six-point rubric hit its ceiling), larger N, a second language, blinded grading, and non-web quality metrics.
+- **C3 — supply-chain pinning.** 🟡 v3.2.0 warns on `@latest`/bare npx in lint
+  providers and guidance CLI packs (`*_UNPINNED`), and `mygrace trust` hashes the
+  config. Remaining: `guidance-lock.json` with resolved versions/hashes,
+  verification before retrieval, and documented pinning policy for providers.
+- **C4 — agent workflow.** ✅ v3.2.0: packet/focus print configured packs plus exact
+  search/retrieve commands; `mygrace-execute`/`mygrace-cli`/`AGENTS.md` require
+  consulting relevant packs and citing pack/id; retrieved text stays untrusted.
+
+Acceptance for closing Wave 7: all three limitations either closed or explicitly
+accepted in `ROADMAP.md`; no unpinned specs in default docs/examples; a quality
+benchmark with N≥10 per arm and a stated limitation section.
+
 ## B. Octocode MCP startup diagnosis (upstream)
 
 ### Verified state (2026-11-24)

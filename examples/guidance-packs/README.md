@@ -29,11 +29,11 @@ For Modern Web Guidance as a CLI pack:
 ```json
 {
   "guidancePacks": [
-    { "name": "modern-web-guidance", "kind": "cli", "command": "npx -y modern-web-guidance@latest", "enabled": "auto" }
+    { "name": "modern-web-guidance", "kind": "cli", "command": "npx -y modern-web-guidance@1.0.2", "enabled": "auto" }
   ],
   "allowCommands": true
 }
 ```
 
-CLI packs require trusted project commands (`mygrace trust` or
+Pin the CLI package version and keep the trust record current. CLI packs require trusted project commands (`mygrace trust` or
 `--allow-commands`); MyGRACE prints retrieved text only and never executes it.

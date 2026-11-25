@@ -26,3 +26,6 @@ analysis/capsule-eval/runs/
 
 # external benchmark raw agent logs stay local (may contain model output)
 analysis/external-benchmark-runs/
+
+# web-quality benchmark raw agent logs stay local
+analysis/web-quality-benchmark-runs/

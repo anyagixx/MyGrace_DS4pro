@@ -73,6 +73,7 @@ export interface GuidancePackStatus {
   version: string | null;
   license: string | null;
   guides: number;
+  pinned: boolean;
   skippedReason: string | null;
   hint: string | null;
 }
@@ -134,6 +135,16 @@ function parseLocalManifest(packPath: string): GuidancePackManifest | null {
   }
 }
 
+/** CLI pack commands must pin their package spec; `@latest`/bare npx is flagged. */
+export function guidanceCommandPinned(command: string): boolean {
+  if (/@latest\b/i.test(command)) return false;
+  const match = /(?:^|\s)(?:npx|pnpx|bunx)\s+(?:-y\s+|--yes\s+)?([^\s-][^\s]*)/.exec(command);
+  if (match === null) return true;
+  const spec = match[1] ?? "";
+  if (spec.startsWith(".") || spec.startsWith("/") || spec.startsWith("~")) return true;
+  return /@\d/.test(spec);
+}
+
 function packDir(root: string, settings: GuidancePackSettings): string | null {
   if (settings.path === null) return null;
   const candidate = isAbsolute(settings.path) ? resolve(settings.path) : resolve(root, settings.path);
@@ -171,6 +182,7 @@ function resolvePacks(
       version: null,
       license: null,
       guides: 0,
+      pinned: settings.kind === "local" ? true : guidanceCommandPinned(settings.command ?? ""),
       skippedReason: null,
       hint: null,
     };
@@ -391,6 +403,15 @@ const guidanceCommand = defineCommand({
       const findings: Finding[] = data.skipped.map((entry) =>
         finding("info", "GUIDANCE_PACK_SKIPPED", `Guidance pack "${entry.pack}" was skipped: ${entry.reason}.`)
       );
+      for (const pack of data.packs) {
+        if (pack.kind === "cli" && !pack.pinned) {
+          findings.push(
+            finding("warning", "GUIDANCE_PACK_UNPINNED", `Guidance CLI pack "${pack.name}" is not pinned; pin the package version for reproducible retrieval.`, {
+              hint: "Replace @latest/bare npx specs with an exact version and re-run `mygrace trust`.",
+            })
+          );
+        }
+      }
       const envelope = createEnvelope({ data, findings, meta: { command: "context guidance", root } });
       return {
         envelope,

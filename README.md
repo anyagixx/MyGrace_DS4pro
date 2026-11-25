@@ -13,7 +13,7 @@ It is a CLI (`mygrace`, 15 commands) plus an agent methodology (12 skills) and
 an MCP server (21 tools). It does not generate code, call a model, or send telemetry — it
 enforces traceability and context discipline for the agent you already use.
 
-Current version: `3.1.1`
+Current version: `3.2.0`
 
 > Distribution is **GitHub Releases + source**: there is no npm publication
 > (decision 2026-11-25). `@osovv` is a third-party scope (the project's starting
@@ -269,7 +269,8 @@ Projects can declare trust-gated external scanners in `lintProviders` (for
 example Modern Web Guidance `legacy-scan --json`). They run only with a current
 trust record or `--allow-commands`, pass the same dangerous-command deny list and
 are audited in `.mygrace/audit.log`; findings are ordinary MyGRACE findings with
-`failOn: warning|error|none`. See
+`failOn: warning|error|none`; unpinned scanner commands get
+`LINT_PROVIDER_UNPINNED`. See
 [`docs/guidance-packs.md`](docs/guidance-packs.md) and
 [ADR-11](docs/adr/ADR-11-guidance-and-lint-providers.md).
 
@@ -278,7 +279,8 @@ are audited in `.mygrace/audit.log`; findings are ordinary MyGRACE findings with
 `guidancePacks` wires local markdown packs or a CLI pack (Modern Web Guidance
 implements the protocol) into `mygrace context guidance "<query>"` and the
 existing `mygrace_context` MCP mode `guidance`. Remote text is untrusted data,
-never executed; see [`docs/guidance-packs.md`](docs/guidance-packs.md).
+never executed; pin CLI package versions (unpinned specs get a
+`GUIDANCE_PACK_UNPINNED` warning). See [`docs/guidance-packs.md`](docs/guidance-packs.md).
 ### Octocode setup (graph mode)
 
 Octocode starts a **local FastEmbed/ONNX embedding model before it answers MCP
@@ -363,7 +365,10 @@ project: `mygrace ci` ≈ 380 ms / 109 MB on 29 modules and ≈ 419 ms / 94 MB o
 modules; `status` and `lint --strict` ≈ 155–260 ms. On two real external repos (expressjs/express, psf/requests) the same
 commands are 105–237 ms / 65–83 MB; curated agent sessions still show no
 consistent token benefit, and the MyGRACE+MWG arm was more expensive
-(negative results documented in the report). Full table, method and
+(negative results documented in the report). A separate
+artifact-quality pilot (accessible dialog, six-point rubric) saturated at 6/6 for
+all arms; MyGRACE-only used the fewest tokens (7 981) while MyGRACE+MWG used the
+most (68 351) — see [`analysis/web-quality-benchmark.md`](analysis/web-quality-benchmark.md). Full table, method and
 limitations: [`analysis/benchmark.md`](analysis/benchmark.md). This is CLI/index
 performance only — agent-task success and token usage are measured separately
 (capsule pilot: [`analysis/capsule-eval/report.md`](analysis/capsule-eval/report.md);

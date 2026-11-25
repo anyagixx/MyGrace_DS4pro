@@ -14,7 +14,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { cloneDefault } from "../src/grace-config";
 import type { MyGraceConfig } from "../src/grace-config";
-import { adaptJsonFindings, adaptLegacyScan, runLintProviders } from "../src/grace-lint-providers";
+import { adaptJsonFindings, adaptLegacyScan, providerCommandPinned, runLintProviders } from "../src/grace-lint-providers";
 import { runCiGate } from "../src/grace-ci";
 
 function makeRoot(): string {
@@ -196,5 +196,15 @@ JSON
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
+  });
+});
+
+describe("provider command pinning", () => {
+  test("flags @latest and bare npx specs, accepts pinned/local commands", () => {
+    expect(providerCommandPinned("npx -y modern-web-guidance@latest legacy-scan . --json")).toBe(false);
+    expect(providerCommandPinned("npx -y modern-web-guidance legacy-scan . --json")).toBe(false);
+    expect(providerCommandPinned("npx -y modern-web-guidance@1.0.2 legacy-scan . --json")).toBe(true);
+    expect(providerCommandPinned("./scanner.sh {path}")).toBe(true);
+    expect(providerCommandPinned("echo never-run")).toBe(true);
   });
 });

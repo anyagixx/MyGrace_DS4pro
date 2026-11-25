@@ -36,6 +36,7 @@
   <notes>
     <note-1>Provider findings default to warning; failOn error/warning/none controls severity.</note-1>
     <note-2>Every invocation is appended to .mygrace/audit.log; external output is parsed as data, never executed.</note-2>
-    <note-3>Providers are opt-in via config; the core lint gate stays deterministic and offline.</note-3>
+    <note-3>Unpinned provider commands are reported as LINT_PROVIDER_UNPINNED; trust records hash the config.</note-3>
+    <note-4>Providers are opt-in via config; the core lint gate stays deterministic and offline.</note-4>
   </notes>
 </M-LINT-PROVIDERS>

@@ -22,7 +22,7 @@ never executes pack content and never writes it into `docs/`.
       "name": "modern-web-guidance",
       "enabled": "auto",
       "kind": "cli",
-      "command": "npx -y modern-web-guidance@latest",
+      "command": "npx -y modern-web-guidance@1.0.2",
       "timeoutMs": 30000
     }
   ]
@@ -53,7 +53,7 @@ never executes pack content and never writes it into `docs/`.
   - `"<command>" search "<query>" --json` → `[{"id","description"}, ...]`
   - `"<command>" retrieve "<id>"` → markdown text on stdout
 
-CLI packs run only when project commands are trusted (`mygrace trust`,
+Pin the CLI package version (`@1.0.2`, not `@latest`): MyGRACE emits `GUIDANCE_PACK_UNPINNED` for mutable specs, and the trust record covers the config. CLI packs run only when project commands are trusted (`mygrace trust`,
 `allowCommands: true`, or `--allow-commands`) and every invocation is appended to
 `.mygrace/audit.log`. Untrusted packs are skipped, not executed.
 

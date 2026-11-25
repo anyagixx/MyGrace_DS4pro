@@ -33,6 +33,7 @@
   <notes>
     <note-1>Packets are smaller than reading several files, which is the point of lazy navigation.</note-1>
     <note-2>Focus prints contract, dependencies and the canonical test command only.</note-2>
-    <note-3>Both commands are read-only.</note-3>
+    <note-3>Packet/focus list configured guidance packs and the exact `context guidance` commands so worker agents consult them when relevant.</note-3>
+    <note-4>Both commands are read-only.</note-4>
   </notes>
 </M-PACKET>

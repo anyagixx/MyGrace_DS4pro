@@ -78,6 +78,9 @@ export type IntegrationId = "octocode" | "archify" | "modern-web-guidance";
 
 export type IntegrationSource = "config" | "env" | "path";
 
+/** How an integration executable was resolved: direct binary or the npx cache runner. */
+export type IntegrationRunner = "bin" | "npx";
+
 /** Detection result for one optional tool. */
 export interface IntegrationStatus {
   id: IntegrationId;
@@ -90,6 +93,7 @@ export interface IntegrationStatus {
   supported: boolean;
   bin: string | null;
   source: IntegrationSource | null;
+  runner: IntegrationRunner;
   version: string | null;
   expectedRange: string;
   timeoutMs: number;
@@ -218,9 +222,13 @@ export function integrationChildEnv(extra: Record<string, string> = {}): Record<
   return env;
 }
 
-/** Positional version probe: `<bin> --version` with a timeout. */
-function probeVersion(bin: string, timeoutMs: number): { version: VersionTuple | null; error: string | null } {
-  const result = spawnSync(bin, ["--version"], {
+/** Positional version probe: `<bin> <args>` with a timeout. */
+function probeVersionArgs(
+  bin: string,
+  args: string[],
+  timeoutMs: number
+): { version: VersionTuple | null; error: string | null } {
+  const result = spawnSync(bin, args, {
     encoding: "utf-8",
     timeout: timeoutMs,
     shell: false,
@@ -233,9 +241,13 @@ function probeVersion(bin: string, timeoutMs: number): { version: VersionTuple |
   const output = `${result.stdout ?? ""}\n${result.stderr ?? ""}`;
   const version = parseVersionText(output);
   if (version === null) {
-    return { version: null, error: `Could not parse a version from "${bin} --version"` };
+    return { version: null, error: `Could not parse a version from "${bin} ${args.join(" ")}"` };
   }
   return { version, error: null };
+}
+
+function probeVersion(bin: string, timeoutMs: number): { version: VersionTuple | null; error: string | null } {
+  return probeVersionArgs(bin, ["--version"], timeoutMs);
 }
 
 function isKillSwitchOn(env: NodeJS.ProcessEnv): boolean {
@@ -326,6 +338,7 @@ export function resolveIntegration(
     supported: false,
     bin: null,
     source: null,
+    runner: "bin",
     version: null,
     expectedRange: settings.versionRange,
     timeoutMs: settings.timeoutMs,
@@ -359,6 +372,29 @@ export function resolveIntegration(
     bin = findExecutableOnPath(id, env);
     source = bin === null ? null : "path";
   }
+  if (bin === null && id === "modern-web-guidance") {
+    const npx = findExecutableOnPath("npx", env);
+    if (npx !== null) {
+      const probe = probeVersionArgs(npx, ["--no-install", "modern-web-guidance", "--version"], Math.min(settings.timeoutMs, 5_000));
+      const supported = probe.version !== null && versionSatisfies(probe.version, settings.versionRange);
+      return {
+        ...base,
+        available: probe.version !== null,
+        supported,
+        bin: npx,
+        source: "path",
+        runner: "npx",
+        version: probe.version === null ? null : probe.version.join("."),
+        error: probe.error,
+        hint:
+          probe.version !== null && supported
+            ? null
+            : `npx is available but a cached Modern Web Guidance ${settings.versionRange} was not found; ` +
+              `run \`npx modern-web-guidance@latest install\` or configure a guidancePacks CLI entry.`,
+      };
+    }
+  }
+
   if (bin === null) {
     return {
       ...base,
@@ -445,7 +481,7 @@ function describeEntry(entry: IntegrationStatus): string {
   if (!entry.enabled) return `disabled${entry.hint === null ? "" : ` (${entry.hint})`}`;
   if (!entry.available) return `not found — ${entry.hint ?? "no hint"}`;
   const version = entry.version ?? "(version unknown)";
-  const source = entry.source === null ? "unknown" : entry.source;
+  const source = entry.runner === "npx" ? "npx cache" : entry.source === null ? "unknown" : entry.source;
   const supported = entry.supported ? "supported" : `UNSUPPORTED (expected ${entry.expectedRange})`;
   return `${version} (${source}) — ${supported}`;
 }

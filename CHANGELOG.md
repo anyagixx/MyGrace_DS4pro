@@ -9,6 +9,47 @@ release time (see `ROADMAP.md` §6, gate G10).
 
 Nothing yet.
 
+## [3.2.0] — 2026-11-26
+
+### Added
+
+- **Agent guidance workflow.** `context packet`/`focus` now list configured
+  guidance packs and the exact search/retrieve commands; `mygrace-execute` and
+  `mygrace-cli` skills, `AGENTS.md` and its template require agents to consult
+  relevant packs and cite the pack/id. Retrieved text remains untrusted; no
+  corpus is vendored.
+- **npx-cache detection for Modern Web Guidance (limitation 1 closed).**
+  `integrations status`/`doctor` fall back to
+  `npx --no-install modern-web-guidance --version` when no global binary exists,
+  reporting `runner: "npx"` and the cached version without downloading anything.
+- **Supply-chain pin warnings (limitation 3, partial).** Unpinned CLI specs in
+  `lintProviders`/`guidancePacks` produce `LINT_PROVIDER_UNPINNED` /
+  `GUIDANCE_PACK_UNPINNED`; examples and docs use pinned versions. `mygrace trust`
+  continues to hash the config.
+- **Web-quality benchmark pilot (limitation 2, partial).**
+  `scripts/web-quality-benchmark.ts` asks plain/MyGRACE/MyGRACE+MWG agents to
+  create an accessible `dialog-demo.html` and grades a six-point static rubric
+  plus tokens/tools/wall. Pilot (N=2/arm): all arms scored 6/6 (rubric saturates),
+  MyGRACE-only was cheapest (7 981 tokens / 5 tools / 27 s), plain 18 547 / 10 /
+  73.1 s, MyGRACE+MWG 68 351 / 39 / 245.1 s. Reported honestly; quality remains
+  unproven because the rubric ceiling was reached.
+
+### Changed
+
+- Wave 7 in `ROADMAP.md` tracks the three professionalization limitations with
+  acceptance criteria; `FOLLOWUP-PLAN.md` C1–C4 mirrors them.
+
+### Limitations
+
+- The quality rubric is saturated at 6/6, so it cannot distinguish arms; a
+  harder multi-file/a11y rubric and larger N are required before any quality
+  claim.
+- Pin warnings are not a lockfile/attestation: a mutable package can still change
+  server-side; reviewed trust and pinned versions are the current mitigation.
+- npx detection needs a cached package and a usable npx; sandboxes without npx
+  fall back to the global binary/config/env path.
+
+
 ## [3.1.1] — 2026-11-26
 
 ### Fixed

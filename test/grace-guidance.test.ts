@@ -16,7 +16,7 @@ import { join } from "node:path";
 import { cloneDefault } from "../src/grace-config";
 import type { MyGraceConfig } from "../src/grace-config";
 import { GuidancePackSettings } from "../src/grace-config";
-import { retrieveGuidance, searchGuidance } from "../src/grace-guidance";
+import { guidanceCommandPinned, retrieveGuidance, searchGuidance } from "../src/grace-guidance";
 
 const EXAMPLES = join(import.meta.dir, "..", "examples", "guidance-packs");
 
@@ -132,5 +132,14 @@ esac
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
+  });
+});
+
+describe("guidance CLI pinning", () => {
+  test("flags @latest and bare npx specs", () => {
+    expect(guidanceCommandPinned("npx -y modern-web-guidance@latest")).toBe(false);
+    expect(guidanceCommandPinned("npx -y modern-web-guidance")).toBe(false);
+    expect(guidanceCommandPinned("npx -y modern-web-guidance@1.0.2")).toBe(true);
+    expect(guidanceCommandPinned("./guide.sh")).toBe(true);
   });
 });

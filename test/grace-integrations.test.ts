@@ -277,6 +277,24 @@ describe("modern-web-guidance integration", () => {
     }
   });
 
+  posixTest("falls back to a cached npx package when no global binary exists", () => {
+    const dir = makeDir();
+    const root = makeDir();
+    try {
+      const npx = join(dir, "npx");
+      writeFileSync(npx, "#!/bin/sh\necho modern-web-guidance 1.0.2\n", { mode: 0o755 });
+      const status = resolveIntegration("modern-web-guidance", cloneDefault(), root, emptyEnv({ PATH: dir }));
+      expect(status.available).toBe(true);
+      expect(status.supported).toBe(true);
+      expect(status.runner).toBe("npx");
+      expect(status.version).toBe("1.0.2");
+      expect(status.source).toBe("path");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("missing MWG is optional and carries an install hint", () => {
     const root = makeDir();
     try {

@@ -43,7 +43,8 @@
   <notes>
     <note-1>ADR-9: allowlist only, argv-only, shell:false, timeouts, scrubbed env; external output is untrusted data and is never executed.</note-1>
     <note-2>Pinned tested ranges: octocode >=0.29 &lt;0.30, archify >=3.2 &lt;4. Out-of-range tools are reported, never used.</note-2>
-    <note-3>MYGRACE_INTEGRATIONS=off disables every adapter for reproducible CI (release gate G13); the status command itself always exits 0.</note-3>
-    <note-4>No network in detection: only a --version probe; the adapter's MCP session uses the same scrubbed env.</note-4>
+    <note-3>Modern Web Guidance is detected as a global binary, a config/env entry, or an npx-cache package (`npx --no-install`; no download).</note-3>
+    <note-4>MYGRACE_INTEGRATIONS=off disables every adapter for reproducible CI (release gate G13); the status command itself always exits 0.</note-4>
+    <note-5>No network in detection: only a --version probe; the adapter's MCP session uses the same scrubbed env.</note-5>
   </notes>
 </M-INTEGRATIONS>

@@ -1,6 +1,6 @@
 # MyGRACE Roadmap — from audit findings to a professional agent engineering harness
 
-> Status: **v3.1.1 shipped 2026-11-26** — optional MWG detection, trust-gated external lint providers (ADR-11) and guidance packs (ADR-12); `inspect` grouping/benchmark shipped in v3.0.0. The benchmark still reports no measured token/effort gain from docs or guidance. Baseline: v1.0.1 as audited on 2026-11-22
+> Status: **v3.2.0 shipped 2026-11-26** — guidance professionalization: agent workflow, npx-cache MWG detection, pin warnings and a quality-benchmark pilot. Quality/token gains remain unproven; Wave 7 lists the remaining acceptance criteria. Baseline: v1.0.1 as audited on 2026-11-22
 > (see `analysis/00-EXECUTIVE-ASSESSMENT.md` and appendices 01–04).
 > Target: a tool that AI coding agents can use with confidence on software of **any complexity** —
 > from a 3-module script to a 500-module monorepo, on repos you do not fully trust.
@@ -227,6 +227,22 @@ Release gates added: **G13** core gates pass with `MYGRACE_INTEGRATIONS=off` (no
   (`tokenUsage`, `sessionStats`, `contextBreakdown`), pre-registered capsule-vs-skill A/B on 2–3 tasks,
   N=10 per arm, medians + bootstrap CI; kill criterion < 15 % tool-call/turn reduction or gate
   regression → keep capsules experimental without token/cost claims.
+
+### Wave 7 — Guidance professionalization — *v3.2.x*
+
+The v3.1 guidance integration is functional but not yet production-grade. Three
+limitations are tracked explicitly:
+
+| # | Limitation | Status | Acceptance |
+|---|---|---|---|
+| 1 | MWG was detected only as a global CLI; npx-only installs were invisible | ✅ v3.2.0 — `integrations` falls back to `npx --no-install modern-web-guidance --version` (npx cache), reports `runner: "npx"`; no network download | Detection covered by tests; no global install required |
+| 2 | The external benchmark graded token usage, not artifact quality | 🟡 v3.2.0 pilot: all arms scored 6/6 (rubric saturated); MyGRACE-only 7 981 tokens vs plain 18 547 vs MWG 68 351 | Harden the rubric (multi-file, a11y behaviour, failure paths), larger N, second language; quality claim only after that |
+| 3 | CLI packs/providers can use mutable `@latest`; no pin attestation | 🟡 v3.2.0 warning: `LINT_PROVIDER_UNPINNED` / `GUIDANCE_PACK_UNPINNED`; docs/examples pinned; trust hashes config | Lockfile/attestation for pack versions, signed/hash-verified local packs |
+
+Wave 7 also adds the agent workflow: `context packet`/`focus` list configured
+packs and the exact `context guidance` commands; `mygrace-execute`, `mygrace-cli`,
+`AGENTS.md` and its template require agents to consult relevant packs and cite
+them, without vendoring the corpus.
 
 ## 6. Release gates checklist (copy into every release PR)
 

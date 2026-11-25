@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-25T22:40:57.167Z",
+  "repository": "expressjs/express (artifact task; no repo code modified)",
+  "task": "Create a file `dialog-demo.html` in the repository root with a complete, accessible modal dialog demo using modern web platform APIs. Requirements: native <dialog> with showModal(), an accessible name (aria-labelledby or aria-label), a visible close control, Escape/keyboard support, and CSS that respects prefers-reduced-motion. Use minimal CSS/JS and no libraries. Do not modify any other file. After writing, reply with the platform APIs you used.",
+  "rubric": [
+    "nativeDialog",
+    "showModal",
+    "accessibleName",
+    "closeControl",
+    "reducedMotion",
+    "noAriaDialogRole"
+  ],
+  "reps": 2,
+  "rows": [
+    {
+      "arm": "plain",
+      "n": 2,
+      "files": 2,
+      "medianScore": 6,
+      "medianTokens": 18547,
+      "medianTools": 10,
+      "medianWall": 73.1
+    },
+    {
+      "arm": "grace",
+      "n": 2,
+      "files": 2,
+      "medianScore": 6,
+      "medianTokens": 7981,
+      "medianTools": 5,
+      "medianWall": 27
+    },
+    {
+      "arm": "grace+mwg",
+      "n": 2,
+      "files": 2,
+      "medianScore": 6,
+      "medianTokens": 68351,
+      "medianTools": 39,
+      "medianWall": 245.1
+    }
+  ],
+  "sessions": [
+    {
+      "arm": "plain",
+      "rep": 1,
+      "sessionId": "session-ab504507-01fa-478f-95a6-a7b4e999c9d8",
+      "wallSeconds": 89.8,
+      "costTokens": 22299,
+      "toolCalls": 13,
+      "fileCreated": true,
+      "score": 6,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true
+      },
+      "notes": ""
+    },
+    {
+      "arm": "plain",
+      "rep": 2,
+      "sessionId": "session-f9d41c7f-0aa8-43ff-afa3-8479f40f4287",
+      "wallSeconds": 56.4,
+      "costTokens": 14794,
+      "toolCalls": 7,
+      "fileCreated": true,
+      "score": 6,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true
+      },
+      "notes": ""
+    },
+    {
+      "arm": "grace",
+      "rep": 1,
+      "sessionId": "session-be4f6132-4708-4497-bfcf-b32fdd937a3a",
+      "wallSeconds": 32.7,
+      "costTokens": 11159,
+      "toolCalls": 4,
+      "fileCreated": true,
+      "score": 6,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true
+      },
+      "notes": ""
+    },
+    {
+      "arm": "grace",
+      "rep": 2,
+      "sessionId": "session-c6671a81-141c-4f1b-a307-edb268876add",
+      "wallSeconds": 21.3,
+      "costTokens": 4803,
+      "toolCalls": 6,
+      "fileCreated": true,
+      "score": 6,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true
+      },
+      "notes": ""
+    },
+    {
+      "arm": "grace+mwg",
+      "rep": 1,
+      "sessionId": "session-87924265-06db-4fad-b703-5c8f529b552e",
+      "wallSeconds": 121.6,
+      "costTokens": 49944,
+      "toolCalls": 24,
+      "fileCreated": true,
+      "score": 6,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true
+      },
+      "notes": ""
+    },
+    {
+      "arm": "grace+mwg",
+      "rep": 2,
+      "sessionId": "session-14435c88-0fad-43b6-8a19-9ac9832279c4",
+      "wallSeconds": 368.6,
+      "costTokens": 86757,
+      "toolCalls": 53,
+      "fileCreated": true,
+      "score": 6,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true
+      },
+      "notes": ""
+    }
+  ],
+  "limitations": [
+    "One task, static six-point rubric, small N; not a general quality benchmark.",
+    "The grace+mwg arm used npx @latest at run time; guidance version is not pinned by the harness.",
+    "File creation/quality depends on the agent following the write instruction; missing files score 0 and are reported."
+  ]
+}
