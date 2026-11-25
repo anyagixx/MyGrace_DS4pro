@@ -13,7 +13,7 @@ It is a CLI (`mygrace`, 18 commands) plus an agent methodology (12 skills) and
 an MCP server (21 tools). It does not generate code, call a model, or send telemetry — it
 enforces traceability and context discipline for the agent you already use.
 
-Current version: `2.0.0`
+Current version: `2.1.0`
 
 > Distribution is **GitHub Releases + source**: there is no npm publication
 > (decision 2026-11-25). `@osovv` is a third-party scope (the project's starting
@@ -343,10 +343,12 @@ markup only. It prints the scope line and adds `data.scope` to the JSON envelope
 Core command benchmarks (median wall time / peak RSS, 7 runs after a warm-up) on
 this repository, `examples/demo-store` and a generated lint-clean 70-module
 project: `mygrace ci` ≈ 380 ms / 109 MB on 29 modules and ≈ 419 ms / 94 MB on 70
-modules; `status` and `lint --strict` ≈ 155–260 ms. Full table, method and
+modules; `status` and `lint --strict` ≈ 155–260 ms. On a real external repo
+(expressjs/express) the same commands are 105–169 ms / 65–83 MB. Full table, method and
 limitations: [`analysis/benchmark.md`](analysis/benchmark.md). This is CLI/index
 performance only — agent-task success and token usage are measured separately
-(capsule pilot: [`analysis/capsule-eval/report.md`](analysis/capsule-eval/report.md)).
+(capsule pilot: [`analysis/capsule-eval/report.md`](analysis/capsule-eval/report.md);
+external express benchmark: [`analysis/external-benchmark.md`](analysis/external-benchmark.md)).
 
 ## Diagrams (optional)
 

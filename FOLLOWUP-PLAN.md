@@ -265,6 +265,16 @@ Status of the three priorities from the project review (2026-11-25):
   Remaining: further reduction of the `module`/`phase`/`verification`/`file`
   readers is a later major decision.
 
+## Review priority B — external + agent benchmark (v2.1.0)
+
+- **Done:** `scripts/external-benchmark.ts` on expressjs/express (CLI + 8
+  headless agent sessions). CLI 105–169 ms / 65–83 MB. Agent results are mixed:
+  simple lookup slightly cheaper with MyGRACE, routing task more expensive; both
+  arms correct. N=2/arm/task, generated docs, keyword grading — reported as a
+  first data point, not a claim.
+- **Remaining:** curated external artifacts, more tasks, larger N, blinded
+  grading; ideally a second repository and language.
+
 ## E. Sequencing, releases, and ownership
 
 | Order | Work | Owner | Effort | Output |

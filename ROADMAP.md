@@ -1,10 +1,10 @@
 # MyGRACE Roadmap — from audit findings to a professional agent engineering harness
 
-> Status: **v2.0.0 shipped 2026-11-25** — breaking surface consolidation (18 commands / 21 MCP tools / 12 skills) and a migration guide; trust hardening/benchmarks/quickstart shipped in v1.8.0. Remaining review priority: external-repo + agent-task benchmarks. Baseline: v1.0.1 as audited on 2026-11-22
+> Status: **v2.1.0 shipped 2026-11-25** — external express benchmark (CLI + agent sessions, honest mixed result) and the v2.0 validator self-test CI fix; surface consolidation shipped in v2.0.0. Remaining: larger/curated external agent benchmark. Baseline: v1.0.1 as audited on 2026-11-22
 > (see `analysis/00-EXECUTIVE-ASSESSMENT.md` and appendices 01–04).
 > Target: a tool that AI coding agents can use with confidence on software of **any complexity** —
 > from a 3-module script to a 500-module monorepo, on repos you do not fully trust.
-> **v2.0.0 shipped evidence:** `bun run release:check` green (typecheck 0, **727 tests / 35 files**,
+> **v2.1.0 shipped evidence:** `bun run release:check` green (typecheck 0, **727 tests / 35 files**,
 > demo lint, doc-truth gates, pack-smoke, **diagram IR freshness for all three kinds**, capsule validation),
 > `mygrace ci --path .` PASS on this repository (**29 modules / 4 phases / 29 verifications /
 > 39 declared test files**), and `bun run publish:dry` proves the publish artifact (68 files, 259 kB, 29 shipped src files, 137 relative + 28 bare imports). G13 green with

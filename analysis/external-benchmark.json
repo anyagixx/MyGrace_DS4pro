@@ -1,0 +1,214 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-25T20:05:53.962Z",
+  "repository": "expressjs/express",
+  "commit": "43fca52d28a422c8be48fd489cbd4f2d6152bab6",
+  "artifacts": "Generated one module per lib file (6 modules) + real upstream test files; lint/ci clean.",
+  "cli": [
+    {
+      "command": "status",
+      "medianMs": 169,
+      "p95Ms": 184,
+      "medianRssMb": 81.5,
+      "failures": 0
+    },
+    {
+      "command": "lint --strict",
+      "medianMs": 158,
+      "p95Ms": 166,
+      "medianRssMb": 80.6,
+      "failures": 0
+    },
+    {
+      "command": "ci",
+      "medianMs": 137,
+      "p95Ms": 157,
+      "medianRssMb": 82.5,
+      "failures": 0
+    },
+    {
+      "command": "trace M-RESPONSE",
+      "medianMs": 105,
+      "p95Ms": 121,
+      "medianRssMb": 67.9,
+      "failures": 0
+    },
+    {
+      "command": "context packet M-RESPONSE",
+      "medianMs": 103,
+      "p95Ms": 106,
+      "medianRssMb": 65.5,
+      "failures": 0
+    }
+  ],
+  "agent": {
+    "model": "dsh headless default (DeepSeek route)",
+    "reps": 2,
+    "tasks": [
+      {
+        "id": "res.send location",
+        "keywords": [
+          "lib/response.js",
+          "res.send"
+        ]
+      },
+      {
+        "id": "routing path",
+        "keywords": [
+          "lib/application.js",
+          "router"
+        ]
+      }
+    ],
+    "rows": [
+      {
+        "task": "res.send location",
+        "arm": "grace",
+        "n": 2,
+        "medianCost": 6243,
+        "medianTools": 5,
+        "medianWall": 15.05,
+        "correct": 2
+      },
+      {
+        "task": "res.send location",
+        "arm": "plain",
+        "n": 2,
+        "medianCost": 6877,
+        "medianTools": 6,
+        "medianWall": 17.5,
+        "correct": 2
+      },
+      {
+        "task": "routing path",
+        "arm": "grace",
+        "n": 2,
+        "medianCost": 31812,
+        "medianTools": 20,
+        "medianWall": 81.19999999999999,
+        "correct": 2
+      },
+      {
+        "task": "routing path",
+        "arm": "plain",
+        "n": 2,
+        "medianCost": 25340,
+        "medianTools": 18,
+        "medianWall": 68.9,
+        "correct": 2
+      }
+    ],
+    "sessions": [
+      {
+        "arm": "grace",
+        "task": "res.send location",
+        "rep": 1,
+        "sessionId": "session-b0bb1c21-56ce-4450-b85f-842278bae764",
+        "runJsonl": "analysis/external-benchmark-runs/res-send-location-grace-1.jsonl",
+        "wallSeconds": 18,
+        "correct": true,
+        "costTokens": 7336,
+        "toolCalls": 5,
+        "cacheReadTokens": 53632,
+        "finalChars": 1248
+      },
+      {
+        "arm": "grace",
+        "task": "res.send location",
+        "rep": 2,
+        "sessionId": "session-814be449-2e22-4777-9371-9a5cab64fb8c",
+        "runJsonl": "analysis/external-benchmark-runs/res-send-location-grace-2.jsonl",
+        "wallSeconds": 12.1,
+        "correct": true,
+        "costTokens": 5149,
+        "toolCalls": 5,
+        "cacheReadTokens": 37376,
+        "finalChars": 903
+      },
+      {
+        "arm": "plain",
+        "task": "res.send location",
+        "rep": 1,
+        "sessionId": "session-aede09fb-3435-4a2a-971d-1e6a06e5cb03",
+        "runJsonl": "analysis/external-benchmark-runs/res-send-location-plain-1.jsonl",
+        "wallSeconds": 19.4,
+        "correct": true,
+        "costTokens": 8785,
+        "toolCalls": 6,
+        "cacheReadTokens": 51200,
+        "finalChars": 1210
+      },
+      {
+        "arm": "plain",
+        "task": "res.send location",
+        "rep": 2,
+        "sessionId": "session-97f12b38-4ef8-4035-a475-f82d529806ed",
+        "runJsonl": "analysis/external-benchmark-runs/res-send-location-plain-2.jsonl",
+        "wallSeconds": 15.6,
+        "correct": true,
+        "costTokens": 4969,
+        "toolCalls": 5,
+        "cacheReadTokens": 36480,
+        "finalChars": 1003
+      },
+      {
+        "arm": "grace",
+        "task": "routing path",
+        "rep": 1,
+        "sessionId": "session-bdfd5749-a96a-4cc3-aee0-3296bcf40502",
+        "runJsonl": "analysis/external-benchmark-runs/routing-path-grace-1.jsonl",
+        "wallSeconds": 106.6,
+        "correct": true,
+        "costTokens": 39713,
+        "toolCalls": 24,
+        "cacheReadTokens": 378624,
+        "finalChars": 6087
+      },
+      {
+        "arm": "grace",
+        "task": "routing path",
+        "rep": 2,
+        "sessionId": "session-44566cb2-fbe5-4aaa-885b-4056289514bc",
+        "runJsonl": "analysis/external-benchmark-runs/routing-path-grace-2.jsonl",
+        "wallSeconds": 55.8,
+        "correct": true,
+        "costTokens": 23910,
+        "toolCalls": 16,
+        "cacheReadTokens": 160640,
+        "finalChars": 6936
+      },
+      {
+        "arm": "plain",
+        "task": "routing path",
+        "rep": 1,
+        "sessionId": "session-f02b7cdd-3a51-4c90-b121-fb1f55262c7a",
+        "runJsonl": "analysis/external-benchmark-runs/routing-path-plain-1.jsonl",
+        "wallSeconds": 56,
+        "correct": true,
+        "costTokens": 26940,
+        "toolCalls": 15,
+        "cacheReadTokens": 109696,
+        "finalChars": 10099
+      },
+      {
+        "arm": "plain",
+        "task": "routing path",
+        "rep": 2,
+        "sessionId": "session-d0830454-58ef-410a-9ec9-e50d6158b40c",
+        "runJsonl": "analysis/external-benchmark-runs/routing-path-plain-2.jsonl",
+        "wallSeconds": 81.8,
+        "correct": true,
+        "costTokens": 23739,
+        "toolCalls": 20,
+        "cacheReadTokens": 310016,
+        "finalChars": 6101
+      }
+    ]
+  },
+  "limitations": [
+    "MyGRACE artifacts are generated from file layout, not curated by a human.",
+    "Two shallow retrieval/architecture tasks; keyword-graded correctness only.",
+    "One model, one host, small N; not a general agent-productivity claim.",
+    "CLI benchmark runs on a warm machine with bun startup included."
+  ]
+}

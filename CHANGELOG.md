@@ -9,6 +9,36 @@ release time (see `ROADMAP.md` §6, gate G10).
 
 Nothing yet.
 
+## [2.1.0] — 2026-11-25
+
+### Added
+
+- **External benchmark on a real OSS repository (expressjs/express).**
+  `scripts/external-benchmark.ts` clones express, generates lint-clean MyGRACE
+  artifacts (6 modules from `lib/*.js` with real upstream test files) and
+  measures both the CLI and agent sessions with/without the artifacts.
+  CLI: `status` 169 ms / 81.5 MB, `lint --strict` 158 ms / 80.6 MB,
+  `ci` 137 ms / 82.5 MB, `trace`/`context packet` ≈105 ms / ~66 MB (median,
+  warm runs). Agent (N=2/arm/task, headless DSH, keyword-graded): both arms
+  correct on both tasks; `res.send` lookup slightly cheaper with MyGRACE
+  (6 243 vs 6 877 tokens; 5 vs 6 tool calls), routing/architecture task more
+  expensive (31 812 vs 25 340; 20 vs 18). Directions conflict — reported as a
+  harness + first data point, **not** a general productivity claim.
+  Report: `analysis/external-benchmark.md`.
+- CI fix for the v2.0.0 marketplace self-test baseline (12 skills; the control
+  run previously normalized to 15).
+- README "Measured performance" now links both the self-owned and external
+  benchmarks.
+
+### Limitations
+
+- External artifacts are generated from file layout, not curated; two shallow
+  tasks, one model/host, N=2 per arm/task, keyword grading only.
+- The v2.0.0 tag's CI run failed on the validator self-test only; this release
+  includes the fix on `main` (all gates green).
+- No curated external MyGRACE adoption yet; that is the next benchmark step.
+
+
 ## [2.0.0] — 2026-11-25
 
 ### Breaking changes (surface consolidation)
