@@ -179,7 +179,7 @@ describe("guidance lockfile", () => {
     }
   });
 
-  test("locks a CLI pack by command hash and version", () => {
+  posixTest("locks a CLI pack by command hash and version", () => {
     const root = makeRoot();
     try {
       const cli = join(root, "guide.sh");

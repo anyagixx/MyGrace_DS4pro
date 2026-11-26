@@ -9,6 +9,15 @@ release time (see `ROADMAP.md` §6, gate G10).
 
 Nothing yet.
 
+## [3.3.1] — 2026-11-26
+
+### Fixed
+
+- Windows CI: the CLI-pack lockfile test executes a POSIX shell fixture; mark it
+  POSIX-only like the other CLI-pack tests. Local-pack lock tests stay
+  cross-platform. No runtime behavior changed; v3.3.0 remains valid.
+
+
 ## [3.3.0] — 2026-11-26
 
 ### Added
