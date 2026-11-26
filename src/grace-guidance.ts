@@ -18,7 +18,7 @@
 // START_MODULE_CONTRACT
 //   PURPOSE: Search/retrieve guidance from configured packs with trust-gated CLI execution and path-safe local reads.
 //   SCOPE: reads local pack manifests/guides; optionally runs configured CLI packs; no writes, no network logic of its own.
-//   DEPENDS: grace-config, grace-common, grace-errors, grace-test (authorization/audit/tokenizer)
+//   DEPENDS: grace-config, grace-common, grace-errors, grace-test (authorization/audit/tokenizer), node:crypto
 //   LINKS: docs/guidance-packs.md, docs/adr/ADR-12-guidance-packs.md
 // END_MODULE_CONTRACT
 
@@ -29,15 +29,18 @@
 //   loadGuidancePacks()  — resolve local manifests and CLI availability/trust
 //   searchGuidance()     — search across enabled packs
 //   retrieveGuidance()   — retrieve one guide (local file read or CLI stdout)
-//   guidanceCommand      — `mygrace context guidance <query> [--id]`
+//   guidanceLock helpers — `mygrace context guidance --lock/--check-lock` (ADR-12)
+//   guidanceCommand      — `mygrace context guidance <query> [--id] [--lock] [--check-lock]`
 // END_MODULE_MAP
 
 // START_CHANGE_SUMMARY
 //   v3.1.0 — introduced ADR-12 guidance-pack SPI and the `context guidance` command.
+//   v3.3.0 — guidance lockfile: local SHA-256 + CLI command hash/version, auto-verified.
 // END_CHANGE_SUMMARY
 
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { isAbsolute, join, resolve, sep } from "node:path";
 import { defineCommand } from "citty";
 import { tryFindProjectRoot } from "./grace-common";
@@ -74,9 +77,28 @@ export interface GuidancePackStatus {
   license: string | null;
   guides: number;
   pinned: boolean;
+  locked: GuidanceLockState;
   skippedReason: string | null;
   hint: string | null;
 }
+
+export type GuidanceLockState = "verified" | "mismatch" | "missing" | "unlocked";
+
+export interface GuidanceLockEntry {
+  kind: GuidancePackSettings["kind"];
+  version: string | null;
+  sha256: string | null;
+  commandHash: string | null;
+  lockedAt: string;
+}
+
+export interface GuidanceLock {
+  version: 1;
+  generatedAt: string;
+  packs: Record<string, GuidanceLockEntry>;
+}
+
+export const GUIDANCE_LOCK_FILENAME = "mygrace.guidance-lock.json";
 
 export interface GuidanceHit {
   pack: string;
@@ -91,6 +113,13 @@ export interface GuidanceSearchData {
   results: GuidanceHit[];
   skipped: { pack: string; reason: string }[];
 }
+
+export interface GuidanceLockData {
+  lock: GuidanceLock;
+  file: string;
+}
+
+export type GuidanceData = GuidanceSearchData | GuidanceRetrieveData | GuidanceLockData;
 
 export interface GuidanceRetrieveData {
   pack: string;
@@ -145,6 +174,113 @@ export function guidanceCommandPinned(command: string): boolean {
   return /@\d/.test(spec);
 }
 
+/** SHA-256 over every file in a local pack (sorted, path + bytes). */
+export function localPackDigest(dir: string): string {
+  const hash = createHash("sha256");
+  const walk = (current: string, prefix: string): void => {
+    const entries = readdirSync(current, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name));
+    for (const entry of entries) {
+      const relative = prefix === "" ? entry.name : `${prefix}/${entry.name}`;
+      const absolute = join(current, entry.name);
+      if (entry.isDirectory()) {
+        walk(absolute, relative);
+      } else if (entry.isFile()) {
+        hash.update(relative);
+        hash.update("\0");
+        hash.update(readFileSync(absolute));
+        hash.update("\0");
+      }
+    }
+  };
+  walk(dir, "");
+  return hash.digest("hex");
+}
+
+/** Stable hash of a CLI pack command (whitespace-normalised). */
+export function cliCommandHash(command: string): string {
+  return createHash("sha256").update(command.trim().replace(/\s+/g, " ")).digest("hex");
+}
+
+/** Read and validate `mygrace.guidance-lock.json`; null when absent. */
+export function loadGuidanceLock(root: string): GuidanceLock | null {
+  const file = join(root, GUIDANCE_LOCK_FILENAME);
+  if (!existsSync(file)) return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(readFileSync(file, "utf-8"));
+  } catch {
+    throw new UsageError(`Invalid ${GUIDANCE_LOCK_FILENAME}: not valid JSON.`, { file: GUIDANCE_LOCK_FILENAME });
+  }
+  if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new UsageError(`Invalid ${GUIDANCE_LOCK_FILENAME}: expected an object.`, { file: GUIDANCE_LOCK_FILENAME });
+  }
+  const raw = parsed as Record<string, unknown>;
+  if (raw.version !== 1 || raw.packs === null || typeof raw.packs !== "object" || Array.isArray(raw.packs)) {
+    throw new UsageError(`Invalid ${GUIDANCE_LOCK_FILENAME}: unsupported shape/version.`, { file: GUIDANCE_LOCK_FILENAME });
+  }
+  const packs: Record<string, GuidanceLockEntry> = {};
+  for (const [name, entry] of Object.entries(raw.packs as Record<string, unknown>)) {
+    if (entry === null || typeof entry !== "object" || Array.isArray(entry)) continue;
+    const item = entry as Record<string, unknown>;
+    if (item.kind !== "local" && item.kind !== "cli") continue;
+    packs[name] = {
+      kind: item.kind,
+      version: typeof item.version === "string" ? item.version : null,
+      sha256: typeof item.sha256 === "string" ? item.sha256 : null,
+      commandHash: typeof item.commandHash === "string" ? item.commandHash : null,
+      lockedAt: typeof item.lockedAt === "string" ? item.lockedAt : new Date(0).toISOString(),
+    };
+  }
+  return { version: 1, generatedAt: typeof raw.generatedAt === "string" ? raw.generatedAt : new Date(0).toISOString(), packs };
+}
+
+function applyLock(
+  root: string,
+  statuses: GuidancePackStatus[],
+  manifests: Map<string, GuidancePackManifest>,
+  commandTokens: Map<string, string[]>,
+  config: MyGraceConfig
+): GuidanceLock | null {
+  const lock = loadGuidanceLock(root);
+  if (lock === null) return null;
+  for (const status of statuses) {
+    if (!status.enabled || !status.available) continue;
+    const entry = lock.packs[status.name];
+    if (entry === undefined) {
+      status.available = false;
+      status.locked = "missing";
+      status.skippedReason = "lock-missing";
+      status.hint = `Pack "${status.name}" is absent from ${GUIDANCE_LOCK_FILENAME}; run \`mygrace context guidance --lock\`.`;
+      continue;
+    }
+    if (status.kind === "local") {
+      const settings = config.guidancePacks.find((pack) => pack.name === status.name);
+      const dir = settings === undefined ? null : packDir(root, settings);
+      const digest = dir === null ? "" : localPackDigest(dir);
+      if (entry.kind !== "local" || entry.sha256 === null || entry.sha256 !== digest) {
+        status.available = false;
+        status.locked = "mismatch";
+        status.skippedReason = "lock-mismatch";
+        status.hint = `Local pack "${status.name}" changed after locking; re-run \`mygrace context guidance --lock\` after review.`;
+      } else {
+        status.locked = "verified";
+      }
+      continue;
+    }
+    const tokens = commandTokens.get(status.name);
+    const hash = tokens === undefined ? null : cliCommandHash(tokens.join(" "));
+    if (entry.kind !== "cli" || entry.commandHash === null || hash === null || entry.commandHash !== hash) {
+      status.available = false;
+      status.locked = "mismatch";
+      status.skippedReason = "lock-mismatch";
+      status.hint = `CLI pack "${status.name}" command changed after locking; re-run \`mygrace context guidance --lock\` after review.`;
+    } else {
+      status.locked = "verified";
+    }
+  }
+  return lock;
+}
+
 function packDir(root: string, settings: GuidancePackSettings): string | null {
   if (settings.path === null) return null;
   const candidate = isAbsolute(settings.path) ? resolve(settings.path) : resolve(root, settings.path);
@@ -165,8 +301,8 @@ function cliCommandTokens(settings: GuidancePackSettings): string[] | null {
 function resolvePacks(
   root: string,
   config: MyGraceConfig,
-  options: { allowCommands: boolean; allowUnsafeCommands: boolean }
-): { statuses: GuidancePackStatus[]; manifests: Map<string, GuidancePackManifest>; commandTokens: Map<string, string[]>; authorization: ReturnType<typeof authorizeCommands> } {
+  options: { allowCommands: boolean; allowUnsafeCommands: boolean; ignoreLock?: boolean }
+): { statuses: GuidancePackStatus[]; manifests: Map<string, GuidancePackManifest>; commandTokens: Map<string, string[]>; authorization: ReturnType<typeof authorizeCommands>; lock: GuidanceLock | null } {
   const authorization = authorizeCommands(root, config, options.allowCommands);
   const statuses: GuidancePackStatus[] = [];
   const manifests = new Map<string, GuidancePackManifest>();
@@ -183,6 +319,7 @@ function resolvePacks(
       license: null,
       guides: 0,
       pinned: settings.kind === "local" ? true : guidanceCommandPinned(settings.command ?? ""),
+      locked: "unlocked",
       skippedReason: null,
       hint: null,
     };
@@ -221,7 +358,8 @@ function resolvePacks(
     }
     statuses.push({ ...base, available: true, hint: "CLI pack; version is reported by the pack CLI on retrieval." });
   }
-  return { statuses, manifests, commandTokens, authorization };
+  const lock = options.ignoreLock === true ? null : applyLock(root, statuses, manifests, commandTokens, config);
+  return { statuses, manifests, commandTokens, authorization, lock };
 }
 
 function scoreHit(manifest: GuidancePackManifest["guides"][number], terms: string[]): number {
@@ -361,23 +499,88 @@ export function retrieveGuidance(
   return { pack: packName, id, title: id, content: run.stdout, source: "cli" };
 }
 
+/** Build and write `mygrace.guidance-lock.json` for configured packs. */
+export function writeGuidanceLock(
+  root: string,
+  config: MyGraceConfig,
+  options: { allowCommands: boolean; allowUnsafeCommands: boolean }
+): GuidanceLock {
+  const resolved = resolvePacks(root, config, { ...options, ignoreLock: true });
+  if (resolved.statuses.filter((status) => status.enabled).length === 0) {
+    throw new UsageError("No guidance packs are configured.", {
+      hint: "Add guidancePacks to mygrace.config.json, then re-run `mygrace context guidance --lock`.",
+    });
+  }
+  if (resolved.statuses.some((status) => status.enabled && status.kind === "cli" && !resolved.authorization.authorized)) {
+    throw new UsageError("Locking CLI guidance packs requires trusted project commands.", {
+      hint: trustRefusalHint(root, resolved.authorization),
+    });
+  }
+  const now = new Date().toISOString();
+  const packs: Record<string, GuidanceLockEntry> = {};
+  for (const settings of config.guidancePacks) {
+    if (settings.enabled === false) continue;
+    const status = resolved.statuses.find((entry) => entry.name === settings.name);
+    if (status === undefined || !status.available) continue;
+    if (settings.kind === "local") {
+      const dir = packDir(root, settings);
+      const manifest = resolved.manifests.get(settings.name);
+      if (dir === null || manifest === undefined) continue;
+      packs[settings.name] = {
+        kind: "local",
+        version: manifest.version,
+        sha256: localPackDigest(dir),
+        commandHash: null,
+        lockedAt: now,
+      };
+      continue;
+    }
+    const tokens = resolved.commandTokens.get(settings.name);
+    if (tokens === undefined) continue;
+    let version: string | null = null;
+    const probe = spawnSync(tokens[0] as string, [...tokens.slice(1), "--version"], {
+      cwd: root,
+      encoding: "utf8",
+      timeout: Math.min(settings.timeoutMs, 10_000),
+      shell: false,
+      env: integrationChildEnv({ NO_COLOR: "1", CI: "1" }),
+    });
+    if ((probe.status ?? -1) === 0) {
+      const match = /(\d+)\.(\d+)\.(\d+)/.exec(`${probe.stdout ?? ""}\n${probe.stderr ?? ""}`);
+      if (match !== null) version = `${match[1]}.${match[2]}.${match[3]}`;
+    }
+    packs[settings.name] = {
+      kind: "cli",
+      version,
+      sha256: null,
+      commandHash: cliCommandHash(tokens.join(" ")),
+      lockedAt: now,
+    };
+  }
+  const lock: GuidanceLock = { version: 1, generatedAt: now, packs };
+  writeFileSync(join(root, GUIDANCE_LOCK_FILENAME), `${JSON.stringify(lock, null, 2)}\n`);
+  return lock;
+}
+
 const guidanceCommand = defineCommand({
   meta: {
     name: "guidance",
     description: "Search/retrieve domain guidance from configured packs (local markdown or trust-gated CLI)",
   },
   args: {
-    query: { type: "positional", required: true, description: "Search query (use --id to retrieve a specific guide)" },
+    query: { type: "positional", required: false, description: "Search query (use --id to retrieve a specific guide; not needed with --lock)" },
     path: { type: "string", default: ".", description: "Project root" },
     format: { type: "string", default: "text", description: "Output format: text or json" },
     id: { type: "string", description: "Retrieve this guide id from --pack (or the matching pack)" },
     pack: { type: "string", description: "Limit search to one configured pack name" },
     allowCommands: { type: "boolean", default: false, description: "Allow trust-gated CLI packs for this run" },
     allowUnsafeCommands: { type: "boolean", default: false, description: "One-off opt-in for deny-listed pack commands" },
+    lock: { type: "boolean", default: false, description: "Write mygrace.guidance-lock.json for configured packs" },
+    checkLock: { type: "boolean", default: false, description: "Fail (exit 1) when a configured pack is missing/differs from the lockfile" },
   },
   run: async ({ args }) => {
     const format = parseOutputFormat(args.format);
-    await runCommandOutcome<GuidanceSearchData | GuidanceRetrieveData>(format, { command: "context guidance" }, (): CommandOutcome<GuidanceSearchData | GuidanceRetrieveData> => {
+    await runCommandOutcome<GuidanceData>(format, { command: "context guidance" }, (): CommandOutcome<GuidanceData> => {
       const input = typeof args.path === "string" ? args.path : ".";
       const root = tryFindProjectRoot(input) ?? resolve(input);
       const loaded = tryLoadConfig(root);
@@ -386,6 +589,29 @@ const guidanceCommand = defineCommand({
       const id = typeof args.id === "string" && args.id.trim() !== "" ? args.id.trim() : null;
       const pack = typeof args.pack === "string" && args.pack.trim() !== "" ? args.pack.trim() : undefined;
       const options = { allowCommands: args.allowCommands === true, allowUnsafeCommands: args.allowUnsafeCommands === true, ...(pack === undefined ? {} : { pack }) };
+      if (args.lock === true) {
+        const lock = writeGuidanceLock(root, config, options);
+        const envelope = createEnvelope({
+          data: { lock, file: GUIDANCE_LOCK_FILENAME },
+          findings: [],
+          meta: { command: "context guidance", root },
+        });
+        return {
+          envelope,
+          print: () => {
+            console.log(`Guidance lock written: ${GUIDANCE_LOCK_FILENAME}`);
+            console.log("=".repeat(32));
+            for (const [name, entry] of Object.entries(lock.packs)) {
+              console.log(`- ${name} (${entry.kind}) version=${entry.version ?? "unknown"} sha256=${entry.sha256?.slice(0, 12) ?? "-"} command=${entry.commandHash?.slice(0, 12) ?? "-"}`);
+            }
+          },
+        };
+      }
+      if (typeof args.query !== "string" || args.query.trim() === "") {
+        throw new UsageError("context guidance needs a search query (or --lock).", {
+          hint: 'Example: mygrace context guidance "accessible dialog" --path .',
+        });
+      }
       if (id !== null) {
         const data = retrieveGuidance(root, config, pack ?? config.guidancePacks[0]?.name ?? "", id, options);
         const findings: Finding[] = [];
@@ -411,6 +637,18 @@ const guidanceCommand = defineCommand({
             })
           );
         }
+        if (args.checkLock === true && pack.locked !== "verified") {
+          findings.push(
+            finding("error", "GUIDANCE_LOCK_MISMATCH", `Guidance pack "${pack.name}" is ${pack.locked}; the lockfile does not verify it.`, {
+              hint: "Review changes and re-run `mygrace context guidance --lock`, or remove the lockfile if it is not used.",
+            })
+          );
+        }
+      }
+      if (args.checkLock === true && !existsSync(join(root, GUIDANCE_LOCK_FILENAME))) {
+        findings.push(
+          finding("error", "GUIDANCE_LOCK_MISSING", `No ${GUIDANCE_LOCK_FILENAME} exists; run \`mygrace context guidance --lock\` after reviewing packs.`)
+        );
       }
       const envelope = createEnvelope({ data, findings, meta: { command: "context guidance", root } });
       return {

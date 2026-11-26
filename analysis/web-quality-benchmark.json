@@ -1,165 +1,394 @@
 {
-  "schemaVersion": 1,
-  "generatedAt": "2026-11-25T22:40:57.167Z",
-  "repository": "expressjs/express (artifact task; no repo code modified)",
-  "task": "Create a file `dialog-demo.html` in the repository root with a complete, accessible modal dialog demo using modern web platform APIs. Requirements: native <dialog> with showModal(), an accessible name (aria-labelledby or aria-label), a visible close control, Escape/keyboard support, and CSS that respects prefers-reduced-motion. Use minimal CSS/JS and no libraries. Do not modify any other file. After writing, reply with the platform APIs you used.",
-  "rubric": [
-    "nativeDialog",
-    "showModal",
-    "accessibleName",
-    "closeControl",
-    "reducedMotion",
-    "noAriaDialogRole"
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-26T00:13:01.359Z",
+  "repository": "empty workspace (artifact tasks only; no repository context)",
+  "reps": 1,
+  "tasks": [
+    {
+      "id": "dialog",
+      "file": "dialog-demo.html",
+      "rubricKeys": [
+        "nativeDialog",
+        "showModal",
+        "accessibleName",
+        "closeControl",
+        "reducedMotion",
+        "noAriaDialogRole",
+        "backdropOrStartingStyle",
+        "focusManagement"
+      ]
+    },
+    {
+      "id": "form",
+      "file": "profile-form.html",
+      "rubricKeys": [
+        "form",
+        "labels",
+        "emailRequired",
+        "autocomplete",
+        "describedBy",
+        "userInvalid",
+        "constraintApi",
+        "noAlert"
+      ]
+    },
+    {
+      "id": "tabs",
+      "file": "tabs.html",
+      "rubricKeys": [
+        "tablist",
+        "tabRole",
+        "tabpanel",
+        "ariaSelected",
+        "ariaControls",
+        "rovingTabindex",
+        "arrowKeys",
+        "focusManagement"
+      ]
+    }
   ],
-  "reps": 2,
-  "rows": [
+  "aggregate": [
     {
       "arm": "plain",
-      "n": 2,
-      "files": 2,
-      "medianScore": 6,
-      "medianTokens": 18547,
-      "medianTools": 10,
-      "medianWall": 73.1
+      "n": 3,
+      "files": 3,
+      "meanQuality": 100,
+      "medianTokens": 21219,
+      "medianTools": 6,
+      "medianWall": 80
     },
     {
       "arm": "grace",
-      "n": 2,
-      "files": 2,
-      "medianScore": 6,
-      "medianTokens": 7981,
-      "medianTools": 5,
-      "medianWall": 27
+      "n": 3,
+      "files": 3,
+      "meanQuality": 100,
+      "medianTokens": 20738,
+      "medianTools": 7,
+      "medianWall": 75.5
     },
     {
       "arm": "grace+mwg",
-      "n": 2,
-      "files": 2,
-      "medianScore": 6,
-      "medianTokens": 68351,
+      "n": 3,
+      "files": 3,
+      "meanQuality": 95.8,
+      "medianTokens": 61028,
+      "medianTools": 26,
+      "medianWall": 151.1
+    }
+  ],
+  "rows": [
+    {
+      "arm": "plain",
+      "task": "dialog",
+      "n": 1,
+      "files": 1,
+      "medianScore": 8,
+      "medianMax": 8,
+      "medianTokens": 73099,
+      "medianTools": 49,
+      "medianWall": 380.5
+    },
+    {
+      "arm": "plain",
+      "task": "form",
+      "n": 1,
+      "files": 1,
+      "medianScore": 8,
+      "medianMax": 8,
+      "medianTokens": 21219,
+      "medianTools": 6,
+      "medianWall": 80
+    },
+    {
+      "arm": "plain",
+      "task": "tabs",
+      "n": 1,
+      "files": 1,
+      "medianScore": 8,
+      "medianMax": 8,
+      "medianTokens": 8129,
+      "medianTools": 3,
+      "medianWall": 30.9
+    },
+    {
+      "arm": "grace",
+      "task": "dialog",
+      "n": 1,
+      "files": 1,
+      "medianScore": 8,
+      "medianMax": 8,
+      "medianTokens": 100048,
+      "medianTools": 46,
+      "medianWall": 396.2
+    },
+    {
+      "arm": "grace",
+      "task": "form",
+      "n": 1,
+      "files": 1,
+      "medianScore": 8,
+      "medianMax": 8,
+      "medianTokens": 20738,
+      "medianTools": 7,
+      "medianWall": 75.5
+    },
+    {
+      "arm": "grace",
+      "task": "tabs",
+      "n": 1,
+      "files": 1,
+      "medianScore": 8,
+      "medianMax": 8,
+      "medianTokens": 12237,
+      "medianTools": 3,
+      "medianWall": 41.7
+    },
+    {
+      "arm": "grace+mwg",
+      "task": "dialog",
+      "n": 1,
+      "files": 1,
+      "medianScore": 7,
+      "medianMax": 8,
+      "medianTokens": 74637,
       "medianTools": 39,
-      "medianWall": 245.1
+      "medianWall": 220.6
+    },
+    {
+      "arm": "grace+mwg",
+      "task": "form",
+      "n": 1,
+      "files": 1,
+      "medianScore": 8,
+      "medianMax": 8,
+      "medianTokens": 61028,
+      "medianTools": 24,
+      "medianWall": 151.1
+    },
+    {
+      "arm": "grace+mwg",
+      "task": "tabs",
+      "n": 1,
+      "files": 1,
+      "medianScore": 8,
+      "medianMax": 8,
+      "medianTokens": 47230,
+      "medianTools": 26,
+      "medianWall": 119.5
     }
   ],
   "sessions": [
     {
       "arm": "plain",
+      "task": "dialog",
       "rep": 1,
-      "sessionId": "session-ab504507-01fa-478f-95a6-a7b4e999c9d8",
-      "wallSeconds": 89.8,
-      "costTokens": 22299,
-      "toolCalls": 13,
+      "sessionId": "session-fc26938a-3a36-4a81-9aab-7e2b72c742b1",
+      "wallSeconds": 380.5,
+      "costTokens": 73099,
+      "toolCalls": 49,
       "fileCreated": true,
-      "score": 6,
+      "score": 8,
+      "max": 8,
       "checks": {
         "nativeDialog": true,
         "showModal": true,
         "accessibleName": true,
         "closeControl": true,
         "reducedMotion": true,
-        "noAriaDialogRole": true
+        "noAriaDialogRole": true,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true
       },
       "notes": ""
     },
     {
       "arm": "plain",
-      "rep": 2,
-      "sessionId": "session-f9d41c7f-0aa8-43ff-afa3-8479f40f4287",
-      "wallSeconds": 56.4,
-      "costTokens": 14794,
-      "toolCalls": 7,
-      "fileCreated": true,
-      "score": 6,
-      "checks": {
-        "nativeDialog": true,
-        "showModal": true,
-        "accessibleName": true,
-        "closeControl": true,
-        "reducedMotion": true,
-        "noAriaDialogRole": true
-      },
-      "notes": ""
-    },
-    {
-      "arm": "grace",
+      "task": "form",
       "rep": 1,
-      "sessionId": "session-be4f6132-4708-4497-bfcf-b32fdd937a3a",
-      "wallSeconds": 32.7,
-      "costTokens": 11159,
-      "toolCalls": 4,
-      "fileCreated": true,
-      "score": 6,
-      "checks": {
-        "nativeDialog": true,
-        "showModal": true,
-        "accessibleName": true,
-        "closeControl": true,
-        "reducedMotion": true,
-        "noAriaDialogRole": true
-      },
-      "notes": ""
-    },
-    {
-      "arm": "grace",
-      "rep": 2,
-      "sessionId": "session-c6671a81-141c-4f1b-a307-edb268876add",
-      "wallSeconds": 21.3,
-      "costTokens": 4803,
+      "sessionId": "session-1af364b8-9dc2-4e6a-a43b-0fbd41096a8b",
+      "wallSeconds": 80,
+      "costTokens": 21219,
       "toolCalls": 6,
       "fileCreated": true,
-      "score": 6,
+      "score": 8,
+      "max": 8,
+      "checks": {
+        "form": true,
+        "labels": true,
+        "emailRequired": true,
+        "autocomplete": true,
+        "describedBy": true,
+        "userInvalid": true,
+        "constraintApi": true,
+        "noAlert": true
+      },
+      "notes": ""
+    },
+    {
+      "arm": "plain",
+      "task": "tabs",
+      "rep": 1,
+      "sessionId": "session-46f83872-5788-453c-81e1-5f5dd32a6140",
+      "wallSeconds": 30.9,
+      "costTokens": 8129,
+      "toolCalls": 3,
+      "fileCreated": true,
+      "score": 8,
+      "max": 8,
+      "checks": {
+        "tablist": true,
+        "tabRole": true,
+        "tabpanel": true,
+        "ariaSelected": true,
+        "ariaControls": true,
+        "rovingTabindex": true,
+        "arrowKeys": true,
+        "focusManagement": true
+      },
+      "notes": ""
+    },
+    {
+      "arm": "grace",
+      "task": "dialog",
+      "rep": 1,
+      "sessionId": "session-12165baa-12ee-40ab-9711-f5c3ea4bd61f",
+      "wallSeconds": 396.2,
+      "costTokens": 100048,
+      "toolCalls": 46,
+      "fileCreated": true,
+      "score": 8,
+      "max": 8,
       "checks": {
         "nativeDialog": true,
         "showModal": true,
         "accessibleName": true,
         "closeControl": true,
         "reducedMotion": true,
-        "noAriaDialogRole": true
+        "noAriaDialogRole": true,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true
+      },
+      "notes": ""
+    },
+    {
+      "arm": "grace",
+      "task": "form",
+      "rep": 1,
+      "sessionId": "session-a2286c7d-f05e-41c7-bca7-7c8702242afc",
+      "wallSeconds": 75.5,
+      "costTokens": 20738,
+      "toolCalls": 7,
+      "fileCreated": true,
+      "score": 8,
+      "max": 8,
+      "checks": {
+        "form": true,
+        "labels": true,
+        "emailRequired": true,
+        "autocomplete": true,
+        "describedBy": true,
+        "userInvalid": true,
+        "constraintApi": true,
+        "noAlert": true
+      },
+      "notes": ""
+    },
+    {
+      "arm": "grace",
+      "task": "tabs",
+      "rep": 1,
+      "sessionId": "session-85f210eb-46eb-452a-9f22-672e8e6cb8d2",
+      "wallSeconds": 41.7,
+      "costTokens": 12237,
+      "toolCalls": 3,
+      "fileCreated": true,
+      "score": 8,
+      "max": 8,
+      "checks": {
+        "tablist": true,
+        "tabRole": true,
+        "tabpanel": true,
+        "ariaSelected": true,
+        "ariaControls": true,
+        "rovingTabindex": true,
+        "arrowKeys": true,
+        "focusManagement": true
       },
       "notes": ""
     },
     {
       "arm": "grace+mwg",
+      "task": "dialog",
       "rep": 1,
-      "sessionId": "session-87924265-06db-4fad-b703-5c8f529b552e",
-      "wallSeconds": 121.6,
-      "costTokens": 49944,
+      "sessionId": "session-31483d4b-3686-430b-8c4e-ab6f0bde9b6a",
+      "wallSeconds": 220.6,
+      "costTokens": 74637,
+      "toolCalls": 39,
+      "fileCreated": true,
+      "score": 7,
+      "max": 8,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": false,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true
+      },
+      "notes": "missing:noAriaDialogRole"
+    },
+    {
+      "arm": "grace+mwg",
+      "task": "form",
+      "rep": 1,
+      "sessionId": "session-f20b9ca3-f3ac-40cd-b37b-c4cfbd9d8c5a",
+      "wallSeconds": 151.1,
+      "costTokens": 61028,
       "toolCalls": 24,
       "fileCreated": true,
-      "score": 6,
+      "score": 8,
+      "max": 8,
       "checks": {
-        "nativeDialog": true,
-        "showModal": true,
-        "accessibleName": true,
-        "closeControl": true,
-        "reducedMotion": true,
-        "noAriaDialogRole": true
+        "form": true,
+        "labels": true,
+        "emailRequired": true,
+        "autocomplete": true,
+        "describedBy": true,
+        "userInvalid": true,
+        "constraintApi": true,
+        "noAlert": true
       },
       "notes": ""
     },
     {
       "arm": "grace+mwg",
-      "rep": 2,
-      "sessionId": "session-14435c88-0fad-43b6-8a19-9ac9832279c4",
-      "wallSeconds": 368.6,
-      "costTokens": 86757,
-      "toolCalls": 53,
+      "task": "tabs",
+      "rep": 1,
+      "sessionId": "session-8475cef3-7f95-475a-b2cf-b90b53f305a0",
+      "wallSeconds": 119.5,
+      "costTokens": 47230,
+      "toolCalls": 26,
       "fileCreated": true,
-      "score": 6,
+      "score": 8,
+      "max": 8,
       "checks": {
-        "nativeDialog": true,
-        "showModal": true,
-        "accessibleName": true,
-        "closeControl": true,
-        "reducedMotion": true,
-        "noAriaDialogRole": true
+        "tablist": true,
+        "tabRole": true,
+        "tabpanel": true,
+        "ariaSelected": true,
+        "ariaControls": true,
+        "rovingTabindex": true,
+        "arrowKeys": true,
+        "focusManagement": true
       },
       "notes": ""
     }
   ],
   "limitations": [
-    "One task, static six-point rubric, small N; not a general quality benchmark.",
-    "The grace+mwg arm used npx @latest at run time; guidance version is not pinned by the harness.",
-    "File creation/quality depends on the agent following the write instruction; missing files score 0 and are reported."
+    "Static rubrics check source patterns, not runtime accessibility behaviour; a perfect score is not proof of a good UI.",
+    "Empty workspace, three tasks, N=1 per task/arm (3 samples per arm); no second language or blinded human grading yet.",
+    "The grace+mwg arm used npx @latest at run time; guidance version is not pinned by the harness."
   ]
 }

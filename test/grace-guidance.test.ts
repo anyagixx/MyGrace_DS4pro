@@ -10,13 +10,20 @@ import { describe, expect, test } from "bun:test";
 
 const POSIX_ONLY = process.platform !== "win32";
 const posixTest = test.skipIf(!POSIX_ONLY);
-import { chmodSync, cpSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { cloneDefault } from "../src/grace-config";
 import type { MyGraceConfig } from "../src/grace-config";
 import { GuidancePackSettings } from "../src/grace-config";
-import { guidanceCommandPinned, retrieveGuidance, searchGuidance } from "../src/grace-guidance";
+import {
+  GUIDANCE_LOCK_FILENAME,
+  guidanceCommandPinned,
+  loadGuidanceLock,
+  retrieveGuidance,
+  searchGuidance,
+  writeGuidanceLock,
+} from "../src/grace-guidance";
 
 const EXAMPLES = join(import.meta.dir, "..", "examples", "guidance-packs");
 
@@ -141,5 +148,71 @@ describe("guidance CLI pinning", () => {
     expect(guidanceCommandPinned("npx -y modern-web-guidance")).toBe(false);
     expect(guidanceCommandPinned("npx -y modern-web-guidance@1.0.2")).toBe(true);
     expect(guidanceCommandPinned("./guide.sh")).toBe(true);
+  });
+});
+
+describe("guidance lockfile", () => {
+  test("locks and verifies a local pack; tampering is detected", () => {
+    const root = makeRoot();
+    try {
+      cpSync(join(EXAMPLES, "web-basics"), join(root, "packs", "web-basics"), { recursive: true });
+      const config = localPackConfig("packs/web-basics");
+      const options = { allowCommands: false, allowUnsafeCommands: false };
+      const lock = writeGuidanceLock(root, config, options);
+      expect(lock.packs["pack-1"]?.kind).toBe("local");
+      expect(lock.packs["pack-1"]?.sha256).toMatch(/^[0-9a-f]{64}$/);
+      expect(loadGuidanceLock(root)?.["packs"]?.["pack-1"]?.version).toBe("1.0.0");
+
+      const verified = searchGuidance(root, config, "dialog", options);
+      expect(verified.packs[0]?.locked).toBe("verified");
+      expect(verified.results.length).toBeGreaterThan(0);
+
+      const guide = join(root, "packs", "web-basics", "guides", "accessible-dialog.md");
+      writeFileSync(guide, `${readFileSync(guide, "utf-8")}\n- tampered\n`);
+      const tampered = searchGuidance(root, config, "dialog", options);
+      expect(tampered.packs[0]?.locked).toBe("mismatch");
+      expect(tampered.packs[0]?.available).toBe(false);
+      expect(tampered.results).toEqual([]);
+      expect(() => retrieveGuidance(root, config, "pack-1", "accessible-dialog", options)).toThrow(/not available/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("locks a CLI pack by command hash and version", () => {
+    const root = makeRoot();
+    try {
+      const cli = join(root, "guide.sh");
+      writeFileSync(
+        cli,
+        `#!/bin/sh
+case "$1" in
+  --version) echo 1.0.2 ;;
+  search) echo '[{"id":"dialog","description":"Native dialog guidance"}]' ;;
+  retrieve) echo "# Dialog" ;;
+  *) exit 2 ;;
+esac
+`
+      );
+      chmodSync(cli, 0o755);
+      const config = cloneDefault();
+      config.allowCommands = true;
+      config.guidancePacks = [{ name: "fake-cli", enabled: "auto", kind: "cli", path: null, command: "./guide.sh", timeoutMs: 10_000 }];
+      const lock = writeGuidanceLock(root, config, { allowCommands: false, allowUnsafeCommands: false });
+      expect(lock.packs["fake-cli"]?.commandHash).toMatch(/^[0-9a-f]{64}$/);
+      expect(lock.packs["fake-cli"]?.version).toBe("1.0.2");
+      expect(readFileSync(join(root, GUIDANCE_LOCK_FILENAME), "utf-8")).toContain("fake-cli");
+
+      const search = searchGuidance(root, config, "dialog", { allowCommands: false, allowUnsafeCommands: false });
+      expect(search.packs[0]?.locked).toBe("verified");
+      expect(search.results).toHaveLength(1);
+
+      config.guidancePacks[0]!.command = "./guide.sh --changed";
+      const changed = searchGuidance(root, config, "dialog", { allowCommands: false, allowUnsafeCommands: false });
+      expect(changed.packs[0]?.locked).toBe("mismatch");
+      expect(changed.results).toEqual([]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 });

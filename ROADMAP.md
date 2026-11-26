@@ -1,6 +1,6 @@
 # MyGRACE Roadmap — from audit findings to a professional agent engineering harness
 
-> Status: **v3.2.2 shipped 2026-11-26** — guidance professionalization: agent workflow, npx-cache MWG detection, pin warnings and a quality-benchmark pilot. Quality/token gains remain unproven; Wave 7 lists the remaining acceptance criteria. Baseline: v1.0.1 as audited on 2026-11-22
+> Status: **v3.3.0 shipped 2026-11-26** — guidance professionalization: lockfile/integrity, npx-cache detection and a three-task quality benchmark. Quality/token gains remain unproven; Wave 7 tracks the remaining harder-rubric/N work. Baseline: v1.0.1 as audited on 2026-11-22
 > (see `analysis/00-EXECUTIVE-ASSESSMENT.md` and appendices 01–04).
 > Target: a tool that AI coding agents can use with confidence on software of **any complexity** —
 > from a 3-module script to a 500-module monorepo, on repos you do not fully trust.
@@ -236,10 +236,10 @@ limitations are tracked explicitly:
 | # | Limitation | Status | Acceptance |
 |---|---|---|---|
 | 1 | MWG was detected only as a global CLI; npx-only installs were invisible | ✅ v3.2.0 — `integrations` falls back to `npx --no-install modern-web-guidance --version` (npx cache), reports `runner: "npx"`; no network download | Detection covered by tests; no global install required |
-| 2 | The external benchmark graded token usage, not artifact quality | 🟡 v3.2.0 pilot: all arms scored 6/6 (rubric saturated); MyGRACE-only 7 981 tokens vs plain 18 547 vs MWG 68 351 | Harden the rubric (multi-file, a11y behaviour, failure paths), larger N, second language; quality claim only after that |
-| 3 | CLI packs/providers can use mutable `@latest`; no pin attestation | 🟡 v3.2.0 warning: `LINT_PROVIDER_UNPINNED` / `GUIDANCE_PACK_UNPINNED`; docs/examples pinned; trust hashes config | Lockfile/attestation for pack versions, signed/hash-verified local packs |
+| 2 | The external benchmark graded token usage, not artifact quality | 🟡 v3.3.0 pilot: 3 tasks × 8-check rubrics, N=1/task/arm; plain/MyGRACE 100%, MWG 95.8%; MWG 61 028 tokens vs 21 219/20 738 | Rubric still saturates two arms; N=1 too small — larger N, runtime a11y checks, second language, blinded grading |
+| 3 | CLI packs/providers can use mutable `@latest`; no pin attestation | ✅ v3.3.0: `mygrace.guidance-lock.json` (local SHA-256, CLI command hash + `--version`), enforced automatically; `--lock`/`--check-lock`; plus pin warnings | Residual: server-side package mutation after lock is still trusted — attestation/signature is future work |
 
-Wave 7 also adds the agent workflow: `context packet`/`focus` list configured
+Wave 6→7 also adds the agent workflow: `context packet`/`focus` list configured
 packs and the exact `context guidance` commands; `mygrace-execute`, `mygrace-cli`,
 `AGENTS.md` and its template require agents to consult relevant packs and cite
 them, without vendoring the corpus.

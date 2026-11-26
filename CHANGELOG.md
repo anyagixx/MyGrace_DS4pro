@@ -9,6 +9,34 @@ release time (see `ROADMAP.md` §6, gate G10).
 
 Nothing yet.
 
+## [3.3.0] — 2026-11-26
+
+### Added
+
+- **Guidance lockfile / integrity (C3 closed).** `mygrace context guidance --lock`
+  writes `mygrace.guidance-lock.json` with local-pack SHA-256 digests and CLI
+  command hashes + `--version`; when present it is enforced before retrieval
+  (changed/missing packs are skipped with coded findings). `--check-lock` exits 1
+  on drift. Docs and ADR-12 updated; local packs are hash-verified, CLI packs
+  record command/version for audit. Residual: a mutable server-side CLI package
+  can change after locking — attestation/signature remains future work.
+- **Harder quality benchmark (C2, pilot).** `scripts/web-quality-benchmark.ts`
+  now runs three artifact tasks (8-check dialog, native form validation,
+  accessible tabs) in an empty workspace across plain/MyGRACE/MyGRACE+MWG arms.
+  Pilot N=1/task/arm: plain and MyGRACE 100% mean quality, MyGRACE+MWG 95.8%;
+  MyGRACE+MWG used 61 028 median tokens / 26 tools / 151 s vs plain 21 219 / 6 /
+  80 s and MyGRACE 20 738 / 7 / 75.5 s. The rubric still saturates for two arms,
+  so this remains a **quality signal, not a quality claim**; larger N/blinded
+  grading stay in Wave 7.
+
+### Changed
+
+- Agent workflow: `mygrace-cli`/`mygrace-execute`, `AGENTS.md` and its template
+  mention lockfile drift and review-before-relock.
+- Roadmap Wave 7: limitation 1 and 3 closed; limitation 2 remains partial with a
+  concrete hardening plan.
+
+
 ## [3.2.2] — 2026-11-26
 
 ### Fixed

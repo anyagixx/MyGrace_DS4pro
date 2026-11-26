@@ -71,6 +71,25 @@ The MCP surface is the existing `mygrace_context` tool:
 { "mode": "guidance", "query": "accessible dialog", "pack": "web-basics" }
 ```
 
+## Lockfile and integrity
+
+Commit a lockfile so a changed pack is visible and cannot silently alter what
+agents retrieve:
+
+```bash
+mygrace context guidance --lock          # writes mygrace.guidance-lock.json
+mygrace context guidance --check-lock "dialog"   # exit 1 on missing/mismatched packs
+```
+
+- **Local packs:** SHA-256 over every file in the pack directory; any edit is a
+  `GUIDANCE_LOCK_MISMATCH` and the pack is skipped until re-locked after review.
+- **CLI packs:** SHA-256 of the command plus the version reported by
+  `<command> --version` at lock time; a changed command is skipped. The version
+  is recorded for audit but runtime retrieval still trusts the pinned command.
+- Lock enforcement is automatic when the file exists; a configured pack missing
+  from the lock is treated as `lock-missing` (skipped). Re-run `--lock` after an
+  intentional change and commit the lockfile.
+
 ## Examples and limits
 
 - [`examples/guidance-packs/`](../examples/guidance-packs/) contains two

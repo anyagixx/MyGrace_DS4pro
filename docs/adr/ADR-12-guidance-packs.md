@@ -23,6 +23,10 @@ maintenance burden and update lag.
    rejected. CLI packs run only under the ADR-1 trust gate and are audited.
 4. Retrieved text is printed/returned as data, never executed and never written
    into `docs/` automatically.
+5. A committed `mygrace.guidance-lock.json` records local-pack SHA-256 digests and
+   CLI command hashes/resolved versions. When present it is enforced
+   automatically: changed/missing packs are skipped and `--check-lock` fails the
+   command; `--lock` regenerates it after review.
 
 ## Consequences
 
