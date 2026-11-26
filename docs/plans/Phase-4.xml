@@ -1,5 +1,5 @@
 <!-- Phase-4 plan. Target 50-200 lines (sizeBudgets.phase): one step per workstream plus outcome/acceptance so an agent can execute without re-reading the whole plan. -->
-<Phase-4 name="Release engineering and operations" status="wip">
+<Phase-4 name="Release engineering and operations" status="done">
   <description>Wave 4/5: ship MyGRACE like a product — a LIVE DeepSeek Harness status panel, a tag-driven release workflow with provenance, an artifact dry-run gate, a cross-platform CI matrix, and the actual npm publication (pending owner action). The package is publish-ready but not published.</description>
 
   <step-1 module="M-INSTALL" description="LIVE DSH status panel (W4.1): setup install --panel installs a real host route GET /api/mygrace.status + browser card reading `mygrace status --format json`; graceful {ok:false,error} on every failure." status="done" />

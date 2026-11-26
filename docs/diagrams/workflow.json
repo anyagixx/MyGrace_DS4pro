@@ -3,7 +3,7 @@
   "diagram_type": "workflow",
   "meta": {
     "title": "MyGRACE — MyGRACE delivery plan",
-    "subtitle": "4 phases · 38 steps",
+    "subtitle": "5 phases · 54 steps",
     "output": "workflow.html"
   },
   "lanes": [
@@ -22,6 +22,10 @@
     {
       "id": "phase-4",
       "label": "Phase-4 · Release engineering and operations"
+    },
+    {
+      "id": "phase-5",
+      "label": "Phase-5 · Hardening and product evidence"
     }
   ],
   "nodes": [
@@ -58,7 +62,16 @@
       "col": 4,
       "type": "backend",
       "label": "Release engineering and operations",
-      "sublabel": "6 steps · wip",
+      "sublabel": "6 steps · done",
+      "width": 300
+    },
+    {
+      "id": "node-phase-5",
+      "lane": "phase-5",
+      "col": 5,
+      "type": "backend",
+      "label": "Hardening and product evidence",
+      "sublabel": "16 steps · wip",
       "width": 300
     }
   ],
@@ -83,6 +96,13 @@
       "to": "node-phase-4",
       "fromSide": "bottom",
       "toSide": "top"
+    },
+    {
+      "id": "edge-4",
+      "from": "node-phase-4",
+      "to": "node-phase-5",
+      "fromSide": "bottom",
+      "toSide": "top"
     }
   ],
   "cards": [
@@ -90,7 +110,7 @@
       "dot": "cyan",
       "title": "Plan",
       "items": [
-        "4 phases · 38 steps"
+        "5 phases · 54 steps"
       ]
     },
     {
@@ -100,7 +120,8 @@
         "Phase-1: done",
         "Phase-2: done",
         "Phase-3: done",
-        "Phase-4: wip"
+        "Phase-4: done",
+        "Phase-5: wip"
       ]
     }
   ]

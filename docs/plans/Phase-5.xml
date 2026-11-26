@@ -1,0 +1,50 @@
+<!-- Phase-5 plan: hardening after the v3.4 audit. Target 50-200 lines; steps are scoped modules/outcomes so agents can execute one at a time. -->
+<Phase-5 name="Hardening and product evidence" status="wip">
+  <description>Close the audit gaps: production dependency security, release provenance, scoped verification, traceability, and measurable product evidence. Status stays wip while external adoption/quality measurement remains.</description>
+
+  <step-1 module="M-CLI" description="Scoped verification and command-surface truth after the v3.4 audit." status="done" />
+  <step-2 module="M-FILE" description="File-reader verification scoped to its declared tests." status="done" />
+  <step-3 module="M-STATUS" description="Status snapshot verification scoped to its declared tests." status="done" />
+  <step-4 module="M-PATHS" description="Path-safety verification scoped to its declared tests." status="done" />
+  <step-5 module="M-IMPACT" description="Impact analysis verification scoped to its declared tests." status="done" />
+  <step-6 module="M-NEXT" description="Next-step advisor verification scoped to its declared tests." status="done" />
+  <step-7 module="M-PROJECTS" description="Monorepo discovery verification scoped to its declared tests." status="done" />
+  <step-8 module="M-SHARD" description="Sharded-index verification scoped to its declared tests." status="done" />
+  <step-9 module="M-TRACE" description="Traceability verification scoped to its declared tests." status="done" />
+  <step-10 module="M-DIAGRAM" description="Diagram exporter verification scoped to its tests." status="done" />
+  <step-11 module="M-INTEGRATIONS" description="Optional integrations verification scoped to its tests." status="done" />
+  <step-12 module="M-LINT-PROVIDERS" description="External lint providers are trust-gated, audited and scoped." status="done" />
+  <step-13 module="M-GUIDANCE" description="Guidance packs, lockfile and Ed25519 attestation are verified." status="done" />
+  <step-14 module="M-CAPSULE" description="Capsule routines remain experimental and verified." status="done" />
+  <step-15 module="M-CI" description="External adoption and larger quality benchmark (N>=10, browser a11y) remain as product evidence." status="wip" />
+  <step-16 module="M-CODE-GRAPH" description="Octocode code-graph adapter remains optional, trust-gated and scoped." status="done" />
+
+  <outcome>
+    <item-1>Production dependencies have no high/critical advisories and CI enforces the audit gate.</item-1>
+    <item-2>Release assets carry SHA-256 checksums and GitHub build provenance; docs match the workflow.</item-2>
+    <item-3>Every verification command is scoped to declared test files; no bare `bun test` remains.</item-3>
+    <item-4>Every module has a requirement and phase trace link.</item-4>
+    <item-5>Remaining product evidence (external adoption, N>=10 quality, browser a11y) is tracked explicitly.</item-5>
+  </outcome>
+
+  <deliverables>
+    <item-1>Updated bun.lock with zero production advisories and an `audit:prod` gate.</item-1>
+    <item-2>Release workflow with SHA256SUMS and build provenance attestation.</item-2>
+    <item-3>Scoped verification files and a policy test that rejects bare `bun test`.</item-3>
+    <item-4>Requirements/phase trace links for every module and a closed Phase-4.</item-4>
+    <item-5>ROADMAP/FOLLOWUP truth pass for the remaining evidence work.</item-5>
+  </deliverables>
+
+  <acceptance-gates>
+    <item-1>`bun audit --production --audit-level=high` exits 0.</item-1>
+    <item-2>`bun test test/verification-scoping.test.ts` passes and every module trace has no gaps.</item-2>
+    <item-3>`mygrace lint --strict` and `mygrace ci` pass on the repo.</item-3>
+    <item-4>release workflow packs SHA256SUMS and attaches provenance only for tag pushes.</item-4>
+  </acceptance-gates>
+
+  <risks>
+    <item-1>Dependency upgrades can break MCP behavior; full test suite plus stdio runtime tests must stay green.</item-1>
+    <item-2>Attestation actions require id-token/attestations permissions; misconfiguration must fail the release, not silently skip.</item-2>
+    <item-3>Scoped commands can be too narrow; declared test files and coverage remain the guardrail.</item-3>
+  </risks>
+</Phase-5>

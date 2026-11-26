@@ -13,7 +13,7 @@ It is a CLI (`mygrace`, 15 commands) plus an agent methodology (12 skills) and
 an MCP server (21 tools). It does not generate code, call a model, or send telemetry — it
 enforces traceability and context discipline for the agent you already use.
 
-Current version: `3.4.0`
+Current version: `3.5.0`
 
 > Distribution is **GitHub Releases + source**: there is no npm publication
 > (decision 2026-11-25). `@osovv` is a third-party scope (the project's starting
@@ -606,12 +606,14 @@ Tag-driven and CI-only: `.github/workflows/release.yml` runs on a `v*` tag (or
 manually via workflow_dispatch for a gates-only run), executes
 `bun run release:check` and `bun run publish:dry` (artifact packing, static
 import completeness, offline install, packaged CLI smoke), refuses a tag that
-does not match `package.json`, packs `mygrace-cli-<version>.tgz`, uploads it as a
-workflow artifact and creates a GitHub Release with generated notes. CI runs the
-same gates plus an OS matrix (Ubuntu, Windows, macOS).
+does not match `package.json`, packs `mygrace-cli-<version>.tgz`, writes `SHA256SUMS`, attaches a GitHub
+build-provenance attestation, uploads both as workflow artifacts and creates a
+GitHub Release with generated notes. CI runs the same gates plus an OS matrix
+(Ubuntu, Windows, macOS) and a production dependency audit.
 
-- `bun run release:check` — the full gate: typecheck, tests, demo lint,
-  `mygrace ci` self-check, truth validators, diagram/capsule gates, pack-smoke.
+- `bun run release:check` — the full gate: typecheck, production dependency
+  audit, tests, demo lint, `mygrace ci` self-check, truth validators,
+  diagram/capsule gates, pack-smoke.
 - `bun run publish:dry` — packs the tarball, checks static import completeness,
   installs it offline and runs the packaged CLI. It is an artifact gate; it does
   not contact any registry.

@@ -36,6 +36,8 @@ jobs:
       - name: Typecheck with node 26 running tsc directly
         if: matrix.runtime == 'node'
         run: node node_modules/typescript/bin/tsc --noEmit
+      - name: Audit production dependencies (no high/critical advisories)
+        run: bun audit --production --audit-level=high
 
   test:
     name: tests (bun)
@@ -46,8 +48,8 @@ jobs:
         with:
           bun-version: "1.4.5"
       - run: bun install --frozen-lockfile
-      - name: Foundation + command unit tests (scoped by bunfig.toml)
-        run: bun test
+      - name: Foundation + command unit tests with coverage gate
+        run: bun test --coverage
       - name: Demo-store integration tests (dedicated bunfig root)
         run: bun run test:demo
 

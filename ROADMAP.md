@@ -1,6 +1,6 @@
 # MyGRACE Roadmap — from audit findings to a professional agent engineering harness
 
-> Status: **v3.4.0 shipped 2026-11-26** — guidance professionalization: lockfile/integrity, npx-cache detection and a three-task quality benchmark. Quality/token gains remain unproven; Wave 7 tracks the remaining harder-rubric/N work. Baseline: v1.0.1 as audited on 2026-11-22
+> Status: **v3.5.0 shipped 2026-11-26** — audit hardening: zero production advisories, release checksums/provenance, scoped verification, zero trace gaps. Phase-5 remains wip for external product evidence. Quality/token gains remain unproven; Wave 7 tracks the remaining harder-rubric/N work. Baseline: v1.0.1 as audited on 2026-11-22
 > (see `analysis/00-EXECUTIVE-ASSESSMENT.md` and appendices 01–04).
 > Target: a tool that AI coding agents can use with confidence on software of **any complexity** —
 > from a 3-module script to a 500-module monorepo, on repos you do not fully trust.
@@ -175,8 +175,8 @@ plus a `language-matrix` CI job.
 `mygrace next` (deterministic next action), `mygrace projects` (monorepo), `lint --changed` (incremental),
 plus MCP tools `mygrace_trace/impact/next/projects` (21 tools total).
 ✅ **Live DSH status panel**: host `GET /api/mygrace.status` + live sidebar card (opt-in `--panel`).
-✅ **Release engineering**: `publish:dry` artifact gate, tag-driven `release.yml` with provenance/OIDC,
-OS matrix (ubuntu/windows/macos). Publication itself is pending npm credentials/trusted-publisher setup.
+✅ **Release engineering**: `publish:dry` artifact gate, tag-driven `release.yml` with SHA-256 checksums and GitHub build-provenance attestation,
+OS matrix (ubuntu/windows/macos). Distribution is GitHub Releases (npm publication cancelled).
 
 ### Wave 4 — Release engineering — ✅ done (GitHub Releases; npm publication cancelled 2026-11-25)
 Version reset to a truthful `1.1.0` → `2.0.0` line; CHANGELOG automation; tag-driven gates and GitHub Release artifacts (npm publication intentionally not used);
@@ -243,6 +243,23 @@ Wave 6→7 also adds the agent workflow: `context packet`/`focus` list configure
 packs and the exact `context guidance` commands; `mygrace-execute`, `mygrace-cli`,
 `AGENTS.md` and its template require agents to consult relevant packs and cite
 them, without vendoring the corpus.
+
+### Wave 8 — Audit hardening — *v3.5.0*
+
+Closes the v3.4 audit findings:
+
+| Finding | Resolution |
+|---|---|
+| 40 production advisories (1 critical, 11 high) | `bun audit fix` + zero-advisory lockfile; `audit:prod` gate in CI and release |
+| Release had no checksum/provenance | `SHA256SUMS` asset + GitHub build-provenance attestation; docs match workflow |
+| 20/31 module checks were bare `bun test` | all verifications scoped to declared test files; policy test rejects future bare commands |
+| 13/31 modules had no requirement/phase trace | UC-007 + Phase-5 steps; trace gaps now 0; trace-link test added |
+| Phase-4 stale / `next` drift | Phase-4 closed, Phase-5 opened; `next` points at the real remaining evidence work |
+| No coverage signal in CI | CI runs `bun test --coverage`; measured 87.39% lines / 92.76% functions |
+
+Remaining (Phase-5 wip): external adoption and larger/blinded quality evidence
+(N>=10, browser a11y). These require infrastructure/time outside deterministic CI,
+not code changes to the core.
 
 ## 6. Release gates checklist (copy into every release PR)
 

@@ -104,6 +104,16 @@
       <RelatedModules>M-LINT-PROVIDERS,M-GUIDANCE,M-INTEGRATIONS,M-CONFIG</RelatedModules>
     </UC-006>
 
+    <UC-007>
+      <Actor>Maintainer/agent</Actor>
+      <Action>Uses the general tooling, integration and guidance surfaces (CLI, module/file readers, status, impact, trace, next, projects, sharding, diagrams, integrations, lint providers, capsules).</Action>
+      <Goal>Build and audit any-complexity projects while keeping the core deterministic and external tools opt-in.</Goal>
+      <Preconditions>The project has docs/ indexes and mygrace.config.json; external tools/packs are optional.</Preconditions>
+      <AcceptanceCriteria>Every surface has contracts, verification and trace links; scoped verification commands pass; external tools degrade to coded findings.</AcceptanceCriteria>
+      <Priority>medium</Priority>
+      <RelatedModules>M-CLI,M-FILE,M-STATUS,M-MODULE,M-PATHS,M-IMPACT,M-NEXT,M-PROJECTS,M-SHARD,M-TRACE,M-DIAGRAM,M-INTEGRATIONS,M-LINT-PROVIDERS,M-GUIDANCE,M-CAPSULE,M-CODE-GRAPH</RelatedModules>
+    </UC-007>
+
   </UseCases>
 
   <NonGoals>

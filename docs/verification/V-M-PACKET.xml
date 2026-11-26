@@ -5,7 +5,7 @@
   </test-files>
 
   <module-checks>
-    <check-1>bun test</check-1>
+    <check-1>bun test test/grace-packet.test.ts</check-1>
   </module-checks>
 
   <scenarios>

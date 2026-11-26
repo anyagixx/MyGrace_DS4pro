@@ -9,6 +9,46 @@ release time (see `ROADMAP.md` §6, gate G10).
 
 Nothing yet.
 
+## [3.5.0] — 2026-11-26
+
+### Security
+
+- **Production dependencies: 40 → 0 advisories.** `bun audit fix` updated the
+  lockfile (`@modelcontextprotocol/sdk` 1.30.0 → 1.32.0, `zod` 4.4.3 → 4.6.6,
+  express transitives), removing 1 critical, 11 high, 25 moderate and 3 low
+  advisories. New `bun run audit:prod` gate (`--production --audit-level=high`)
+  runs in CI and in `release:check`; the MCP stdio tests stay green.
+
+### Release provenance
+
+- Tag releases now produce `SHA256SUMS` next to the tarball and attach a GitHub
+  build-provenance attestation (`actions/attest-build-provenance@v2`, with
+  `id-token`/`attestations` permissions). Both are uploaded as workflow
+  artifacts and release assets; README/CONTRIBUTING/ROADMAP claims match the
+  actual workflow.
+
+### Verification and traceability
+
+- **All 31 module checks are scoped:** the 20 bare `<check-1>bun test</check-1>`
+  entries now name their declared test files, so `mygrace verify --module M-X`
+  runs only that module's tests (verified on M-XML). A policy test rejects bare
+  commands in future.
+- **Trace gaps: 13 → 0.** UC-007 covers the platform/tooling modules and Phase-5
+  links every module to a step; a trace-link policy test enforces both.
+- **Plan/next drift fixed:** Phase-4 closed, Phase-5 opened with the remaining
+  product-evidence work; `mygrace next` now points at Phase-5.
+- CI runs `bun test --coverage`; current coverage is **87.39% lines / 92.76%
+  functions** (754→756 tests, 39 files; coverage output is reported, not a hard
+  threshold yet).
+
+### Remaining (tracked in Phase-5, status wip)
+
+- External adoption and larger/blinded quality evidence (N≥10, browser a11y)
+  require infrastructure/time outside deterministic CI; no new code claim.
+- Registry-level provenance/signature for third-party CLI packs remains
+  upstream-dependent.
+
+
 ## [3.4.0] — 2026-11-26
 
 ### Added

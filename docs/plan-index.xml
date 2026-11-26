@@ -3,5 +3,6 @@
   <Phase-1 name="Foundation and safety" status="done" steps="19" />
   <Phase-2 name="Documentation and dogfooding" status="done" steps="5" />
   <Phase-3 name="Scale and agent workflows" status="done" steps="8" />
-  <Phase-4 name="Release engineering and operations" status="wip" steps="6" />
+  <Phase-4 name="Release engineering and operations" status="done" steps="6" />
+  <Phase-5 name="Hardening and product evidence" status="wip" steps="16" />
 </PlanIndex>

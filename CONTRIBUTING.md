@@ -196,6 +196,10 @@ Rules that keep history useful:
 
 ## Release gates
 
+Production dependencies must pass `bun run audit:prod` (no high/critical
+advisories); the release workflow attests the packed tarball with GitHub build
+provenance.
+
 `ROADMAP.md` §6 is the authoritative list. This is how it maps to the repo today:
 
 | Gate | Verify with | Status |
@@ -229,7 +233,7 @@ frozen lockfile, runs `bun run release:check` (typecheck, full tests, demo lint,
 pack-smoke) and `bun run publish:dry` (pack the tarball, static import
 completeness, offline install, packaged CLI `--version`/`--help`), refuses a tag
 that does not match `package.json`, then packs `mygrace-cli-<version>.tgz`,
-uploads it as a workflow artifact and creates a GitHub Release with generated
+writes `SHA256SUMS` and a GitHub build-provenance attestation, uploads them as workflow artifacts and creates a GitHub Release with generated
 notes. Manual: Actions → release → Run workflow for a gates-only run.
 
 **No npm publication.** Distribution decision 2026-11-25: the project does not

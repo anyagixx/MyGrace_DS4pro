@@ -17,6 +17,17 @@ D needs a stable CLI and C is the only user-visible feature left; B is independe
 
 ---
 
+## Audit hardening (v3.5.0)
+
+- ✅ Dependencies: 40 production advisories → 0; `audit:prod` gate in CI/release.
+- ✅ Release: `SHA256SUMS` + GitHub build-provenance attestation; stale
+  provenance/OIDC and npm-pending claims fixed.
+- ✅ Verification: all module checks scoped; `mygrace verify --module` runs only
+  declared tests; policy test rejects bare `bun test`.
+- ✅ Traceability: 13 trace gaps → 0; UC-007 + Phase-5 + policy test.
+- ✅ Plan/next: Phase-4 closed, Phase-5 opened for the remaining evidence work.
+- 🟡 Remaining: external adoption, N≥10/blinded quality, browser a11y.
+
 ## A. npm publication — ❌ cancelled by the owner (2026-11-25)
 
 Decision: **MyGRACE is not published to npm.** Distribution is GitHub Releases

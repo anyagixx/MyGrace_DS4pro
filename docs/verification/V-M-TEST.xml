@@ -7,7 +7,7 @@
   </test-files>
 
   <module-checks>
-    <check-1>bun test</check-1>
+    <check-1>bun test test/grace-test.test.ts test/grace-trust.test.ts test/grace-security.test.ts</check-1>
   </module-checks>
 
   <scenarios>

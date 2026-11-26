@@ -227,3 +227,9 @@ behavior, and the packaged artifact.
 Out of scope: vulnerabilities in third-party tools (DSH, pnpm, rtk, caveman, the
 project's own test runner and dependencies), vulnerabilities in projects you
 govern with MyGRACE, and model-provider behavior.
+
+## Dependency policy
+
+Production dependencies are audited in CI with
+`bun audit --production --audit-level=high`; high/critical advisories block a
+release. `bun.lock` is committed and `bun install --frozen-lockfile` is used in CI.
