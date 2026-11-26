@@ -1,6 +1,6 @@
 # MyGRACE Roadmap — from audit findings to a professional agent engineering harness
 
-> Status: **v3.3.1 shipped 2026-11-26** — guidance professionalization: lockfile/integrity, npx-cache detection and a three-task quality benchmark. Quality/token gains remain unproven; Wave 7 tracks the remaining harder-rubric/N work. Baseline: v1.0.1 as audited on 2026-11-22
+> Status: **v3.4.0 shipped 2026-11-26** — guidance professionalization: lockfile/integrity, npx-cache detection and a three-task quality benchmark. Quality/token gains remain unproven; Wave 7 tracks the remaining harder-rubric/N work. Baseline: v1.0.1 as audited on 2026-11-22
 > (see `analysis/00-EXECUTIVE-ASSESSMENT.md` and appendices 01–04).
 > Target: a tool that AI coding agents can use with confidence on software of **any complexity** —
 > from a 3-module script to a 500-module monorepo, on repos you do not fully trust.
@@ -236,7 +236,7 @@ limitations are tracked explicitly:
 | # | Limitation | Status | Acceptance |
 |---|---|---|---|
 | 1 | MWG was detected only as a global CLI; npx-only installs were invisible | ✅ v3.2.0 — `integrations` falls back to `npx --no-install modern-web-guidance --version` (npx cache), reports `runner: "npx"`; no network download | Detection covered by tests; no global install required |
-| 2 | The external benchmark graded token usage, not artifact quality | 🟡 v3.3.0 pilot: 3 tasks × 8-check rubrics, N=1/task/arm; plain/MyGRACE 100%, MWG 95.8%; MWG 61 028 tokens vs 21 219/20 738 | Rubric still saturates two arms; N=1 too small — larger N, runtime a11y checks, second language, blinded grading |
+| 2 | The external benchmark graded token usage, not artifact quality | 🟡 v3.4.0: 4 tasks (3 web + Python CLI), 8–10 static/runtime-proxy checks, N=1/task/arm; plain/MyGRACE 96.9%, MWG 90%, MWG 53 785 tokens vs 22 716/9 018 | Static proxies are not browser execution; N=1 is small. Real browser a11y and N≥10 are accepted out of deterministic CI scope |
 | 3 | CLI packs/providers can use mutable `@latest`; no pin attestation | ✅ v3.3.0: `mygrace.guidance-lock.json` (local SHA-256, CLI command hash + `--version`), enforced automatically; `--lock`/`--check-lock`; plus pin warnings | Residual: server-side package mutation after lock is still trusted — attestation/signature is future work |
 
 Wave 6→7 also adds the agent workflow: `context packet`/`focus` list configured

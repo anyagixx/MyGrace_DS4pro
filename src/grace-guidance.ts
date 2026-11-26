@@ -29,21 +29,23 @@
 //   loadGuidancePacks()  — resolve local manifests and CLI availability/trust
 //   searchGuidance()     — search across enabled packs
 //   retrieveGuidance()   — retrieve one guide (local file read or CLI stdout)
-//   guidanceLock helpers — `mygrace context guidance --lock/--check-lock` (ADR-12)
+//   guidanceLock helpers — `mygrace context guidance --lock/--check-lock/--sign/--keygen` (ADR-12)
 //   guidanceCommand      — `mygrace context guidance <query> [--id] [--lock] [--check-lock]`
 // END_MODULE_MAP
 
 // START_CHANGE_SUMMARY
 //   v3.1.0 — introduced ADR-12 guidance-pack SPI and the `context guidance` command.
 //   v3.3.0 — guidance lockfile: local SHA-256 + CLI command hash/version, auto-verified.
+//   v3.4.0 — lock attestation: CLI package digest (npx cache) + optional Ed25519 signature.
 // END_CHANGE_SUMMARY
 
 import { spawnSync } from "node:child_process";
-import { createHash } from "node:crypto";
-import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
+import { createHash, createPrivateKey, createPublicKey, generateKeyPairSync, sign as signBytes, verify as verifyBytes } from "node:crypto";
+import { chmodSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { isAbsolute, join, resolve, sep } from "node:path";
 import { defineCommand } from "citty";
 import { tryFindProjectRoot } from "./grace-common";
+import { findNpxCachedPackage } from "./grace-integrations";
 import { tryLoadConfig } from "./grace-config";
 import type { GuidancePackSettings, MyGraceConfig } from "./grace-config";
 import { createEnvelope, finding, UsageError } from "./grace-errors";
@@ -99,6 +101,9 @@ export interface GuidanceLock {
 }
 
 export const GUIDANCE_LOCK_FILENAME = "mygrace.guidance-lock.json";
+export const GUIDANCE_SIGNATURE_FILENAME = "mygrace.guidance-lock.sig";
+export const GUIDANCE_PUBLIC_KEY_FILENAME = "mygrace.guidance.pub";
+export const GUIDANCE_PRIVATE_KEY_PATH = join(".mygrace", "guidance-signing.key");
 
 export interface GuidanceHit {
   pack: string;
@@ -119,7 +124,12 @@ export interface GuidanceLockData {
   file: string;
 }
 
-export type GuidanceData = GuidanceSearchData | GuidanceRetrieveData | GuidanceLockData;
+export interface GuidanceKeygenData {
+  privateKey: string;
+  publicKey: string;
+}
+
+export type GuidanceData = GuidanceSearchData | GuidanceRetrieveData | GuidanceLockData | GuidanceKeygenData;
 
 export interface GuidanceRetrieveData {
   pack: string;
@@ -196,9 +206,85 @@ export function localPackDigest(dir: string): string {
   return hash.digest("hex");
 }
 
+/** Parse the package spec after npx/pnpx/bunx (`npx -y pkg@1.0.2` → `pkg`). */
+export function packageSpecFromCommand(tokens: readonly string[]): string | null {
+  const runnerIndex = tokens.findIndex((token) => /^(npx|pnpx|bunx)$/.test(token));
+  if (runnerIndex === -1) return null;
+  for (const token of tokens.slice(runnerIndex + 1)) {
+    if (token.startsWith("-")) continue;
+    const withoutVersion = token.startsWith("@") ? token.replace(/@([^/]+)$/, (match) => (match.includes("/") ? match : "")) : token.split("@")[0];
+    return withoutVersion === "" ? null : withoutVersion;
+  }
+  return null;
+}
+
 /** Stable hash of a CLI pack command (whitespace-normalised). */
 export function cliCommandHash(command: string): string {
   return createHash("sha256").update(command.trim().replace(/\s+/g, " ")).digest("hex");
+}
+
+/** Stable JSON (sorted keys) used for signing/verifying the lockfile. */
+export function canonicalJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map((item) => canonicalJson(item)).join(",")}]`;
+  if (value !== null && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    const keys = Object.keys(record).sort();
+    return `{${keys.map((key) => `${JSON.stringify(key)}:${canonicalJson(record[key])}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+/** Generate an Ed25519 signing keypair: private in .mygrace/, public in the repo root. */
+export function generateGuidanceKeys(root: string): { privateKey: string; publicKey: string } {
+  const privatePath = join(root, GUIDANCE_PRIVATE_KEY_PATH);
+  const publicPath = join(root, GUIDANCE_PUBLIC_KEY_FILENAME);
+  if (existsSync(privatePath) || existsSync(publicPath)) {
+    throw new UsageError(`Guidance signing keys already exist (${GUIDANCE_PRIVATE_KEY_PATH} / ${GUIDANCE_PUBLIC_KEY_FILENAME}).`, {
+      hint: "Delete the old key files before rotating; keep the public key committed.",
+    });
+  }
+  const pair = generateKeyPairSync("ed25519");
+  mkdirSync(join(root, ".mygrace"), { recursive: true });
+  writeFileSync(privatePath, pair.privateKey.export({ type: "pkcs8", format: "pem" }));
+  chmodSync(privatePath, 0o600);
+  writeFileSync(publicPath, pair.publicKey.export({ type: "spki", format: "pem" }));
+  return { privateKey: privatePath, publicKey: publicPath };
+}
+
+/** Sign the canonical lockfile; requires `.mygrace/guidance-signing.key` and the matching public key. */
+export function signGuidanceLock(root: string, lock: GuidanceLock): string {
+  const privatePath = join(root, GUIDANCE_PRIVATE_KEY_PATH);
+  const publicPath = join(root, GUIDANCE_PUBLIC_KEY_FILENAME);
+  if (!existsSync(privatePath)) {
+    throw new UsageError(`No guidance signing key at ${GUIDANCE_PRIVATE_KEY_PATH}.`, {
+      hint: "Run `mygrace context guidance --keygen` once, commit the public key, and keep the private key local.",
+    });
+  }
+  const privateKey = createPrivateKey(readFileSync(privatePath, "utf-8"));
+  const derivedPublic = createPublicKey(privateKey).export({ type: "spki", format: "pem" });
+  if (existsSync(publicPath) && readFileSync(publicPath, "utf-8") !== derivedPublic) {
+    throw new UsageError(`${GUIDANCE_PUBLIC_KEY_FILENAME} does not match the private signing key.`, {
+      hint: "Re-run --keygen after deleting both key files, or restore the matching public key.",
+    });
+  }
+  if (!existsSync(publicPath)) writeFileSync(publicPath, derivedPublic);
+  const signature = signBytes(null, Buffer.from(canonicalJson(lock)), privateKey).toString("base64");
+  writeFileSync(join(root, GUIDANCE_SIGNATURE_FILENAME), `${signature}\n`);
+  return signature;
+}
+
+/** Verify the lock signature; `missing` when no signature/public key is present. */
+export function verifyGuidanceLockSignature(root: string, lock: GuidanceLock): "valid" | "invalid" | "missing" {
+  const signaturePath = join(root, GUIDANCE_SIGNATURE_FILENAME);
+  const publicPath = join(root, GUIDANCE_PUBLIC_KEY_FILENAME);
+  if (!existsSync(signaturePath) || !existsSync(publicPath)) return "missing";
+  try {
+    const signature = Buffer.from(readFileSync(signaturePath, "utf-8").trim(), "base64");
+    const publicKey = createPublicKey(readFileSync(publicPath, "utf-8"));
+    return verifyBytes(null, Buffer.from(canonicalJson(lock)), publicKey, signature) ? "valid" : "invalid";
+  } catch {
+    return "invalid";
+  }
 }
 
 /** Read and validate `mygrace.guidance-lock.json`; null when absent. */
@@ -243,6 +329,17 @@ function applyLock(
 ): GuidanceLock | null {
   const lock = loadGuidanceLock(root);
   if (lock === null) return null;
+  const signature = verifyGuidanceLockSignature(root, lock);
+  if (signature === "invalid") {
+    for (const status of statuses) {
+      if (!status.enabled) continue;
+      status.available = false;
+      status.locked = "mismatch";
+      status.skippedReason = "lock-signature-invalid";
+      status.hint = "The guidance lock signature is invalid; do not trust this lockfile.";
+    }
+    return lock;
+  }
   for (const status of statuses) {
     if (!status.enabled || !status.available) continue;
     const entry = lock.packs[status.name];
@@ -274,6 +371,17 @@ function applyLock(
       status.locked = "mismatch";
       status.skippedReason = "lock-mismatch";
       status.hint = `CLI pack "${status.name}" command changed after locking; re-run \`mygrace context guidance --lock\` after review.`;
+    } else if (entry.sha256 !== null && tokens !== undefined) {
+      const packageName = packageSpecFromCommand(tokens);
+      const cached = packageName === null ? null : findNpxCachedPackage(packageName);
+      if (cached !== null && localPackDigest(cached.dir) !== entry.sha256) {
+        status.available = false;
+        status.locked = "mismatch";
+        status.skippedReason = "lock-integrity";
+        status.hint = `CLI pack "${status.name}" package content changed after locking; re-run --lock after reviewing the new version.`;
+      } else {
+        status.locked = "verified";
+      }
     } else {
       status.locked = "verified";
     }
@@ -538,6 +646,12 @@ export function writeGuidanceLock(
     const tokens = resolved.commandTokens.get(settings.name);
     if (tokens === undefined) continue;
     let version: string | null = null;
+    let packageDigest: string | null = null;
+    const packageName = packageSpecFromCommand(tokens);
+    if (packageName !== null) {
+      const cached = findNpxCachedPackage(packageName);
+      if (cached !== null) packageDigest = localPackDigest(cached.dir);
+    }
     const probe = spawnSync(tokens[0] as string, [...tokens.slice(1), "--version"], {
       cwd: root,
       encoding: "utf8",
@@ -552,7 +666,7 @@ export function writeGuidanceLock(
     packs[settings.name] = {
       kind: "cli",
       version,
-      sha256: null,
+      sha256: packageDigest,
       commandHash: cliCommandHash(tokens.join(" ")),
       lockedAt: now,
     };
@@ -577,6 +691,9 @@ const guidanceCommand = defineCommand({
     allowUnsafeCommands: { type: "boolean", default: false, description: "One-off opt-in for deny-listed pack commands" },
     lock: { type: "boolean", default: false, description: "Write mygrace.guidance-lock.json for configured packs" },
     checkLock: { type: "boolean", default: false, description: "Fail (exit 1) when a configured pack is missing/differs from the lockfile" },
+    sign: { type: "boolean", default: false, description: "With --lock: sign the lockfile with the Ed25519 private key" },
+    keygen: { type: "boolean", default: false, description: "Generate the Ed25519 signing keypair (private local, public committed)" },
+    requireSignature: { type: "boolean", default: false, description: "With --check-lock: require a valid lock signature" },
   },
   run: async ({ args }) => {
     const format = parseOutputFormat(args.format);
@@ -589,10 +706,36 @@ const guidanceCommand = defineCommand({
       const id = typeof args.id === "string" && args.id.trim() !== "" ? args.id.trim() : null;
       const pack = typeof args.pack === "string" && args.pack.trim() !== "" ? args.pack.trim() : undefined;
       const options = { allowCommands: args.allowCommands === true, allowUnsafeCommands: args.allowUnsafeCommands === true, ...(pack === undefined ? {} : { pack }) };
+      if (args.keygen === true) {
+        const keys = generateGuidanceKeys(root);
+        const envelope = createEnvelope({
+          data: { privateKey: GUIDANCE_PRIVATE_KEY_PATH, publicKey: GUIDANCE_PUBLIC_KEY_FILENAME },
+          findings: [],
+          meta: { command: "context guidance", root },
+        });
+        return {
+          envelope,
+          print: () => {
+            console.log(`Guidance signing keys generated.`);
+            console.log(`Private (local, gitignored): ${keys.privateKey}`);
+            console.log(`Public (commit this):        ${keys.publicKey}`);
+            console.log("Next: mygrace context guidance --lock --sign");
+          },
+        };
+      }
       if (args.lock === true) {
         const lock = writeGuidanceLock(root, config, options);
+        const signaturePath = join(root, GUIDANCE_SIGNATURE_FILENAME);
+        let signed = false;
+        if (args.sign === true) {
+          signGuidanceLock(root, lock);
+          signed = true;
+        } else if (existsSync(signaturePath)) {
+          // A rewritten lock makes an old signature misleading; drop it.
+          rmSync(signaturePath, { force: true });
+        }
         const envelope = createEnvelope({
-          data: { lock, file: GUIDANCE_LOCK_FILENAME },
+          data: { lock, file: GUIDANCE_LOCK_FILENAME, signature: signed ? GUIDANCE_SIGNATURE_FILENAME : null },
           findings: [],
           meta: { command: "context guidance", root },
         });
@@ -604,6 +747,7 @@ const guidanceCommand = defineCommand({
             for (const [name, entry] of Object.entries(lock.packs)) {
               console.log(`- ${name} (${entry.kind}) version=${entry.version ?? "unknown"} sha256=${entry.sha256?.slice(0, 12) ?? "-"} command=${entry.commandHash?.slice(0, 12) ?? "-"}`);
             }
+            console.log(signed ? `Signed: ${GUIDANCE_SIGNATURE_FILENAME}` : "Unsigned; run --lock --sign after reviewing the lockfile.");
           },
         };
       }
@@ -649,6 +793,21 @@ const guidanceCommand = defineCommand({
         findings.push(
           finding("error", "GUIDANCE_LOCK_MISSING", `No ${GUIDANCE_LOCK_FILENAME} exists; run \`mygrace context guidance --lock\` after reviewing packs.`)
         );
+      }
+      if (args.checkLock === true) {
+        const lock = loadGuidanceLock(root);
+        if (lock !== null) {
+          const signature = verifyGuidanceLockSignature(root, lock);
+          if (signature === "invalid") {
+            findings.push(finding("error", "GUIDANCE_LOCK_SIGNATURE_INVALID", "The guidance lock signature is invalid; the lockfile must not be trusted."));
+          } else if (signature === "missing" && args.requireSignature === true) {
+            findings.push(
+              finding("error", "GUIDANCE_LOCK_UNSIGNED", `A valid signature is required but ${GUIDANCE_SIGNATURE_FILENAME} is missing.`, {
+                hint: "Run `mygrace context guidance --lock --sign` with the local signing key, then commit the signature and public key.",
+              })
+            );
+          }
+        }
       }
       const envelope = createEnvelope({ data, findings, meta: { command: "context guidance", root } });
       return {

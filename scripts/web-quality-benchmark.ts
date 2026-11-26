@@ -35,6 +35,7 @@ interface TaskSpec {
   file: string;
   mwgQuery: string;
   prompt: string;
+  arms?: Arm[];
   rubric: Record<string, { weight: number; test: (lower: string) => boolean }>;
 }
 
@@ -54,6 +55,8 @@ const TASKS: TaskSpec[] = [
       noAriaDialogRole: { weight: 1, test: (c) => !/role\s*=\s*["']dialog/.test(c) },
       backdropOrStartingStyle: { weight: 1, test: (c) => c.includes("::backdrop") || c.includes("@starting-style") },
       focusManagement: { weight: 1, test: (c) => c.includes("autofocus") || /\.focus\(/.test(c) },
+      focusTrapProxy: { weight: 1, test: (c) => c.includes("keydown") && (c.includes("tab") || c.includes("inert")) },
+      escapeHandling: { weight: 1, test: (c) => c.includes("keydown") && c.includes("escape") },
     },
   },
   {
@@ -71,6 +74,7 @@ const TASKS: TaskSpec[] = [
       userInvalid: { weight: 1, test: (c) => c.includes(":user-invalid") },
       constraintApi: { weight: 1, test: (c) => c.includes("checkvalidity") || c.includes("reportvalidity") },
       noAlert: { weight: 1, test: (c) => !/\balert\s*\(/.test(c) },
+      ariaLive: { weight: 1, test: (c) => c.includes("aria-live") || c.includes("aria-errormessage") },
     },
   },
   {
@@ -88,6 +92,25 @@ const TASKS: TaskSpec[] = [
       rovingTabindex: { weight: 1, test: (c) => c.includes("tabindex=\"-1\"") || c.includes("tabindex='-1'") },
       arrowKeys: { weight: 1, test: (c) => c.includes("arrowleft") || c.includes("arrowright") },
       focusManagement: { weight: 1, test: (c) => /\.focus\(/.test(c) },
+      homeEndKeys: { weight: 1, test: (c) => c.includes("home") && c.includes("end") },
+    },
+  },
+  {
+    id: "python-cli",
+    file: "config_tool.py",
+    mwgQuery: "not applicable",
+    arms: ["plain", "grace"],
+    prompt:
+      "Create `config_tool.py` in the workspace: a small CLI that reads a JSON config path and prints normalized settings. Use argparse, a docstring, type hints, pathlib, explicit error handling (missing/invalid file -> non-zero exit via SystemExit), a main() guarded by if __name__ == '__main__', and no eval/exec. No third-party libraries. Do not modify other files; reply with the APIs used.",
+    rubric: {
+      argparse: { weight: 1, test: (c) => c.includes("argparse") },
+      docstring: { weight: 1, test: (c) => c.includes('"""') },
+      typeHints: { weight: 1, test: (c) => /def\s+\w+\([^)]*:\s*[A-Za-z]/.test(c) && c.includes("->") },
+      pathlib: { weight: 1, test: (c) => c.includes("from pathlib") || c.includes("import pathlib") },
+      mainGuard: { weight: 1, test: (c) => c.includes("if __name__") },
+      errorHandling: { weight: 1, test: (c) => c.includes("try:") && c.includes("except") },
+      noEvalExec: { weight: 1, test: (c) => !/\b(eval|exec)\s*\(/.test(c) },
+      systemExit: { weight: 1, test: (c) => c.includes("SystemExit") || c.includes("sys.exit") },
     },
   },
 ];
@@ -151,6 +174,8 @@ for (const arm of ARMS) {
     }
   }
   for (const task of TASKS) {
+    const taskArms = task.arms ?? ARMS;
+    if (!taskArms.includes(arm)) continue;
     for (let rep = 1; rep <= reps; rep += 1) {
       const file = join(armDir, task.file);
       rmSync(file, { force: true });
@@ -222,6 +247,7 @@ const rows: Row[] = [];
 for (const arm of ARMS) {
   for (const task of TASKS) {
     const items = results.filter((item) => item.arm === arm && item.task === task.id);
+    if (items.length === 0) continue;
     rows.push({
       arm,
       task: task.id,
@@ -259,9 +285,9 @@ const payload = {
   rows,
   sessions: results,
   limitations: [
-    "Static rubrics check source patterns, not runtime accessibility behaviour; a perfect score is not proof of a good UI.",
-    "One repository shell, three tasks, small N; no second language or human/blinded grading yet.",
-    "The grace+mwg arm used npx @latest at run time; guidance version is not pinned by the harness.",
+    "Static rubrics/runtime proxies check source patterns, not real browser accessibility behaviour; a perfect score is not proof of a good UI.",
+    "Empty workspace, four tasks (3 web + Python CLI), N=1 per task/arm; no real browser execution or blinded human grading yet.",
+    "The grace+mwg arm ran only web tasks and used npx @latest at run time; guidance version is not pinned by the harness.",
   ],
 };
 writeFileSync(join(ANALYSIS, "web-quality-benchmark.json"), `${JSON.stringify(payload, null, 2)}\n`);
@@ -282,7 +308,7 @@ const lines = [
   "|---|---|---|---|---|---|---|",
   ...rows.map((row) => `| ${row.arm} | ${row.task} | ${row.n} | ${row.medianScore}/${row.medianMax} | ${row.medianTokens} | ${row.medianTools} | ${row.medianWall} |`),
   "",
-  "Rubrics: dialog (8 checks), native form validation (8), accessible tabs (8); see JSON for check lists.",
+  "Rubrics: dialog (10 checks), native form validation (9), accessible tabs (9), Python CLI (8); see JSON for check lists. Runtime proxies are static patterns, not browser execution.",
   "",
   "Limitations:",
   ...payload.limitations.map((line) => `- ${line}`),

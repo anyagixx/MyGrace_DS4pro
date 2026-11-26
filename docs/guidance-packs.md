@@ -90,6 +90,20 @@ mygrace context guidance --check-lock "dialog"   # exit 1 on missing/mismatched 
   from the lock is treated as `lock-missing` (skipped). Re-run `--lock` after an
   intentional change and commit the lockfile.
 
+### Signing (Ed25519)
+
+```bash
+mygrace context guidance --keygen                 # private key in .mygrace/, public key in repo root
+mygrace context guidance --lock --sign            # sign the lockfile
+mygrace context guidance --check-lock --require-signature "dialog"   # fail if unsigned/invalid
+```
+
+The signature covers the canonical lockfile JSON. A tampered lock is rejected and
+all packs are skipped (`lock-signature-invalid`); the public key
+(`mygrace.guidance.pub`) is committed, the private key stays local and gitignored.
+This is local content attestation — it proves the lockfile was signed by the key
+owner, not that a third-party package was published by its upstream maintainer.
+
 ## Examples and limits
 
 - [`examples/guidance-packs/`](../examples/guidance-packs/) contains two

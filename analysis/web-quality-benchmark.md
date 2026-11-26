@@ -1,33 +1,35 @@
-# Web-quality benchmark — three artifact tasks
+# Web-quality benchmark — four artifact tasks (3 web + Python CLI)
 
-Generated: 2026-11-26T00:13:01.359Z · reps: 1 · arms: plain / MyGRACE / MyGRACE+MWG.
+Generated: 2026-11-26T08:29:04.005Z · reps: 1 · arms: plain / MyGRACE / MyGRACE+MWG.
 
 ## Aggregate quality
 
 | Arm | N | files | mean quality % | median tokens | tool calls | wall s |
 |---|---|---|---|---|---|---|
-| plain | 3 | 3 | 100% | 21219 | 6 | 80 |
-| grace | 3 | 3 | 100% | 20738 | 7 | 75.5 |
-| grace+mwg | 3 | 3 | 95.8% | 61028 | 26 | 151.1 |
+| plain | 4 | 4 | 96.9% | 22716 | 7 | 110.5 |
+| grace | 4 | 4 | 96.9% | 9018 | 5 | 42.2 |
+| grace+mwg | 3 | 3 | 90% | 53785 | 30 | 256.1 |
 
 ## Per task
 
 | Arm | Task | N | score (median/max) | median tokens | tool calls | wall s |
 |---|---|---|---|---|---|---|
-| plain | dialog | 1 | 8/8 | 73099 | 49 | 380.5 |
-| plain | form | 1 | 8/8 | 21219 | 6 | 80 |
-| plain | tabs | 1 | 8/8 | 8129 | 3 | 30.9 |
-| grace | dialog | 1 | 8/8 | 100048 | 46 | 396.2 |
-| grace | form | 1 | 8/8 | 20738 | 7 | 75.5 |
-| grace | tabs | 1 | 8/8 | 12237 | 3 | 41.7 |
-| grace+mwg | dialog | 1 | 7/8 | 74637 | 39 | 220.6 |
-| grace+mwg | form | 1 | 8/8 | 61028 | 24 | 151.1 |
-| grace+mwg | tabs | 1 | 8/8 | 47230 | 26 | 119.5 |
+| plain | dialog | 1 | 10/10 | 36611 | 7 | 166.6 |
+| plain | form | 1 | 9/9 | 32853 | 14 | 163.9 |
+| plain | tabs | 1 | 9/9 | 11906 | 7 | 56.6 |
+| plain | python-cli | 1 | 7/8 | 12578 | 4 | 57.1 |
+| grace | dialog | 1 | 10/10 | 32275 | 19 | 139.7 |
+| grace | form | 1 | 9/9 | 8311 | 4 | 41 |
+| grace | tabs | 1 | 9/9 | 9725 | 5 | 43.3 |
+| grace | python-cli | 1 | 7/8 | 6951 | 3 | 17 |
+| grace+mwg | dialog | 1 | 7/10 | 121485 | 65 | 482.1 |
+| grace+mwg | form | 1 | 9/9 | 53785 | 30 | 256.1 |
+| grace+mwg | tabs | 1 | 9/9 | 42538 | 22 | 112.7 |
 
-Rubrics: dialog (8 checks), native form validation (8), accessible tabs (8); see JSON for check lists.
+Rubrics: dialog (10 checks), native form validation (9), accessible tabs (9), Python CLI (8); see JSON for check lists. Runtime proxies are static patterns, not browser execution.
 
 Limitations:
-- Static rubrics check source patterns, not runtime accessibility behaviour; a perfect score is not proof of a good UI.
-- Empty workspace, three tasks, N=1 per task/arm (3 samples per arm); no second language or blinded human grading yet.
-- The grace+mwg arm used npx @latest at run time; guidance version is not pinned by the harness.
+- Static rubrics/runtime proxies check source patterns, not real browser accessibility behaviour; a perfect score is not proof of a good UI.
+- Empty workspace, four tasks (3 web + Python CLI), N=1 per task/arm; no real browser execution or blinded human grading yet.
+- The grace+mwg arm ran only web tasks and used npx @latest at run time; guidance version is not pinned by the harness.
 

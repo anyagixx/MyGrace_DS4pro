@@ -69,7 +69,8 @@ Three limitations from the v3.1 review, with acceptance criteria:
   tools and wall time. Remaining: harder multi-file/a11y rubric (the six-point rubric hit its ceiling), larger N, a second language, blinded grading, and non-web quality metrics.
 - **C3 — supply-chain pinning.** 🟡 v3.2.0 warns on `@latest`/bare npx in lint
   providers and guidance CLI packs (`*_UNPINNED`), and `mygrace trust` hashes the
-  config. `mygrace.guidance-lock.json` records local SHA-256 and CLI command hashes/versions and is enforced before retrieval; `--lock`/`--check-lock`. Residual: a mutable server-side CLI package can change after lock, so attestation/signature remains future work.
+  config. `mygrace.guidance-lock.json` records local SHA-256, CLI command hashes/versions and package digests; optional Ed25519 signature (`--keygen`/`--lock --sign`/`--check-lock --require-signature`) attests the lockfile. Residual: local signer attests the lockfile, not registry-level publisher provenance.
+- **C1 edge — sandbox wrapper.** ✅ v3.4.0 test covers `MYGRACE_MODERN_WEB_GUIDANCE_BIN` with no global CLI/npx.
 - **C4 — agent workflow.** ✅ v3.2.0: packet/focus print configured packs plus exact
   search/retrieve commands; `mygrace-execute`/`mygrace-cli`/`AGENTS.md` require
   consulting relevant packs and citing pack/id; retrieved text stays untrusted.

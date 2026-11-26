@@ -18,10 +18,13 @@ import type { MyGraceConfig } from "../src/grace-config";
 import { GuidancePackSettings } from "../src/grace-config";
 import {
   GUIDANCE_LOCK_FILENAME,
+  generateGuidanceKeys,
   guidanceCommandPinned,
   loadGuidanceLock,
   retrieveGuidance,
   searchGuidance,
+  signGuidanceLock,
+  verifyGuidanceLockSignature,
   writeGuidanceLock,
 } from "../src/grace-guidance";
 
@@ -211,6 +214,52 @@ esac
       const changed = searchGuidance(root, config, "dialog", { allowCommands: false, allowUnsafeCommands: false });
       expect(changed.packs[0]?.locked).toBe("mismatch");
       expect(changed.results).toEqual([]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("guidance lock signature (Ed25519)", () => {
+  test("generates keys, signs and verifies the lock; tampering is detected", () => {
+    const root = makeRoot();
+    try {
+      cpSync(join(EXAMPLES, "web-basics"), join(root, "packs", "web-basics"), { recursive: true });
+      const config = localPackConfig("packs/web-basics");
+      const options = { allowCommands: false, allowUnsafeCommands: false };
+      const keys = generateGuidanceKeys(root);
+      expect(keys.publicKey).toBe(join(root, "mygrace.guidance.pub"));
+      expect(keys.privateKey).toBe(join(root, ".mygrace", "guidance-signing.key"));
+      const lock = writeGuidanceLock(root, config, options);
+      const signature = signGuidanceLock(root, lock);
+      expect(signature.length).toBeGreaterThan(10);
+      expect(verifyGuidanceLockSignature(root, lock)).toBe("valid");
+      expect(searchGuidance(root, config, "dialog", options).packs[0]?.locked).toBe("verified");
+
+      const lockFile = join(root, GUIDANCE_LOCK_FILENAME);
+      const tampered = JSON.parse(readFileSync(lockFile, "utf-8")) as Record<string, unknown>;
+      tampered.generatedAt = "2000-01-01T00:00:00.000Z";
+      writeFileSync(lockFile, JSON.stringify(tampered));
+      const tamperedLock = JSON.parse(readFileSync(lockFile, "utf-8")) as Parameters<typeof verifyGuidanceLockSignature>[1];
+      expect(verifyGuidanceLockSignature(root, tamperedLock)).toBe("invalid");
+      const search = searchGuidance(root, config, "dialog", options);
+      expect(search.packs[0]?.skippedReason).toBe("lock-signature-invalid");
+      expect(search.results).toEqual([]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("refuses to sign without a key and refuses to overwrite keys", () => {
+    const root = makeRoot();
+    try {
+      cpSync(join(EXAMPLES, "web-basics"), join(root, "packs", "web-basics"), { recursive: true });
+      const config = localPackConfig("packs/web-basics");
+      const options = { allowCommands: false, allowUnsafeCommands: false };
+      const lock = writeGuidanceLock(root, config, options);
+      expect(() => signGuidanceLock(root, lock)).toThrow(/signing key/);
+      generateGuidanceKeys(root);
+      expect(() => generateGuidanceKeys(root)).toThrow(/already exist/);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

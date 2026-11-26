@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-26T00:13:01.359Z",
+  "generatedAt": "2026-11-26T08:29:04.005Z",
   "repository": "empty workspace (artifact tasks only; no repository context)",
   "reps": 1,
   "tasks": [
@@ -15,7 +15,9 @@
         "reducedMotion",
         "noAriaDialogRole",
         "backdropOrStartingStyle",
-        "focusManagement"
+        "focusManagement",
+        "focusTrapProxy",
+        "escapeHandling"
       ]
     },
     {
@@ -29,7 +31,8 @@
         "describedBy",
         "userInvalid",
         "constraintApi",
-        "noAlert"
+        "noAlert",
+        "ariaLive"
       ]
     },
     {
@@ -43,37 +46,52 @@
         "ariaControls",
         "rovingTabindex",
         "arrowKeys",
-        "focusManagement"
+        "focusManagement",
+        "homeEndKeys"
+      ]
+    },
+    {
+      "id": "python-cli",
+      "file": "config_tool.py",
+      "rubricKeys": [
+        "argparse",
+        "docstring",
+        "typeHints",
+        "pathlib",
+        "mainGuard",
+        "errorHandling",
+        "noEvalExec",
+        "systemExit"
       ]
     }
   ],
   "aggregate": [
     {
       "arm": "plain",
-      "n": 3,
-      "files": 3,
-      "meanQuality": 100,
-      "medianTokens": 21219,
-      "medianTools": 6,
-      "medianWall": 80
+      "n": 4,
+      "files": 4,
+      "meanQuality": 96.9,
+      "medianTokens": 22716,
+      "medianTools": 7,
+      "medianWall": 110.5
     },
     {
       "arm": "grace",
-      "n": 3,
-      "files": 3,
-      "meanQuality": 100,
-      "medianTokens": 20738,
-      "medianTools": 7,
-      "medianWall": 75.5
+      "n": 4,
+      "files": 4,
+      "meanQuality": 96.9,
+      "medianTokens": 9018,
+      "medianTools": 5,
+      "medianWall": 42.2
     },
     {
       "arm": "grace+mwg",
       "n": 3,
       "files": 3,
-      "meanQuality": 95.8,
-      "medianTokens": 61028,
-      "medianTools": 26,
-      "medianWall": 151.1
+      "meanQuality": 90,
+      "medianTokens": 53785,
+      "medianTools": 30,
+      "medianWall": 256.1
     }
   ],
   "rows": [
@@ -82,66 +100,88 @@
       "task": "dialog",
       "n": 1,
       "files": 1,
-      "medianScore": 8,
-      "medianMax": 8,
-      "medianTokens": 73099,
-      "medianTools": 49,
-      "medianWall": 380.5
+      "medianScore": 10,
+      "medianMax": 10,
+      "medianTokens": 36611,
+      "medianTools": 7,
+      "medianWall": 166.6
     },
     {
       "arm": "plain",
       "task": "form",
       "n": 1,
       "files": 1,
-      "medianScore": 8,
-      "medianMax": 8,
-      "medianTokens": 21219,
-      "medianTools": 6,
-      "medianWall": 80
+      "medianScore": 9,
+      "medianMax": 9,
+      "medianTokens": 32853,
+      "medianTools": 14,
+      "medianWall": 163.9
     },
     {
       "arm": "plain",
       "task": "tabs",
       "n": 1,
       "files": 1,
-      "medianScore": 8,
+      "medianScore": 9,
+      "medianMax": 9,
+      "medianTokens": 11906,
+      "medianTools": 7,
+      "medianWall": 56.6
+    },
+    {
+      "arm": "plain",
+      "task": "python-cli",
+      "n": 1,
+      "files": 1,
+      "medianScore": 7,
       "medianMax": 8,
-      "medianTokens": 8129,
-      "medianTools": 3,
-      "medianWall": 30.9
+      "medianTokens": 12578,
+      "medianTools": 4,
+      "medianWall": 57.1
     },
     {
       "arm": "grace",
       "task": "dialog",
       "n": 1,
       "files": 1,
-      "medianScore": 8,
-      "medianMax": 8,
-      "medianTokens": 100048,
-      "medianTools": 46,
-      "medianWall": 396.2
+      "medianScore": 10,
+      "medianMax": 10,
+      "medianTokens": 32275,
+      "medianTools": 19,
+      "medianWall": 139.7
     },
     {
       "arm": "grace",
       "task": "form",
       "n": 1,
       "files": 1,
-      "medianScore": 8,
-      "medianMax": 8,
-      "medianTokens": 20738,
-      "medianTools": 7,
-      "medianWall": 75.5
+      "medianScore": 9,
+      "medianMax": 9,
+      "medianTokens": 8311,
+      "medianTools": 4,
+      "medianWall": 41
     },
     {
       "arm": "grace",
       "task": "tabs",
       "n": 1,
       "files": 1,
-      "medianScore": 8,
+      "medianScore": 9,
+      "medianMax": 9,
+      "medianTokens": 9725,
+      "medianTools": 5,
+      "medianWall": 43.3
+    },
+    {
+      "arm": "grace",
+      "task": "python-cli",
+      "n": 1,
+      "files": 1,
+      "medianScore": 7,
       "medianMax": 8,
-      "medianTokens": 12237,
+      "medianTokens": 6951,
       "medianTools": 3,
-      "medianWall": 41.7
+      "medianWall": 17
     },
     {
       "arm": "grace+mwg",
@@ -149,32 +189,32 @@
       "n": 1,
       "files": 1,
       "medianScore": 7,
-      "medianMax": 8,
-      "medianTokens": 74637,
-      "medianTools": 39,
-      "medianWall": 220.6
+      "medianMax": 10,
+      "medianTokens": 121485,
+      "medianTools": 65,
+      "medianWall": 482.1
     },
     {
       "arm": "grace+mwg",
       "task": "form",
       "n": 1,
       "files": 1,
-      "medianScore": 8,
-      "medianMax": 8,
-      "medianTokens": 61028,
-      "medianTools": 24,
-      "medianWall": 151.1
+      "medianScore": 9,
+      "medianMax": 9,
+      "medianTokens": 53785,
+      "medianTools": 30,
+      "medianWall": 256.1
     },
     {
       "arm": "grace+mwg",
       "task": "tabs",
       "n": 1,
       "files": 1,
-      "medianScore": 8,
-      "medianMax": 8,
-      "medianTokens": 47230,
-      "medianTools": 26,
-      "medianWall": 119.5
+      "medianScore": 9,
+      "medianMax": 9,
+      "medianTokens": 42538,
+      "medianTools": 22,
+      "medianWall": 112.7
     }
   ],
   "sessions": [
@@ -182,13 +222,13 @@
       "arm": "plain",
       "task": "dialog",
       "rep": 1,
-      "sessionId": "session-fc26938a-3a36-4a81-9aab-7e2b72c742b1",
-      "wallSeconds": 380.5,
-      "costTokens": 73099,
-      "toolCalls": 49,
+      "sessionId": "session-3788d7a0-7281-421c-b6a5-e148ee23adb8",
+      "wallSeconds": 166.6,
+      "costTokens": 36611,
+      "toolCalls": 7,
       "fileCreated": true,
-      "score": 8,
-      "max": 8,
+      "score": 10,
+      "max": 10,
       "checks": {
         "nativeDialog": true,
         "showModal": true,
@@ -197,7 +237,9 @@
         "reducedMotion": true,
         "noAriaDialogRole": true,
         "backdropOrStartingStyle": true,
-        "focusManagement": true
+        "focusManagement": true,
+        "focusTrapProxy": true,
+        "escapeHandling": true
       },
       "notes": ""
     },
@@ -205,13 +247,13 @@
       "arm": "plain",
       "task": "form",
       "rep": 1,
-      "sessionId": "session-1af364b8-9dc2-4e6a-a43b-0fbd41096a8b",
-      "wallSeconds": 80,
-      "costTokens": 21219,
-      "toolCalls": 6,
+      "sessionId": "session-cb4e579a-80e4-47bc-b90a-287461dbb5ba",
+      "wallSeconds": 163.9,
+      "costTokens": 32853,
+      "toolCalls": 14,
       "fileCreated": true,
-      "score": 8,
-      "max": 8,
+      "score": 9,
+      "max": 9,
       "checks": {
         "form": true,
         "labels": true,
@@ -220,7 +262,8 @@
         "describedBy": true,
         "userInvalid": true,
         "constraintApi": true,
-        "noAlert": true
+        "noAlert": true,
+        "ariaLive": true
       },
       "notes": ""
     },
@@ -228,13 +271,13 @@
       "arm": "plain",
       "task": "tabs",
       "rep": 1,
-      "sessionId": "session-46f83872-5788-453c-81e1-5f5dd32a6140",
-      "wallSeconds": 30.9,
-      "costTokens": 8129,
-      "toolCalls": 3,
+      "sessionId": "session-12248e6c-8395-428b-ad32-ef9fa35347d1",
+      "wallSeconds": 56.6,
+      "costTokens": 11906,
+      "toolCalls": 7,
       "fileCreated": true,
-      "score": 8,
-      "max": 8,
+      "score": 9,
+      "max": 9,
       "checks": {
         "tablist": true,
         "tabRole": true,
@@ -243,21 +286,45 @@
         "ariaControls": true,
         "rovingTabindex": true,
         "arrowKeys": true,
-        "focusManagement": true
+        "focusManagement": true,
+        "homeEndKeys": true
       },
       "notes": ""
+    },
+    {
+      "arm": "plain",
+      "task": "python-cli",
+      "rep": 1,
+      "sessionId": "session-1f1ca876-0c46-42a9-8b71-e02af1304eb1",
+      "wallSeconds": 57.1,
+      "costTokens": 12578,
+      "toolCalls": 4,
+      "fileCreated": true,
+      "score": 7,
+      "max": 8,
+      "checks": {
+        "argparse": true,
+        "docstring": true,
+        "typeHints": true,
+        "pathlib": true,
+        "mainGuard": true,
+        "errorHandling": true,
+        "noEvalExec": true,
+        "systemExit": false
+      },
+      "notes": "missing:systemExit"
     },
     {
       "arm": "grace",
       "task": "dialog",
       "rep": 1,
-      "sessionId": "session-12165baa-12ee-40ab-9711-f5c3ea4bd61f",
-      "wallSeconds": 396.2,
-      "costTokens": 100048,
-      "toolCalls": 46,
+      "sessionId": "session-cc161f41-280c-4ef7-a0ce-ff7915a4534e",
+      "wallSeconds": 139.7,
+      "costTokens": 32275,
+      "toolCalls": 19,
       "fileCreated": true,
-      "score": 8,
-      "max": 8,
+      "score": 10,
+      "max": 10,
       "checks": {
         "nativeDialog": true,
         "showModal": true,
@@ -266,7 +333,9 @@
         "reducedMotion": true,
         "noAriaDialogRole": true,
         "backdropOrStartingStyle": true,
-        "focusManagement": true
+        "focusManagement": true,
+        "focusTrapProxy": true,
+        "escapeHandling": true
       },
       "notes": ""
     },
@@ -274,13 +343,13 @@
       "arm": "grace",
       "task": "form",
       "rep": 1,
-      "sessionId": "session-a2286c7d-f05e-41c7-bca7-7c8702242afc",
-      "wallSeconds": 75.5,
-      "costTokens": 20738,
-      "toolCalls": 7,
+      "sessionId": "session-b00029ff-2682-400e-92d5-12a4654e9c46",
+      "wallSeconds": 41,
+      "costTokens": 8311,
+      "toolCalls": 4,
       "fileCreated": true,
-      "score": 8,
-      "max": 8,
+      "score": 9,
+      "max": 9,
       "checks": {
         "form": true,
         "labels": true,
@@ -289,7 +358,8 @@
         "describedBy": true,
         "userInvalid": true,
         "constraintApi": true,
-        "noAlert": true
+        "noAlert": true,
+        "ariaLive": true
       },
       "notes": ""
     },
@@ -297,13 +367,13 @@
       "arm": "grace",
       "task": "tabs",
       "rep": 1,
-      "sessionId": "session-85f210eb-46eb-452a-9f22-672e8e6cb8d2",
-      "wallSeconds": 41.7,
-      "costTokens": 12237,
-      "toolCalls": 3,
+      "sessionId": "session-7d1aef4a-9a00-4913-a18f-6a6bfcbed725",
+      "wallSeconds": 43.3,
+      "costTokens": 9725,
+      "toolCalls": 5,
       "fileCreated": true,
-      "score": 8,
-      "max": 8,
+      "score": 9,
+      "max": 9,
       "checks": {
         "tablist": true,
         "tabRole": true,
@@ -312,21 +382,45 @@
         "ariaControls": true,
         "rovingTabindex": true,
         "arrowKeys": true,
-        "focusManagement": true
+        "focusManagement": true,
+        "homeEndKeys": true
       },
       "notes": ""
+    },
+    {
+      "arm": "grace",
+      "task": "python-cli",
+      "rep": 1,
+      "sessionId": "session-775d8c6d-d097-4045-a447-a0243355a9d4",
+      "wallSeconds": 17,
+      "costTokens": 6951,
+      "toolCalls": 3,
+      "fileCreated": true,
+      "score": 7,
+      "max": 8,
+      "checks": {
+        "argparse": true,
+        "docstring": true,
+        "typeHints": true,
+        "pathlib": true,
+        "mainGuard": true,
+        "errorHandling": true,
+        "noEvalExec": true,
+        "systemExit": false
+      },
+      "notes": "missing:systemExit"
     },
     {
       "arm": "grace+mwg",
       "task": "dialog",
       "rep": 1,
-      "sessionId": "session-31483d4b-3686-430b-8c4e-ab6f0bde9b6a",
-      "wallSeconds": 220.6,
-      "costTokens": 74637,
-      "toolCalls": 39,
+      "sessionId": "session-56f04e6a-bb65-44ab-a65f-3ce64a1e7adf",
+      "wallSeconds": 482.1,
+      "costTokens": 121485,
+      "toolCalls": 65,
       "fileCreated": true,
       "score": 7,
-      "max": 8,
+      "max": 10,
       "checks": {
         "nativeDialog": true,
         "showModal": true,
@@ -335,21 +429,23 @@
         "reducedMotion": true,
         "noAriaDialogRole": false,
         "backdropOrStartingStyle": true,
-        "focusManagement": true
+        "focusManagement": true,
+        "focusTrapProxy": false,
+        "escapeHandling": false
       },
-      "notes": "missing:noAriaDialogRole"
+      "notes": "missing:noAriaDialogRole,missing:focusTrapProxy,missing:escapeHandling"
     },
     {
       "arm": "grace+mwg",
       "task": "form",
       "rep": 1,
-      "sessionId": "session-f20b9ca3-f3ac-40cd-b37b-c4cfbd9d8c5a",
-      "wallSeconds": 151.1,
-      "costTokens": 61028,
-      "toolCalls": 24,
+      "sessionId": "session-ec85a424-12c1-4ae1-babc-26e8c4e92e73",
+      "wallSeconds": 256.1,
+      "costTokens": 53785,
+      "toolCalls": 30,
       "fileCreated": true,
-      "score": 8,
-      "max": 8,
+      "score": 9,
+      "max": 9,
       "checks": {
         "form": true,
         "labels": true,
@@ -358,7 +454,8 @@
         "describedBy": true,
         "userInvalid": true,
         "constraintApi": true,
-        "noAlert": true
+        "noAlert": true,
+        "ariaLive": true
       },
       "notes": ""
     },
@@ -366,13 +463,13 @@
       "arm": "grace+mwg",
       "task": "tabs",
       "rep": 1,
-      "sessionId": "session-8475cef3-7f95-475a-b2cf-b90b53f305a0",
-      "wallSeconds": 119.5,
-      "costTokens": 47230,
-      "toolCalls": 26,
+      "sessionId": "session-3c7f9ce1-f9c1-4773-ad0e-9d23ac926385",
+      "wallSeconds": 112.7,
+      "costTokens": 42538,
+      "toolCalls": 22,
       "fileCreated": true,
-      "score": 8,
-      "max": 8,
+      "score": 9,
+      "max": 9,
       "checks": {
         "tablist": true,
         "tabRole": true,
@@ -381,14 +478,15 @@
         "ariaControls": true,
         "rovingTabindex": true,
         "arrowKeys": true,
-        "focusManagement": true
+        "focusManagement": true,
+        "homeEndKeys": true
       },
       "notes": ""
     }
   ],
   "limitations": [
-    "Static rubrics check source patterns, not runtime accessibility behaviour; a perfect score is not proof of a good UI.",
-    "Empty workspace, three tasks, N=1 per task/arm (3 samples per arm); no second language or blinded human grading yet.",
-    "The grace+mwg arm used npx @latest at run time; guidance version is not pinned by the harness."
+    "Static rubrics/runtime proxies check source patterns, not real browser accessibility behaviour; a perfect score is not proof of a good UI.",
+    "Empty workspace, four tasks (3 web + Python CLI), N=1 per task/arm; no real browser execution or blinded human grading yet.",
+    "The grace+mwg arm ran only web tasks and used npx @latest at run time; guidance version is not pinned by the harness."
   ]
 }

@@ -35,7 +35,7 @@
   <notes>
     <note-1>CLI packs follow the Modern Web Guidance search/retrieve protocol but are not tied to it.</note-1>
     <note-2>Local guide files are read only inside the pack directory; traversal is rejected.</note-2>
-    <note-3>mygrace.guidance-lock.json records local SHA-256 and CLI command hashes/versions; when present it is enforced automatically.</note-3>
+    <note-3>mygrace.guidance-lock.json records local SHA-256, CLI command hashes/versions and optional package digests; optional Ed25519 signature attests the lockfile. Enforced automatically.</note-3>
     <note-4>CLI commands with mutable specs (`@latest`/bare npx) are reported as GUIDANCE_PACK_UNPINNED; docs/examples use pinned versions.</note-4>
     <note-4>Guidance text is untrusted input: MyGRACE never executes or persists it automatically.</note-4>
   </notes>

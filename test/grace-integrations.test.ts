@@ -297,6 +297,27 @@ describe("modern-web-guidance integration", () => {
     }
   });
 
+  posixTest("env override supports a sandbox wrapper without npx/PATH install", () => {
+    const dir = makeDir();
+    const root = makeDir();
+    try {
+      const wrapper = join(dir, "mwq");
+      writeFileSync(wrapper, "#!/bin/sh\necho modern-web-guidance 1.0.2\n", { mode: 0o755 });
+      const status = resolveIntegration(
+        "modern-web-guidance",
+        cloneDefault(),
+        root,
+        emptyEnv({ PATH: "", [INTEGRATION_ENV.modernWebGuidanceBin]: wrapper })
+      );
+      expect(status.available).toBe(true);
+      expect(status.source).toBe("env");
+      expect(status.version).toBe("1.0.2");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("missing MWG is optional and carries an install hint", () => {
     const root = makeDir();
     try {

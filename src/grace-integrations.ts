@@ -291,7 +291,7 @@ function archifyHint(settings: IntegrationSettings): string {
 export function findNpxCachedPackage(
   name: string,
   env: NodeJS.ProcessEnv = process.env
-): { version: string; packageJson: string } | null {
+): { version: string; packageJson: string; dir: string } | null {
   const home = env.HOME ?? env.USERPROFILE ?? "";
   const candidates = [
     env.npm_config_cache ?? "",
@@ -311,7 +311,7 @@ export function findNpxCachedPackage(
       if (!existsSync(packageJson)) continue;
       try {
         const parsed = JSON.parse(readFileSync(packageJson, "utf-8")) as { name?: unknown; version?: unknown };
-        if (parsed.name === name && typeof parsed.version === "string") return { version: parsed.version, packageJson };
+        if (parsed.name === name && typeof parsed.version === "string") return { version: parsed.version, packageJson, dir: join(npxDir, entry, "node_modules", name) };
       } catch {
         // ignore unreadable cache entries
       }

@@ -9,6 +9,35 @@ release time (see `ROADMAP.md` §6, gate G10).
 
 Nothing yet.
 
+## [3.4.0] — 2026-11-26
+
+### Added
+
+- **Ed25519 lock attestation + CLI package digests (C3 residual).**
+  `mygrace context guidance --keygen` creates a local private key
+  (`.mygrace/guidance-signing.key`) and a committed public key
+  (`mygrace.guidance.pub`); `--lock --sign` signs the canonical lockfile;
+  `--check-lock --require-signature` fails on a missing/invalid signature. CLI
+  lock entries now also record an npx-cache package-content digest; changed
+  package files are rejected (`lock-integrity`). Residual: this attests the
+  signer, not registry-level publisher provenance.
+- **C1 sandbox edge.** Detection through `MYGRACE_MODERN_WEB_GUIDANCE_BIN` (a
+  wrapper with no global CLI/npx) is covered by a test; no network/child process.
+- **C2 quality benchmark v3.** Four artifact tasks: accessible dialog (10 checks,
+  including focus-trap/escape proxies), native form validation (9, including
+  `aria-live`), accessible tabs (9, Home/End) and a **Python CLI** task (8).
+  Pilot N=1/task/arm: plain 96.9%, MyGRACE 96.9%, MyGRACE+MWG 90%; MWG 53 785
+  median tokens / 30 tools / 256 s vs plain 22 716 / 7 / 110.5 and MyGRACE
+  9 018 / 5 / 42.2. Static/runtime-proxy rubrics are not browser execution;
+  real browser a11y and N≥10 are explicitly out of deterministic CI scope.
+
+### Changed
+
+- Roadmap Wave 7: C1 and C3 closed, C2 remains an accepted deterministic-CI
+  limitation with the remaining work documented.
+- Docs/ADR-12 updated for keys, signatures and package digests.
+
+
 ## [3.3.1] — 2026-11-26
 
 ### Fixed
