@@ -104,6 +104,21 @@ all packs are skipped (`lock-signature-invalid`); the public key
 This is local content attestation — it proves the lockfile was signed by the key
 owner, not that a third-party package was published by its upstream maintainer.
 
+### Registry provenance (opt-in network)
+
+```bash
+mygrace context guidance --lock --registry
+mygrace context guidance --check-lock --check-registry "dialog"
+```
+
+For npm-based CLI packs, `--lock --registry` records the package version,
+`dist.integrity` and signature count from the configured registry (default
+`https://registry.npmjs.org`, override with `MYGRACE_NPM_REGISTRY`). A later
+`--check-lock --check-registry` re-fetches the metadata and fails on version or
+integrity drift (`GUIDANCE_REGISTRY_DRIFT`). This is registry metadata
+attestation, not a substitute for publisher signatures; it is opt-in because it
+uses the network (core retrieval stays offline).
+
 ## Examples and limits
 
 - [`examples/guidance-packs/`](../examples/guidance-packs/) contains two

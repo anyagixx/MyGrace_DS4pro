@@ -1,0 +1,38 @@
+<!-- Module contract for M-INSTALL-FS. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-INSTALL-FS NAME="Installer filesystem and backups" TYPE="UTILITY" STATUS="done">
+  <purpose>Atomic config writes and never-overwritten timestamped backups used by the DSH installer.</purpose>
+  <path>src/grace-install-fs.ts</path>
+  <depends>M-ERRORS</depends>
+  <verification-ref>V-M-INSTALL-FS</verification-ref>
+
+  <annotations>
+    <fn-atomicWriteFile PURPOSE="tmp+rename write preserving file mode, with a typed CONFIG_WRITE_FAILED error." />
+    <fn-createTimestampedBackup PURPOSE="Never overwrite an existing backup; append a numeric suffix on collision." />
+    <fn-listBackupFiles PURPOSE="Discover timestamped and legacy backup residue next to a file." />
+    <fn-cleanupBackups PURPOSE="Best-effort removal of installer backup residue." />
+  </annotations>
+
+  <CrossLink to="M-INSTALL" relation="extracted from the installer in v3.6.0; installer re-exports these functions" />
+  <CrossLink to="M-ERRORS" relation="typed CONFIG_WRITE_FAILED / CONFIG_BACKUP_FAILED errors" />
+
+  <contract>
+    <purpose>Atomic config writes and never-overwritten timestamped backups used by the DSH installer.</purpose>
+    <inputs>
+      <param name="path" type="string" description="Absolute file path to write or back up." />
+      <param name="content" type="string" description="New file body for atomicWriteFile." />
+    </inputs>
+    <outputs>
+      <param name="backup" type="string" description="Absolute backup path returned by createTimestampedBackup." />
+    </outputs>
+    <errors>
+      <error code="CONFIG_WRITE_FAILED" description="The target cannot be written (permissions/disk)." />
+      <error code="CONFIG_BACKUP_FAILED" description="The previous file cannot be backed up before an edit." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>Backups are never overwritten: a timestamp collision appends -1, -2, ….</note-1>
+    <note-2>Writes use a temporary file in the same directory so a crash cannot leave a half-written profile.</note-2>
+    <note-3>The installer refuses to edit a user config without a successful backup.</note-3>
+  </notes>
+</M-INSTALL-FS>

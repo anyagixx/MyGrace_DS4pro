@@ -1,0 +1,36 @@
+<!-- Module contract for M-LINT-GIT. Target 30-80 lines (sizeBudgets.module); keep it a contract, not an implementation log. -->
+<M-LINT-GIT NAME="Lint changed-scope resolver" TYPE="UTILITY" STATUS="done">
+  <purpose>Resolve `lint --changed` scope from git (base/untracked) or explicit --files with path-safety checks.</purpose>
+  <path>src/grace-lint-git.ts</path>
+  <depends>M-ERRORS,M-PATHS</depends>
+  <verification-ref>V-M-LINT-GIT</verification-ref>
+
+  <annotations>
+    <fn-parseChangedFilesArg PURPOSE="Parse comma/space separated --files; reject unsafe paths and sort/dedupe." />
+    <fn-resolveChangedFiles PURPOSE="--files precedence; otherwise git diff + untracked, project-prefix aware." />
+    <fn-runGit PURPOSE="Read-only git invocation with a 2 s timeout and typed failure messages." />
+  </annotations>
+
+  <CrossLink to="M-LINT" relation="extracted from grace-lint.ts in v3.6.0; re-exported for compatibility" />
+  <CrossLink to="M-PATHS" relation="assertSafeRelativePath rejects traversal/absolute paths" />
+
+  <contract>
+    <purpose>Resolve `lint --changed` scope from git (base/untracked) or explicit --files with path-safety checks.</purpose>
+    <inputs>
+      <param name="root" type="string" description="Project root (may be a subdirectory of a git repository)." />
+      <param name="options" type="ChangedFileOptions" description="--base revision or explicit --files list." />
+    </inputs>
+    <outputs>
+      <param name="scope" type="ChangedScope" description="Sorted changed files plus scanned/skipped classification." />
+    </outputs>
+    <errors>
+      <error code="USAGE" description="No git repository / invalid base / outside-project paths." />
+    </errors>
+  </contract>
+
+  <notes>
+    <note-1>Git is read-only (`diff --name-only`, `ls-files --others`); no index writes.</note-1>
+    <note-2>Explicit --files works without git and is validated before use.</note-2>
+    <note-3>The full detector set stays in M-LINT; this module only computes the scope.</note-3>
+  </notes>
+</M-LINT-GIT>

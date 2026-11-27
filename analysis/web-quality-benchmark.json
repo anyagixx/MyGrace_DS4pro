@@ -1,8 +1,14 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-26T08:29:04.005Z",
+  "generatedAt": "2026-11-27T01:23:36.777Z",
   "repository": "empty workspace (artifact tasks only; no repository context)",
-  "reps": 1,
+  "reps": 10,
+  "runtime": true,
+  "arms": [
+    "plain",
+    "grace",
+    "grace+mwg"
+  ],
   "tasks": [
     {
       "id": "dialog",
@@ -19,202 +25,73 @@
         "focusTrapProxy",
         "escapeHandling"
       ]
-    },
-    {
-      "id": "form",
-      "file": "profile-form.html",
-      "rubricKeys": [
-        "form",
-        "labels",
-        "emailRequired",
-        "autocomplete",
-        "describedBy",
-        "userInvalid",
-        "constraintApi",
-        "noAlert",
-        "ariaLive"
-      ]
-    },
-    {
-      "id": "tabs",
-      "file": "tabs.html",
-      "rubricKeys": [
-        "tablist",
-        "tabRole",
-        "tabpanel",
-        "ariaSelected",
-        "ariaControls",
-        "rovingTabindex",
-        "arrowKeys",
-        "focusManagement",
-        "homeEndKeys"
-      ]
-    },
-    {
-      "id": "python-cli",
-      "file": "config_tool.py",
-      "rubricKeys": [
-        "argparse",
-        "docstring",
-        "typeHints",
-        "pathlib",
-        "mainGuard",
-        "errorHandling",
-        "noEvalExec",
-        "systemExit"
-      ]
     }
   ],
   "aggregate": [
     {
       "arm": "plain",
-      "n": 4,
-      "files": 4,
-      "meanQuality": 96.9,
-      "medianTokens": 22716,
-      "medianTools": 7,
-      "medianWall": 110.5
+      "n": 10,
+      "files": 10,
+      "meanQuality": 96,
+      "meanRuntime": 100,
+      "medianTokens": 45555,
+      "medianTools": 22,
+      "medianWall": 195.3
     },
     {
       "arm": "grace",
-      "n": 4,
-      "files": 4,
-      "meanQuality": 96.9,
-      "medianTokens": 9018,
-      "medianTools": 5,
-      "medianWall": 42.2
+      "n": 10,
+      "files": 10,
+      "meanQuality": 94,
+      "meanRuntime": 100,
+      "medianTokens": 44641,
+      "medianTools": 14,
+      "medianWall": 185.3
     },
     {
       "arm": "grace+mwg",
-      "n": 3,
-      "files": 3,
-      "meanQuality": 90,
-      "medianTokens": 53785,
-      "medianTools": 30,
-      "medianWall": 256.1
+      "n": 10,
+      "files": 10,
+      "meanQuality": 79,
+      "meanRuntime": 100,
+      "medianTokens": 81182,
+      "medianTools": 45,
+      "medianWall": 325.4
     }
   ],
   "rows": [
     {
       "arm": "plain",
       "task": "dialog",
-      "n": 1,
-      "files": 1,
+      "n": 10,
+      "files": 10,
       "medianScore": 10,
       "medianMax": 10,
-      "medianTokens": 36611,
-      "medianTools": 7,
-      "medianWall": 166.6
-    },
-    {
-      "arm": "plain",
-      "task": "form",
-      "n": 1,
-      "files": 1,
-      "medianScore": 9,
-      "medianMax": 9,
-      "medianTokens": 32853,
-      "medianTools": 14,
-      "medianWall": 163.9
-    },
-    {
-      "arm": "plain",
-      "task": "tabs",
-      "n": 1,
-      "files": 1,
-      "medianScore": 9,
-      "medianMax": 9,
-      "medianTokens": 11906,
-      "medianTools": 7,
-      "medianWall": 56.6
-    },
-    {
-      "arm": "plain",
-      "task": "python-cli",
-      "n": 1,
-      "files": 1,
-      "medianScore": 7,
-      "medianMax": 8,
-      "medianTokens": 12578,
-      "medianTools": 4,
-      "medianWall": 57.1
-    },
-    {
-      "arm": "grace",
-      "task": "dialog",
-      "n": 1,
-      "files": 1,
-      "medianScore": 10,
-      "medianMax": 10,
-      "medianTokens": 32275,
-      "medianTools": 19,
-      "medianWall": 139.7
-    },
-    {
-      "arm": "grace",
-      "task": "form",
-      "n": 1,
-      "files": 1,
-      "medianScore": 9,
-      "medianMax": 9,
-      "medianTokens": 8311,
-      "medianTools": 4,
-      "medianWall": 41
-    },
-    {
-      "arm": "grace",
-      "task": "tabs",
-      "n": 1,
-      "files": 1,
-      "medianScore": 9,
-      "medianMax": 9,
-      "medianTokens": 9725,
-      "medianTools": 5,
-      "medianWall": 43.3
-    },
-    {
-      "arm": "grace",
-      "task": "python-cli",
-      "n": 1,
-      "files": 1,
-      "medianScore": 7,
-      "medianMax": 8,
-      "medianTokens": 6951,
-      "medianTools": 3,
-      "medianWall": 17
-    },
-    {
-      "arm": "grace+mwg",
-      "task": "dialog",
-      "n": 1,
-      "files": 1,
-      "medianScore": 7,
-      "medianMax": 10,
-      "medianTokens": 121485,
-      "medianTools": 65,
-      "medianWall": 482.1
-    },
-    {
-      "arm": "grace+mwg",
-      "task": "form",
-      "n": 1,
-      "files": 1,
-      "medianScore": 9,
-      "medianMax": 9,
-      "medianTokens": 53785,
-      "medianTools": 30,
-      "medianWall": 256.1
-    },
-    {
-      "arm": "grace+mwg",
-      "task": "tabs",
-      "n": 1,
-      "files": 1,
-      "medianScore": 9,
-      "medianMax": 9,
-      "medianTokens": 42538,
+      "medianTokens": 45555,
       "medianTools": 22,
-      "medianWall": 112.7
+      "medianWall": 195.3
+    },
+    {
+      "arm": "grace",
+      "task": "dialog",
+      "n": 10,
+      "files": 10,
+      "medianScore": 10,
+      "medianMax": 10,
+      "medianTokens": 44641,
+      "medianTools": 14,
+      "medianWall": 185.3
+    },
+    {
+      "arm": "grace+mwg",
+      "task": "dialog",
+      "n": 10,
+      "files": 10,
+      "medianScore": 8,
+      "medianMax": 10,
+      "medianTokens": 81182,
+      "medianTools": 45,
+      "medianWall": 325.4
     }
   ],
   "sessions": [
@@ -222,10 +99,10 @@
       "arm": "plain",
       "task": "dialog",
       "rep": 1,
-      "sessionId": "session-3788d7a0-7281-421c-b6a5-e148ee23adb8",
-      "wallSeconds": 166.6,
-      "costTokens": 36611,
-      "toolCalls": 7,
+      "sessionId": "session-91c2bb5e-265a-471e-9f92-afc29dca1da5",
+      "wallSeconds": 180,
+      "costTokens": 42727,
+      "toolCalls": 16,
       "fileCreated": true,
       "score": 10,
       "max": 10,
@@ -241,86 +118,270 @@
         "focusTrapProxy": true,
         "escapeHandling": true
       },
-      "notes": ""
+      "notes": "",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
     },
     {
       "arm": "plain",
-      "task": "form",
-      "rep": 1,
-      "sessionId": "session-cb4e579a-80e4-47bc-b90a-287461dbb5ba",
-      "wallSeconds": 163.9,
-      "costTokens": 32853,
-      "toolCalls": 14,
-      "fileCreated": true,
-      "score": 9,
-      "max": 9,
-      "checks": {
-        "form": true,
-        "labels": true,
-        "emailRequired": true,
-        "autocomplete": true,
-        "describedBy": true,
-        "userInvalid": true,
-        "constraintApi": true,
-        "noAlert": true,
-        "ariaLive": true
-      },
-      "notes": ""
-    },
-    {
-      "arm": "plain",
-      "task": "tabs",
-      "rep": 1,
-      "sessionId": "session-12248e6c-8395-428b-ad32-ef9fa35347d1",
-      "wallSeconds": 56.6,
-      "costTokens": 11906,
-      "toolCalls": 7,
-      "fileCreated": true,
-      "score": 9,
-      "max": 9,
-      "checks": {
-        "tablist": true,
-        "tabRole": true,
-        "tabpanel": true,
-        "ariaSelected": true,
-        "ariaControls": true,
-        "rovingTabindex": true,
-        "arrowKeys": true,
-        "focusManagement": true,
-        "homeEndKeys": true
-      },
-      "notes": ""
-    },
-    {
-      "arm": "plain",
-      "task": "python-cli",
-      "rep": 1,
-      "sessionId": "session-1f1ca876-0c46-42a9-8b71-e02af1304eb1",
-      "wallSeconds": 57.1,
-      "costTokens": 12578,
-      "toolCalls": 4,
-      "fileCreated": true,
-      "score": 7,
-      "max": 8,
-      "checks": {
-        "argparse": true,
-        "docstring": true,
-        "typeHints": true,
-        "pathlib": true,
-        "mainGuard": true,
-        "errorHandling": true,
-        "noEvalExec": true,
-        "systemExit": false
-      },
-      "notes": "missing:systemExit"
-    },
-    {
-      "arm": "grace",
       "task": "dialog",
-      "rep": 1,
-      "sessionId": "session-cc161f41-280c-4ef7-a0ce-ff7915a4534e",
-      "wallSeconds": 139.7,
-      "costTokens": 32275,
+      "rep": 2,
+      "sessionId": "session-5b583b60-7345-49ce-b6ba-d95cc61ebe65",
+      "wallSeconds": 210.6,
+      "costTokens": 49248,
+      "toolCalls": 22,
+      "fileCreated": true,
+      "score": 8,
+      "max": 10,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true,
+        "focusTrapProxy": false,
+        "escapeHandling": false
+      },
+      "notes": "missing:focusTrapProxy,missing:escapeHandling",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
+    },
+    {
+      "arm": "plain",
+      "task": "dialog",
+      "rep": 3,
+      "sessionId": "session-f412a9e6-034f-466d-a2ce-96836fb1456f",
+      "wallSeconds": 130.3,
+      "costTokens": 35000,
+      "toolCalls": 17,
+      "fileCreated": true,
+      "score": 10,
+      "max": 10,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true,
+        "focusTrapProxy": true,
+        "escapeHandling": true
+      },
+      "notes": "",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
+    },
+    {
+      "arm": "plain",
+      "task": "dialog",
+      "rep": 4,
+      "sessionId": "session-9ebb3abe-b522-4aa0-8a99-3036346b0e77",
+      "wallSeconds": 146.2,
+      "costTokens": 33357,
+      "toolCalls": 16,
+      "fileCreated": true,
+      "score": 10,
+      "max": 10,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true,
+        "focusTrapProxy": true,
+        "escapeHandling": true
+      },
+      "notes": "",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
+    },
+    {
+      "arm": "plain",
+      "task": "dialog",
+      "rep": 5,
+      "sessionId": "session-9609a5a5-dcaf-4e63-8d3f-3943c37dc4e8",
+      "wallSeconds": 427.4,
+      "costTokens": 94248,
+      "toolCalls": 64,
+      "fileCreated": true,
+      "score": 10,
+      "max": 10,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true,
+        "focusTrapProxy": true,
+        "escapeHandling": true
+      },
+      "notes": "",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
+    },
+    {
+      "arm": "plain",
+      "task": "dialog",
+      "rep": 6,
+      "sessionId": "session-1a39384b-c3ae-4c61-87b2-0ca1c85b1962",
+      "wallSeconds": 230.1,
+      "costTokens": 58033,
+      "toolCalls": 25,
+      "fileCreated": true,
+      "score": 10,
+      "max": 10,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true,
+        "focusTrapProxy": true,
+        "escapeHandling": true
+      },
+      "notes": "",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
+    },
+    {
+      "arm": "plain",
+      "task": "dialog",
+      "rep": 7,
+      "sessionId": "session-a3a4f413-9e5a-4a44-b654-27c34106744c",
+      "wallSeconds": 177.4,
+      "costTokens": 40209,
+      "toolCalls": 22,
+      "fileCreated": true,
+      "score": 10,
+      "max": 10,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true,
+        "focusTrapProxy": true,
+        "escapeHandling": true
+      },
+      "notes": "",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
+    },
+    {
+      "arm": "plain",
+      "task": "dialog",
+      "rep": 8,
+      "sessionId": "session-1b9e3cc5-1ff2-4440-b7d8-2b99f9b9f1af",
+      "wallSeconds": 217.2,
+      "costTokens": 48382,
+      "toolCalls": 22,
+      "fileCreated": true,
+      "score": 10,
+      "max": 10,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true,
+        "focusTrapProxy": true,
+        "escapeHandling": true
+      },
+      "notes": "",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
+    },
+    {
+      "arm": "plain",
+      "task": "dialog",
+      "rep": 9,
+      "sessionId": "session-e0b30b22-1eb1-446d-9f22-6bc9e6d85332",
+      "wallSeconds": 165.3,
+      "costTokens": 37340,
       "toolCalls": 19,
       "fileCreated": true,
       "score": 10,
@@ -337,87 +398,481 @@
         "focusTrapProxy": true,
         "escapeHandling": true
       },
-      "notes": ""
+      "notes": "",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
+    },
+    {
+      "arm": "plain",
+      "task": "dialog",
+      "rep": 10,
+      "sessionId": "session-f0fa02ef-1661-4980-9b9f-9cf2f7334091",
+      "wallSeconds": 427.8,
+      "costTokens": 95385,
+      "toolCalls": 53,
+      "fileCreated": true,
+      "score": 8,
+      "max": 10,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true,
+        "focusTrapProxy": false,
+        "escapeHandling": false
+      },
+      "notes": "missing:focusTrapProxy,missing:escapeHandling",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
     },
     {
       "arm": "grace",
-      "task": "form",
+      "task": "dialog",
       "rep": 1,
-      "sessionId": "session-b00029ff-2682-400e-92d5-12a4654e9c46",
-      "wallSeconds": 41,
-      "costTokens": 8311,
+      "sessionId": "session-429cc27b-ff7f-4431-8d30-21bad72aa8c7",
+      "wallSeconds": 167.5,
+      "costTokens": 37144,
+      "toolCalls": 18,
+      "fileCreated": true,
+      "score": 10,
+      "max": 10,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true,
+        "focusTrapProxy": true,
+        "escapeHandling": true
+      },
+      "notes": "",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
+    },
+    {
+      "arm": "grace",
+      "task": "dialog",
+      "rep": 2,
+      "sessionId": "session-641f3d48-c8c2-4601-bcc7-98d3a3d6a988",
+      "wallSeconds": 183.8,
+      "costTokens": 43694,
+      "toolCalls": 14,
+      "fileCreated": true,
+      "score": 8,
+      "max": 10,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true,
+        "focusTrapProxy": false,
+        "escapeHandling": false
+      },
+      "notes": "missing:focusTrapProxy,missing:escapeHandling",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
+    },
+    {
+      "arm": "grace",
+      "task": "dialog",
+      "rep": 3,
+      "sessionId": "session-0e3baa64-86ea-4365-a66a-87794dbea5f3",
+      "wallSeconds": 303,
+      "costTokens": 51616,
+      "toolCalls": 33,
+      "fileCreated": true,
+      "score": 8,
+      "max": 10,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true,
+        "focusTrapProxy": false,
+        "escapeHandling": false
+      },
+      "notes": "missing:focusTrapProxy,missing:escapeHandling",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
+    },
+    {
+      "arm": "grace",
+      "task": "dialog",
+      "rep": 4,
+      "sessionId": "session-ba6957b5-178d-4280-a382-2aff4d14e927",
+      "wallSeconds": 240.5,
+      "costTokens": 56357,
+      "toolCalls": 33,
+      "fileCreated": true,
+      "score": 10,
+      "max": 10,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true,
+        "focusTrapProxy": true,
+        "escapeHandling": true
+      },
+      "notes": "",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
+    },
+    {
+      "arm": "grace",
+      "task": "dialog",
+      "rep": 5,
+      "sessionId": "session-7151f71f-ba21-4e9a-b59b-a6f19cf9971e",
+      "wallSeconds": 244.7,
+      "costTokens": 57796,
+      "toolCalls": 33,
+      "fileCreated": true,
+      "score": 10,
+      "max": 10,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true,
+        "focusTrapProxy": true,
+        "escapeHandling": true
+      },
+      "notes": "",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
+    },
+    {
+      "arm": "grace",
+      "task": "dialog",
+      "rep": 6,
+      "sessionId": "session-b8147d23-62d0-43e4-9e81-2e055e757092",
+      "wallSeconds": 199,
+      "costTokens": 45587,
+      "toolCalls": 10,
+      "fileCreated": true,
+      "score": 10,
+      "max": 10,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true,
+        "focusTrapProxy": true,
+        "escapeHandling": true
+      },
+      "notes": "",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
+    },
+    {
+      "arm": "grace",
+      "task": "dialog",
+      "rep": 7,
+      "sessionId": "session-c5a218ac-d17c-4692-a20e-558d1a2c3b2e",
+      "wallSeconds": 142.5,
+      "costTokens": 32938,
+      "toolCalls": 13,
+      "fileCreated": true,
+      "score": 10,
+      "max": 10,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true,
+        "focusTrapProxy": true,
+        "escapeHandling": true
+      },
+      "notes": "",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
+    },
+    {
+      "arm": "grace",
+      "task": "dialog",
+      "rep": 8,
+      "sessionId": "session-5642d6e8-28ea-436b-b3e9-dbe9cca06a0b",
+      "wallSeconds": 186.8,
+      "costTokens": 55697,
+      "toolCalls": 10,
+      "fileCreated": true,
+      "score": 10,
+      "max": 10,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true,
+        "focusTrapProxy": true,
+        "escapeHandling": true
+      },
+      "notes": "",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
+    },
+    {
+      "arm": "grace",
+      "task": "dialog",
+      "rep": 9,
+      "sessionId": "session-cc45541a-5252-48ae-9f55-69e02c8de7b3",
+      "wallSeconds": 98.2,
+      "costTokens": 27056,
+      "toolCalls": 8,
+      "fileCreated": true,
+      "score": 8,
+      "max": 10,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true,
+        "focusTrapProxy": false,
+        "escapeHandling": false
+      },
+      "notes": "missing:focusTrapProxy,missing:escapeHandling",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
+    },
+    {
+      "arm": "grace",
+      "task": "dialog",
+      "rep": 10,
+      "sessionId": "session-a80e3d77-8933-4288-958f-f5f0a67081db",
+      "wallSeconds": 79.2,
+      "costTokens": 18197,
       "toolCalls": 4,
       "fileCreated": true,
-      "score": 9,
-      "max": 9,
+      "score": 10,
+      "max": 10,
       "checks": {
-        "form": true,
-        "labels": true,
-        "emailRequired": true,
-        "autocomplete": true,
-        "describedBy": true,
-        "userInvalid": true,
-        "constraintApi": true,
-        "noAlert": true,
-        "ariaLive": true
-      },
-      "notes": ""
-    },
-    {
-      "arm": "grace",
-      "task": "tabs",
-      "rep": 1,
-      "sessionId": "session-7d1aef4a-9a00-4913-a18f-6a6bfcbed725",
-      "wallSeconds": 43.3,
-      "costTokens": 9725,
-      "toolCalls": 5,
-      "fileCreated": true,
-      "score": 9,
-      "max": 9,
-      "checks": {
-        "tablist": true,
-        "tabRole": true,
-        "tabpanel": true,
-        "ariaSelected": true,
-        "ariaControls": true,
-        "rovingTabindex": true,
-        "arrowKeys": true,
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true,
+        "backdropOrStartingStyle": true,
         "focusManagement": true,
-        "homeEndKeys": true
+        "focusTrapProxy": true,
+        "escapeHandling": true
       },
-      "notes": ""
-    },
-    {
-      "arm": "grace",
-      "task": "python-cli",
-      "rep": 1,
-      "sessionId": "session-775d8c6d-d097-4045-a447-a0243355a9d4",
-      "wallSeconds": 17,
-      "costTokens": 6951,
-      "toolCalls": 3,
-      "fileCreated": true,
-      "score": 7,
-      "max": 8,
-      "checks": {
-        "argparse": true,
-        "docstring": true,
-        "typeHints": true,
-        "pathlib": true,
-        "mainGuard": true,
-        "errorHandling": true,
-        "noEvalExec": true,
-        "systemExit": false
-      },
-      "notes": "missing:systemExit"
+      "notes": "",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
     },
     {
       "arm": "grace+mwg",
       "task": "dialog",
       "rep": 1,
-      "sessionId": "session-56f04e6a-bb65-44ab-a65f-3ce64a1e7adf",
-      "wallSeconds": 482.1,
-      "costTokens": 121485,
-      "toolCalls": 65,
+      "sessionId": "session-70620533-a395-435d-978a-9125bc0385f0",
+      "wallSeconds": 387.3,
+      "costTokens": 71388,
+      "toolCalls": 43,
+      "fileCreated": true,
+      "score": 8,
+      "max": 10,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true,
+        "focusTrapProxy": false,
+        "escapeHandling": false
+      },
+      "notes": "missing:focusTrapProxy,missing:escapeHandling",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
+    },
+    {
+      "arm": "grace+mwg",
+      "task": "dialog",
+      "rep": 2,
+      "sessionId": "session-90a1b828-d7dc-4543-bddd-00135d79637e",
+      "wallSeconds": 364.3,
+      "costTokens": 96117,
+      "toolCalls": 48,
+      "fileCreated": true,
+      "score": 8,
+      "max": 10,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true,
+        "focusTrapProxy": false,
+        "escapeHandling": false
+      },
+      "notes": "missing:focusTrapProxy,missing:escapeHandling",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
+    },
+    {
+      "arm": "grace+mwg",
+      "task": "dialog",
+      "rep": 3,
+      "sessionId": "session-81ee13ee-2bfc-48e6-9071-55ec68d547c5",
+      "wallSeconds": 270.9,
+      "costTokens": 61629,
+      "toolCalls": 32,
       "fileCreated": true,
       "score": 7,
       "max": 10,
@@ -433,60 +888,268 @@
         "focusTrapProxy": false,
         "escapeHandling": false
       },
-      "notes": "missing:noAriaDialogRole,missing:focusTrapProxy,missing:escapeHandling"
+      "notes": "missing:noAriaDialogRole,missing:focusTrapProxy,missing:escapeHandling",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
     },
     {
       "arm": "grace+mwg",
-      "task": "form",
-      "rep": 1,
-      "sessionId": "session-ec85a424-12c1-4ae1-babc-26e8c4e92e73",
-      "wallSeconds": 256.1,
-      "costTokens": 53785,
-      "toolCalls": 30,
+      "task": "dialog",
+      "rep": 4,
+      "sessionId": "session-de7aaa1a-48a3-4612-8a82-288eb3ee0547",
+      "wallSeconds": 287.1,
+      "costTokens": 92151,
+      "toolCalls": 39,
       "fileCreated": true,
-      "score": 9,
-      "max": 9,
+      "score": 8,
+      "max": 10,
       "checks": {
-        "form": true,
-        "labels": true,
-        "emailRequired": true,
-        "autocomplete": true,
-        "describedBy": true,
-        "userInvalid": true,
-        "constraintApi": true,
-        "noAlert": true,
-        "ariaLive": true
-      },
-      "notes": ""
-    },
-    {
-      "arm": "grace+mwg",
-      "task": "tabs",
-      "rep": 1,
-      "sessionId": "session-3c7f9ce1-f9c1-4773-ad0e-9d23ac926385",
-      "wallSeconds": 112.7,
-      "costTokens": 42538,
-      "toolCalls": 22,
-      "fileCreated": true,
-      "score": 9,
-      "max": 9,
-      "checks": {
-        "tablist": true,
-        "tabRole": true,
-        "tabpanel": true,
-        "ariaSelected": true,
-        "ariaControls": true,
-        "rovingTabindex": true,
-        "arrowKeys": true,
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true,
+        "backdropOrStartingStyle": true,
         "focusManagement": true,
-        "homeEndKeys": true
+        "focusTrapProxy": false,
+        "escapeHandling": false
       },
-      "notes": ""
+      "notes": "missing:focusTrapProxy,missing:escapeHandling",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
+    },
+    {
+      "arm": "grace+mwg",
+      "task": "dialog",
+      "rep": 5,
+      "sessionId": "session-51171cdb-a504-4349-9bb7-e68fa0bb9ff6",
+      "wallSeconds": 235.3,
+      "costTokens": 56436,
+      "toolCalls": 38,
+      "fileCreated": true,
+      "score": 8,
+      "max": 10,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true,
+        "focusTrapProxy": false,
+        "escapeHandling": false
+      },
+      "notes": "missing:focusTrapProxy,missing:escapeHandling",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
+    },
+    {
+      "arm": "grace+mwg",
+      "task": "dialog",
+      "rep": 6,
+      "sessionId": "session-53683e72-db67-4662-bffe-41ad8a65485d",
+      "wallSeconds": 363.7,
+      "costTokens": 90975,
+      "toolCalls": 56,
+      "fileCreated": true,
+      "score": 7,
+      "max": 10,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": false,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true,
+        "focusTrapProxy": false,
+        "escapeHandling": false
+      },
+      "notes": "missing:noAriaDialogRole,missing:focusTrapProxy,missing:escapeHandling",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
+    },
+    {
+      "arm": "grace+mwg",
+      "task": "dialog",
+      "rep": 7,
+      "sessionId": "session-443b3448-f55e-4e90-a1ea-b3ac3ba62514",
+      "wallSeconds": 274,
+      "costTokens": 61183,
+      "toolCalls": 46,
+      "fileCreated": true,
+      "score": 9,
+      "max": 10,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true,
+        "focusTrapProxy": false,
+        "escapeHandling": true
+      },
+      "notes": "missing:focusTrapProxy",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
+    },
+    {
+      "arm": "grace+mwg",
+      "task": "dialog",
+      "rep": 8,
+      "sessionId": "session-8642b071-8719-4630-98b8-792b443af79e",
+      "wallSeconds": 419.9,
+      "costTokens": 126353,
+      "toolCalls": 51,
+      "fileCreated": true,
+      "score": 8,
+      "max": 10,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": true,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true,
+        "focusTrapProxy": false,
+        "escapeHandling": false
+      },
+      "notes": "missing:focusTrapProxy,missing:escapeHandling",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
+    },
+    {
+      "arm": "grace+mwg",
+      "task": "dialog",
+      "rep": 9,
+      "sessionId": "session-5ad70b28-9379-4bcf-bc38-853e6246bf20",
+      "wallSeconds": 551.1,
+      "costTokens": 142969,
+      "toolCalls": 86,
+      "fileCreated": true,
+      "score": 9,
+      "max": 10,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": false,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true,
+        "focusTrapProxy": true,
+        "escapeHandling": true
+      },
+      "notes": "missing:noAriaDialogRole",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
+    },
+    {
+      "arm": "grace+mwg",
+      "task": "dialog",
+      "rep": 10,
+      "sessionId": "session-91c09321-cd23-42fd-bb1c-aa3c756ce3c3",
+      "wallSeconds": 235.9,
+      "costTokens": 51290,
+      "toolCalls": 33,
+      "fileCreated": true,
+      "score": 7,
+      "max": 10,
+      "checks": {
+        "nativeDialog": true,
+        "showModal": true,
+        "accessibleName": true,
+        "closeControl": true,
+        "reducedMotion": true,
+        "noAriaDialogRole": false,
+        "backdropOrStartingStyle": true,
+        "focusManagement": true,
+        "focusTrapProxy": false,
+        "escapeHandling": false
+      },
+      "notes": "missing:noAriaDialogRole,missing:focusTrapProxy,missing:escapeHandling",
+      "runtime": {
+        "score": 3,
+        "max": 3,
+        "checks": {
+          "dialogOpens": true,
+          "focusInside": true,
+          "escapeCloses": true
+        },
+        "error": null
+      }
     }
   ],
   "limitations": [
-    "Static rubrics/runtime proxies check source patterns, not real browser accessibility behaviour; a perfect score is not proof of a good UI.",
-    "Empty workspace, four tasks (3 web + Python CLI), N=1 per task/arm; no real browser execution or blinded human grading yet.",
-    "The grace+mwg arm ran only web tasks and used npx @latest at run time; guidance version is not pinned by the harness."
+    "Runtime checks exercise Chromium via Playwright; they do not replace assistive-technology testing or human review.",
+    "Automated blind grading: rubrics are not shown to the agent; N=10 per arm on one dialog task with an empty workspace.",
+    "The grace+mwg arm used npx @latest at run time; guidance version is not pinned by the harness.",
+    "Results are arm medians/means on a single task, not a general product-quality claim."
   ]
 }

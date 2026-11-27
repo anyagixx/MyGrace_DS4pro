@@ -86,11 +86,20 @@ export interface GuidancePackStatus {
 
 export type GuidanceLockState = "verified" | "mismatch" | "missing" | "unlocked";
 
+export interface GuidanceRegistryEntry {
+  package: string;
+  version: string;
+  integrity: string | null;
+  signatures: number;
+  checkedAt: string;
+}
+
 export interface GuidanceLockEntry {
   kind: GuidancePackSettings["kind"];
   version: string | null;
   sha256: string | null;
   commandHash: string | null;
+  registry: GuidanceRegistryEntry | null;
   lockedAt: string;
 }
 
@@ -104,6 +113,8 @@ export const GUIDANCE_LOCK_FILENAME = "mygrace.guidance-lock.json";
 export const GUIDANCE_SIGNATURE_FILENAME = "mygrace.guidance-lock.sig";
 export const GUIDANCE_PUBLIC_KEY_FILENAME = "mygrace.guidance.pub";
 export const GUIDANCE_PRIVATE_KEY_PATH = join(".mygrace", "guidance-signing.key");
+/** Override for tests/private mirrors; default is the public npm registry. */
+export const GUIDANCE_REGISTRY_ENV = "MYGRACE_NPM_REGISTRY";
 
 export interface GuidanceHit {
   pack: string;
@@ -218,6 +229,58 @@ export function packageSpecFromCommand(tokens: readonly string[]): string | null
   return null;
 }
 
+/** Version part of the package spec after npx/pnpx/bunx, if present. */
+export function packageVersionFromCommand(tokens: readonly string[]): string | null {
+  const runnerIndex = tokens.findIndex((token) => /^(npx|pnpx|bunx)$/.test(token));
+  if (runnerIndex === -1) return null;
+  for (const token of tokens.slice(runnerIndex + 1)) {
+    if (token.startsWith("-")) continue;
+    const at = token.lastIndexOf("@");
+    return at > 0 ? token.slice(at + 1) : null;
+  }
+  return null;
+}
+
+/** Fetch npm registry provenance metadata for a package/version. */
+export async function fetchRegistryProvenance(
+  packageName: string,
+  version: string | null,
+  timeoutMs = 15_000,
+  env: NodeJS.ProcessEnv = process.env
+): Promise<GuidanceRegistryEntry> {
+  const base = (env[GUIDANCE_REGISTRY_ENV] ?? "https://registry.npmjs.org").replace(/\/$/, "");
+  const encoded = packageName.startsWith("@") ? packageName.replace("/", "%2F") : encodeURIComponent(packageName);
+  const url = version === null ? `${base}/${encoded}` : `${base}/${encoded}/${encodeURIComponent(version)}`;
+  const response = await fetch(url, {
+    headers: { accept: "application/json" },
+    signal: AbortSignal.timeout(Math.min(timeoutMs, 20_000)),
+  });
+  if (!response.ok) throw new Error(`registry responded ${response.status} for ${packageName}${version ? `@${version}` : ""}`);
+  const raw = (await response.json()) as Record<string, unknown>;
+  let metadata: Record<string, unknown> = raw;
+  if (version === null) {
+    const tags = raw["dist-tags"];
+    const latest = tags !== null && typeof tags === "object" ? (tags as Record<string, unknown>).latest : undefined;
+    const versions = raw.versions;
+    if (typeof latest !== "string" || versions === null || typeof versions !== "object") {
+      throw new Error(`registry metadata for ${packageName} has no latest version`);
+    }
+    metadata = (versions as Record<string, Record<string, unknown>>)[latest] ?? {};
+    version = latest;
+  }
+  const dist = metadata.dist;
+  const distObject = dist !== null && typeof dist === "object" ? (dist as Record<string, unknown>) : {};
+  const integrity = typeof distObject.integrity === "string" ? distObject.integrity : null;
+  const signatures = Array.isArray(distObject.signatures) ? distObject.signatures.length : 0;
+  return {
+    package: packageName,
+    version,
+    integrity,
+    signatures,
+    checkedAt: new Date().toISOString(),
+  };
+}
+
 /** Stable hash of a CLI pack command (whitespace-normalised). */
 export function cliCommandHash(command: string): string {
   return createHash("sha256").update(command.trim().replace(/\s+/g, " ")).digest("hex");
@@ -314,6 +377,21 @@ export function loadGuidanceLock(root: string): GuidanceLock | null {
       version: typeof item.version === "string" ? item.version : null,
       sha256: typeof item.sha256 === "string" ? item.sha256 : null,
       commandHash: typeof item.commandHash === "string" ? item.commandHash : null,
+      registry:
+        item.registry !== null && typeof item.registry === "object" && !Array.isArray(item.registry)
+          ? (() => {
+              const reg = item.registry as Record<string, unknown>;
+              return typeof reg.package === "string" && typeof reg.version === "string"
+                ? {
+                    package: reg.package,
+                    version: reg.version,
+                    integrity: typeof reg.integrity === "string" ? reg.integrity : null,
+                    signatures: typeof reg.signatures === "number" ? reg.signatures : 0,
+                    checkedAt: typeof reg.checkedAt === "string" ? reg.checkedAt : new Date(0).toISOString(),
+                  }
+                : null;
+            })()
+          : null,
       lockedAt: typeof item.lockedAt === "string" ? item.lockedAt : new Date(0).toISOString(),
     };
   }
@@ -608,11 +686,11 @@ export function retrieveGuidance(
 }
 
 /** Build and write `mygrace.guidance-lock.json` for configured packs. */
-export function writeGuidanceLock(
+export async function writeGuidanceLock(
   root: string,
   config: MyGraceConfig,
-  options: { allowCommands: boolean; allowUnsafeCommands: boolean }
-): GuidanceLock {
+  options: { allowCommands: boolean; allowUnsafeCommands: boolean; registry?: boolean }
+): Promise<GuidanceLock> {
   const resolved = resolvePacks(root, config, { ...options, ignoreLock: true });
   if (resolved.statuses.filter((status) => status.enabled).length === 0) {
     throw new UsageError("No guidance packs are configured.", {
@@ -639,6 +717,7 @@ export function writeGuidanceLock(
         version: manifest.version,
         sha256: localPackDigest(dir),
         commandHash: null,
+        registry: null,
         lockedAt: now,
       };
       continue;
@@ -668,12 +747,64 @@ export function writeGuidanceLock(
       version,
       sha256: packageDigest,
       commandHash: cliCommandHash(tokens.join(" ")),
+      registry: null,
       lockedAt: now,
     };
+  }
+  if (options.registry === true) {
+    for (const [name, entry] of Object.entries(packs)) {
+      if (entry.kind !== "cli") continue;
+      const settings = config.guidancePacks.find((pack) => pack.name === name);
+      const tokens = settings === undefined ? [] : tokenizeCommand(settings.command ?? "");
+      const packageName = packageSpecFromCommand(tokens);
+      if (packageName === null) continue;
+      const version = packageVersionFromCommand(tokens) ?? entry.version;
+      try {
+        entry.registry = await fetchRegistryProvenance(packageName, version, settings?.timeoutMs ?? 15_000);
+      } catch (error) {
+        throw new UsageError(`Cannot fetch registry provenance for ${packageName}: ${error instanceof Error ? error.message : String(error)}`, {
+          hint: "Check network/registry access, or omit --registry for a local-only lockfile.",
+        });
+      }
+    }
   }
   const lock: GuidanceLock = { version: 1, generatedAt: now, packs };
   writeFileSync(join(root, GUIDANCE_LOCK_FILENAME), `${JSON.stringify(lock, null, 2)}\n`);
   return lock;
+}
+
+/** Compare recorded registry provenance with the current registry metadata. */
+export async function checkRegistryProvenance(
+  root: string,
+  timeoutMs = 15_000
+): Promise<Finding[]> {
+  const lock = loadGuidanceLock(root);
+  if (lock === null) return [finding("warning", "GUIDANCE_REGISTRY_LOCK_MISSING", `No ${GUIDANCE_LOCK_FILENAME}; run --lock --registry first.`)];
+  const findings: Finding[] = [];
+  for (const [name, entry] of Object.entries(lock.packs)) {
+    if (entry.kind !== "cli") continue;
+    if (entry.registry === null) {
+      findings.push(
+        finding("info", "GUIDANCE_REGISTRY_MISSING", `CLI pack "${name}" has no recorded registry provenance.`, {
+          hint: "Re-run `mygrace context guidance --lock --registry` with network access.",
+        })
+      );
+      continue;
+    }
+    try {
+      const current = await fetchRegistryProvenance(entry.registry.package, entry.registry.version, timeoutMs);
+      if (current.integrity !== entry.registry.integrity || current.version !== entry.registry.version) {
+        findings.push(
+          finding("error", "GUIDANCE_REGISTRY_DRIFT", `Registry provenance for "${name}" changed (${entry.registry.version} → ${current.version}, integrity ${entry.registry.integrity ?? "none"} → ${current.integrity ?? "none"}).`)
+        );
+      }
+    } catch (error) {
+      findings.push(
+        finding("error", "GUIDANCE_REGISTRY_UNAVAILABLE", `Cannot verify registry provenance for "${name}": ${error instanceof Error ? error.message : String(error)}`)
+      );
+    }
+  }
+  return findings;
 }
 
 const guidanceCommand = defineCommand({
@@ -694,10 +825,12 @@ const guidanceCommand = defineCommand({
     sign: { type: "boolean", default: false, description: "With --lock: sign the lockfile with the Ed25519 private key" },
     keygen: { type: "boolean", default: false, description: "Generate the Ed25519 signing keypair (private local, public committed)" },
     requireSignature: { type: "boolean", default: false, description: "With --check-lock: require a valid lock signature" },
+    registry: { type: "boolean", default: false, description: "With --lock: fetch npm registry provenance metadata (network)" },
+    checkRegistry: { type: "boolean", default: false, description: "With --check-lock: re-fetch and compare npm registry provenance" },
   },
   run: async ({ args }) => {
     const format = parseOutputFormat(args.format);
-    await runCommandOutcome<GuidanceData>(format, { command: "context guidance" }, (): CommandOutcome<GuidanceData> => {
+    await runCommandOutcome<GuidanceData>(format, { command: "context guidance" }, async (): Promise<CommandOutcome<GuidanceData>> => {
       const input = typeof args.path === "string" ? args.path : ".";
       const root = tryFindProjectRoot(input) ?? resolve(input);
       const loaded = tryLoadConfig(root);
@@ -724,7 +857,7 @@ const guidanceCommand = defineCommand({
         };
       }
       if (args.lock === true) {
-        const lock = writeGuidanceLock(root, config, options);
+        const lock = await writeGuidanceLock(root, config, { ...options, registry: args.registry === true });
         const signaturePath = join(root, GUIDANCE_SIGNATURE_FILENAME);
         let signed = false;
         if (args.sign === true) {
@@ -793,6 +926,9 @@ const guidanceCommand = defineCommand({
         findings.push(
           finding("error", "GUIDANCE_LOCK_MISSING", `No ${GUIDANCE_LOCK_FILENAME} exists; run \`mygrace context guidance --lock\` after reviewing packs.`)
         );
+      }
+      if (args.checkLock === true && args.checkRegistry === true) {
+        findings.push(...(await checkRegistryProvenance(root)));
       }
       if (args.checkLock === true) {
         const lock = loadGuidanceLock(root);

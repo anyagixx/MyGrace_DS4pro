@@ -23,7 +23,8 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { cpSync, existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { chmodSync, cpSync, existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import {
@@ -804,6 +805,36 @@ describe("project memory helpers", () => {
       expect(readActiveProject(envFor(file))).toBe(resolve(DEMO));
     } finally {
       rmSync(file, { force: true });
+    }
+  });
+});
+
+describe("in-process MCP transport (coverage for server handlers)", () => {
+  const posix = process.platform !== "win32" ? test : test.skip;
+  posix("listTools and callTool run through createMcpServer without a child process", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "mygrace-mcp-inproc-"));
+    const bin = join(dir, "fake-cli.sh");
+    writeFileSync(bin, "#!/bin/sh\necho '# fake mygrace output'\n");
+    chmodSync(bin, 0o755);
+    const launcher = { command: bin, args: [], source: "env" as const, describe: () => "fake-cli" };
+    const server = createMcpServer(launcher);
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+    const client = new Client({ name: "mygrace-inproc", version: "1.0.0" }, { capabilities: {} });
+    try {
+      await server.connect(serverTransport);
+      await client.connect(clientTransport);
+      const listed = await client.listTools();
+      expect(listed.tools.map((tool) => tool.name)).toEqual(DOCUMENTED_TOOL_NAMES);
+      const result = (await client.callTool({
+        name: "mygrace_status",
+        arguments: { path: dir },
+      })) as { isError?: boolean; content?: Array<{ text?: string }> };
+      expect(result.isError).not.toBe(true);
+      expect(result.content?.[0]?.text ?? "").toContain("fake mygrace output");
+    } finally {
+      await client.close().catch(() => {});
+      await server.close().catch(() => {});
+      rmSync(dir, { recursive: true, force: true });
     }
   });
 });

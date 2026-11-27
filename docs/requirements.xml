@@ -111,7 +111,7 @@
       <Preconditions>The project has docs/ indexes and mygrace.config.json; external tools/packs are optional.</Preconditions>
       <AcceptanceCriteria>Every surface has contracts, verification and trace links; scoped verification commands pass; external tools degrade to coded findings.</AcceptanceCriteria>
       <Priority>medium</Priority>
-      <RelatedModules>M-CLI,M-FILE,M-STATUS,M-MODULE,M-PATHS,M-IMPACT,M-NEXT,M-PROJECTS,M-SHARD,M-TRACE,M-DIAGRAM,M-INTEGRATIONS,M-LINT-PROVIDERS,M-GUIDANCE,M-CAPSULE,M-CODE-GRAPH</RelatedModules>
+      <RelatedModules>M-CLI,M-FILE,M-STATUS,M-MODULE,M-PATHS,M-IMPACT,M-NEXT,M-PROJECTS,M-SHARD,M-TRACE,M-DIAGRAM,M-INTEGRATIONS,M-LINT-PROVIDERS,M-GUIDANCE,M-CAPSULE,M-CODE-GRAPH,M-INSTALL-FS,M-LINT-GIT</RelatedModules>
     </UC-007>
 
   </UseCases>

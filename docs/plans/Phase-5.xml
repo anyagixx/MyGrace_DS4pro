@@ -17,6 +17,8 @@
   <step-13 module="M-GUIDANCE" description="Guidance packs, lockfile and Ed25519 attestation are verified." status="done" />
   <step-14 module="M-CAPSULE" description="Capsule routines remain experimental and verified." status="done" />
   <step-15 module="M-CI" description="External adoption and larger quality benchmark (N>=10, browser a11y) remain as product evidence." status="wip" />
+  <step-17 module="M-INSTALL-FS" description="Installer filesystem/backup helpers extracted and verified." status="done" />
+  <step-18 module="M-LINT-GIT" description="Lint changed-scope resolver extracted and verified." status="done" />
   <step-16 module="M-CODE-GRAPH" description="Octocode code-graph adapter remains optional, trust-gated and scoped." status="done" />
 
   <outcome>

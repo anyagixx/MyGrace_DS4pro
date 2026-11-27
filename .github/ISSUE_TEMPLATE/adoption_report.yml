@@ -1,0 +1,41 @@
+name: Adoption / external validation report
+description: Report using MyGRACE on a real repository (read-only validation or adoption)
+title: "[adoption] "
+labels: ["adoption"]
+body:
+  - type: input
+    id: repo
+    attributes:
+      label: Repository and commit
+      placeholder: https://github.com/owner/repo @ sha
+    validations:
+      required: true
+  - type: input
+    id: language
+    attributes:
+      label: Language / build system
+    validations:
+      required: true
+  - type: textarea
+    id: commands
+    attributes:
+      label: Commands and timings
+      description: mygrace setup/lint/ci/verify commands, wall times and exit codes.
+    validations:
+      required: true
+  - type: textarea
+    id: artifacts
+    attributes:
+      label: Artifact provenance
+      description: Generated, hand-curated, or both? Any gaps in trace/verification?
+  - type: textarea
+    id: blockers
+    attributes:
+      label: Blockers / security observations
+  - type: checkboxes
+    id: honesty
+    attributes:
+      label: Reporting policy
+      options:
+        - label: I did not include secrets or private repository content.
+          required: true

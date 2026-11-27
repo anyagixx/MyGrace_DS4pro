@@ -34,4 +34,6 @@
   <M-CAPSULE NAME="Capsule routines" TYPE="ORCHESTRATOR" STATUS="done" PATH="src/grace-capsule.ts" DEPENDS="M-COMMON,M-CONFIG,M-ERRORS,M-TEST" VERIFICATION_REF="V-M-CAPSULE" />
   <M-LINT-PROVIDERS NAME="External lint providers" TYPE="INTEGRATION" STATUS="done" PATH="src/grace-lint-providers.ts" DEPENDS="M-CONFIG,M-ERRORS,M-TEST,M-INTEGRATIONS" VERIFICATION_REF="V-M-LINT-PROVIDERS" />
   <M-GUIDANCE NAME="Guidance packs" TYPE="INTEGRATION" STATUS="done" PATH="src/grace-guidance.ts" DEPENDS="M-CONFIG,M-COMMON,M-ERRORS,M-TEST" VERIFICATION_REF="V-M-GUIDANCE" />
+  <M-INSTALL-FS NAME="Installer filesystem and backups" TYPE="UTILITY" STATUS="done" PATH="src/grace-install-fs.ts" DEPENDS="M-ERRORS" VERIFICATION_REF="V-M-INSTALL-FS" />
+  <M-LINT-GIT NAME="Lint changed-scope resolver" TYPE="UTILITY" STATUS="done" PATH="src/grace-lint-git.ts" DEPENDS="M-ERRORS,M-PATHS" VERIFICATION_REF="V-M-LINT-GIT" />
 </GraphIndex>

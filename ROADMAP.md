@@ -1,6 +1,6 @@
 # MyGRACE Roadmap — from audit findings to a professional agent engineering harness
 
-> Status: **v3.5.0 shipped 2026-11-26** — audit hardening: zero production advisories, release checksums/provenance, scoped verification, zero trace gaps. Phase-5 remains wip for external product evidence. Quality/token gains remain unproven; Wave 7 tracks the remaining harder-rubric/N work. Baseline: v1.0.1 as audited on 2026-11-22
+> Status: **v3.6.0 shipped 2026-11-27** — product-evidence wave: hard coverage gate, registry provenance, MCP in-process coverage, real Chromium runtime a11y grading, modularized lint/install, N=10 blinded benchmark. Phase-5 remains wip for external adoption. Quality/token gains remain unproven; Wave 7 tracks the remaining harder-rubric/N work. Baseline: v1.0.1 as audited on 2026-11-22
 > (see `analysis/00-EXECUTIVE-ASSESSMENT.md` and appendices 01–04).
 > Target: a tool that AI coding agents can use with confidence on software of **any complexity** —
 > from a 3-module script to a 500-module monorepo, on repos you do not fully trust.
@@ -236,7 +236,7 @@ limitations are tracked explicitly:
 | # | Limitation | Status | Acceptance |
 |---|---|---|---|
 | 1 | MWG was detected only as a global CLI; npx-only installs were invisible | ✅ v3.2.0 — `integrations` falls back to `npx --no-install modern-web-guidance --version` (npx cache), reports `runner: "npx"`; no network download | Detection covered by tests; no global install required |
-| 2 | The external benchmark graded token usage, not artifact quality | 🟡 v3.4.0: 4 tasks (3 web + Python CLI), 8–10 static/runtime-proxy checks, N=1/task/arm; plain/MyGRACE 96.9%, MWG 90%, MWG 53 785 tokens vs 22 716/9 018 | Static proxies are not browser execution; N=1 is small. Real browser a11y and N≥10 are accepted out of deterministic CI scope |
+| 2 | The external benchmark graded token usage, not artifact quality | 🟡 v3.6.0: dialog task, N=10/arm, blind static rubric + Chromium runtime a11y; plain 96%, MyGRACE 94%, MWG 79%; runtime 3/3 all arms; MyGRACE 44 641 tokens/14 tools vs plain 45 555/22; MWG 81 182/45 | One task; runtime checks are not assistive-technology testing; no human grading. External adoption remains absent |
 | 3 | CLI packs/providers can use mutable `@latest`; no pin attestation | ✅ v3.3.0: `mygrace.guidance-lock.json` (local SHA-256, CLI command hash + `--version`), enforced automatically; `--lock`/`--check-lock`; plus pin warnings | Residual: server-side package mutation after lock is still trusted — attestation/signature is future work |
 
 Wave 6→7 also adds the agent workflow: `context packet`/`focus` list configured
@@ -260,6 +260,17 @@ Closes the v3.4 audit findings:
 Remaining (Phase-5 wip): external adoption and larger/blinded quality evidence
 (N>=10, browser a11y). These require infrastructure/time outside deterministic CI,
 not code changes to the core.
+
+### Wave 9 — Product evidence and maintainability — *v3.6.0*
+
+| Item | Resolution |
+|---|---|
+| Coverage was reported, not enforced | `scripts/check-coverage.ts` runs the suite with coverage and fails under 90% functions / 85% lines; CI and `release:check` use it (current: 94.08% / 88.34%). |
+| CLI packs had only local Ed25519 attestation | Opt-in registry provenance: `--lock --registry` records npm version/integrity/signature metadata; `--check-registry` detects drift. Normal retrieval stays offline. |
+| MCP line coverage was low because tests used a child process | In-process `InMemoryTransport` test exercises server handlers, validation and result mapping. |
+| Browser a11y was asserted only by static proxies | `scripts/a11y-runtime.ts` runs Playwright Chromium checks (dialog open/focus/Escape, tabs keyboard, form validity) and feeds the quality benchmark. |
+| Large modules | Extracted `grace-install-fs.ts` and `grace-lint-git.ts`; installer/lint re-export the public API, with new module/verification entities. |
+| Product evidence | N=10 blinded dialog benchmark per arm with Chromium runtime grading (plain 96%, MyGRACE 94%, MWG 79%; runtime 3/3) and explicit limitations; external-adoption kit + issue template. No external production users yet. |
 
 ## 6. Release gates checklist (copy into every release PR)
 

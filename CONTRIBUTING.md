@@ -197,8 +197,10 @@ Rules that keep history useful:
 ## Release gates
 
 Production dependencies must pass `bun run audit:prod` (no high/critical
-advisories); the release workflow attests the packed tarball with GitHub build
-provenance.
+advisories); coverage must pass `bun run coverage:check` (90% functions / 85%
+lines); the release workflow attests the packed tarball with GitHub build
+provenance. Runtime a11y checks need `bunx playwright install chromium-headless-shell`
+(local tool dependency, not required for unit tests).
 
 `ROADMAP.md` §6 is the authoritative list. This is how it maps to the repo today:
 

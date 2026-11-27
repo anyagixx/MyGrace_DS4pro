@@ -49,7 +49,7 @@ jobs:
           bun-version: "1.4.5"
       - run: bun install --frozen-lockfile
       - name: Foundation + command unit tests with coverage gate
-        run: bun test --coverage
+        run: bun run coverage:check
       - name: Demo-store integration tests (dedicated bunfig root)
         run: bun run test:demo
 

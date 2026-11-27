@@ -233,3 +233,10 @@ govern with MyGRACE, and model-provider behavior.
 Production dependencies are audited in CI with
 `bun audit --production --audit-level=high`; high/critical advisories block a
 release. `bun.lock` is committed and `bun install --frozen-lockfile` is used in CI.
+
+## Guidance registry provenance
+
+`mygrace context guidance --lock --registry` is the only network path in the
+guidance subsystem; it fetches public npm metadata, records integrity/signature
+fields and never downloads or executes a package. `--check-registry` repeats the
+read and reports drift. Normal search/retrieval remains offline.

@@ -18,6 +18,8 @@ import type { MyGraceConfig } from "../src/grace-config";
 import { GuidancePackSettings } from "../src/grace-config";
 import {
   GUIDANCE_LOCK_FILENAME,
+  checkRegistryProvenance,
+  fetchRegistryProvenance,
   generateGuidanceKeys,
   guidanceCommandPinned,
   loadGuidanceLock,
@@ -155,13 +157,13 @@ describe("guidance CLI pinning", () => {
 });
 
 describe("guidance lockfile", () => {
-  test("locks and verifies a local pack; tampering is detected", () => {
+  test("locks and verifies a local pack; tampering is detected", async () => {
     const root = makeRoot();
     try {
       cpSync(join(EXAMPLES, "web-basics"), join(root, "packs", "web-basics"), { recursive: true });
       const config = localPackConfig("packs/web-basics");
       const options = { allowCommands: false, allowUnsafeCommands: false };
-      const lock = writeGuidanceLock(root, config, options);
+      const lock = await writeGuidanceLock(root, config, options);
       expect(lock.packs["pack-1"]?.kind).toBe("local");
       expect(lock.packs["pack-1"]?.sha256).toMatch(/^[0-9a-f]{64}$/);
       expect(loadGuidanceLock(root)?.["packs"]?.["pack-1"]?.version).toBe("1.0.0");
@@ -182,7 +184,7 @@ describe("guidance lockfile", () => {
     }
   });
 
-  posixTest("locks a CLI pack by command hash and version", () => {
+  posixTest("locks a CLI pack by command hash and version", async () => {
     const root = makeRoot();
     try {
       const cli = join(root, "guide.sh");
@@ -201,7 +203,7 @@ esac
       const config = cloneDefault();
       config.allowCommands = true;
       config.guidancePacks = [{ name: "fake-cli", enabled: "auto", kind: "cli", path: null, command: "./guide.sh", timeoutMs: 10_000 }];
-      const lock = writeGuidanceLock(root, config, { allowCommands: false, allowUnsafeCommands: false });
+      const lock = await writeGuidanceLock(root, config, { allowCommands: false, allowUnsafeCommands: false });
       expect(lock.packs["fake-cli"]?.commandHash).toMatch(/^[0-9a-f]{64}$/);
       expect(lock.packs["fake-cli"]?.version).toBe("1.0.2");
       expect(readFileSync(join(root, GUIDANCE_LOCK_FILENAME), "utf-8")).toContain("fake-cli");
@@ -221,7 +223,7 @@ esac
 });
 
 describe("guidance lock signature (Ed25519)", () => {
-  test("generates keys, signs and verifies the lock; tampering is detected", () => {
+  test("generates keys, signs and verifies the lock; tampering is detected", async () => {
     const root = makeRoot();
     try {
       cpSync(join(EXAMPLES, "web-basics"), join(root, "packs", "web-basics"), { recursive: true });
@@ -230,7 +232,7 @@ describe("guidance lock signature (Ed25519)", () => {
       const keys = generateGuidanceKeys(root);
       expect(keys.publicKey).toBe(join(root, "mygrace.guidance.pub"));
       expect(keys.privateKey).toBe(join(root, ".mygrace", "guidance-signing.key"));
-      const lock = writeGuidanceLock(root, config, options);
+      const lock = await writeGuidanceLock(root, config, options);
       const signature = signGuidanceLock(root, lock);
       expect(signature.length).toBeGreaterThan(10);
       expect(verifyGuidanceLockSignature(root, lock)).toBe("valid");
@@ -250,17 +252,63 @@ describe("guidance lock signature (Ed25519)", () => {
     }
   });
 
-  test("refuses to sign without a key and refuses to overwrite keys", () => {
+  test("refuses to sign without a key and refuses to overwrite keys", async () => {
     const root = makeRoot();
     try {
       cpSync(join(EXAMPLES, "web-basics"), join(root, "packs", "web-basics"), { recursive: true });
       const config = localPackConfig("packs/web-basics");
       const options = { allowCommands: false, allowUnsafeCommands: false };
-      const lock = writeGuidanceLock(root, config, options);
+      const lock = await writeGuidanceLock(root, config, options);
       expect(() => signGuidanceLock(root, lock)).toThrow(/signing key/);
       generateGuidanceKeys(root);
       expect(() => generateGuidanceKeys(root)).toThrow(/already exist/);
     } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("registry provenance", () => {
+  test("locks npm registry provenance and detects registry drift", async () => {
+    let integrity = "sha512-test-integrity";
+    const server = Bun.serve({
+      port: 0,
+      fetch(request) {
+        const url = new URL(request.url);
+        if (url.pathname === "/fake-pkg/1.0.0") {
+          return Response.json({
+            name: "fake-pkg",
+            version: "1.0.0",
+            dist: { integrity, signatures: [{ keyid: "test", sig: "test" }] },
+          });
+        }
+        return new Response("not found", { status: 404 });
+      },
+    });
+    const previous = process.env.MYGRACE_NPM_REGISTRY;
+    process.env.MYGRACE_NPM_REGISTRY = `http://127.0.0.1:${server.port}`;
+    const root = makeRoot();
+    try {
+      const config = cloneDefault();
+      config.allowCommands = true;
+      config.guidancePacks = [
+        { name: "fake-registry", enabled: "auto", kind: "cli", path: null, command: "npx -y fake-pkg@1.0.0", timeoutMs: 10_000 },
+      ];
+      const entry = await fetchRegistryProvenance("fake-pkg", "1.0.0");
+      expect(entry.integrity).toBe("sha512-test-integrity");
+      expect(entry.signatures).toBe(1);
+      const lock = await writeGuidanceLock(root, config, { allowCommands: true, allowUnsafeCommands: false, registry: true });
+      expect(lock.packs["fake-registry"]?.registry?.package).toBe("fake-pkg");
+      expect(lock.packs["fake-registry"]?.registry?.integrity).toBe("sha512-test-integrity");
+      expect(await checkRegistryProvenance(root)).toEqual([]);
+
+      integrity = "sha512-CHANGED";
+      const drift = await checkRegistryProvenance(root);
+      expect(drift.some((item) => item.code === "GUIDANCE_REGISTRY_DRIFT")).toBe(true);
+    } finally {
+      server.stop(true);
+      if (previous === undefined) delete process.env.MYGRACE_NPM_REGISTRY;
+      else process.env.MYGRACE_NPM_REGISTRY = previous;
       rmSync(root, { recursive: true, force: true });
     }
   });

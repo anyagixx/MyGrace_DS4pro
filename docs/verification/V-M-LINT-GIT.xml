@@ -1,0 +1,24 @@
+<!-- Canonical verification entry. <module-checks> is read by mygrace verify; commands are trust-gated (run `mygrace trust` after review). -->
+<V-M-LINT-GIT MODULE="M-LINT-GIT" PRIORITY="high" STATUS="done">
+  <test-files>
+    <file>test/grace-lint-changed.test.ts</file>
+  </test-files>
+
+  <module-checks>
+    <check-1>bun test test/grace-lint-changed.test.ts</check-1>
+  </module-checks>
+
+  <scenarios>
+    <scenario-1 kind="success">--files works without git, normalizes paths and rejects traversal.</scenario-1>
+    <scenario-2 kind="failure">Non-git projects, invalid --base and bad diffs produce typed usage errors.</scenario-2>
+    <scenario-3 kind="success">Git diff + untracked files resolve relative to the project root.</scenario-3>
+  </scenarios>
+
+  <required-log-markers>
+    <marker-1>No runtime markers; tests assert scopes and error messages.</marker-1>
+  </required-log-markers>
+
+  <notes>
+    <note-1>Covered by test/grace-lint-changed.test.ts.</note-1>
+  </notes>
+</V-M-LINT-GIT>

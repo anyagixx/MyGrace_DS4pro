@@ -9,6 +9,53 @@ release time (see `ROADMAP.md` §6, gate G10).
 
 Nothing yet.
 
+## [3.6.0] — 2026-11-27
+
+### Verification and coverage
+
+- **Hard coverage gate:** `bun run coverage:check` runs the suite with coverage and
+  fails below 90% functions / 85% lines; wired into CI and `release:check`
+  (current: 94.08% functions, 88.34% lines).
+- **MCP in-process coverage:** an `InMemoryTransport` test exercises
+  `createMcpServer`, `listTools`, argument validation and tool result mapping
+  without a child process.
+- **New module/verification entities:** extracted `M-INSTALL-FS` and
+  `M-LINT-GIT`; installer/lint re-export the public API. 33 modules / 33
+  verifications / 43 declared test files; trace gaps remain 0.
+
+### Guidance
+
+- **Registry provenance (opt-in network):** `--lock --registry` records npm
+  version, `dist.integrity` and signature count; `--check-registry` re-fetches
+  and reports `GUIDANCE_REGISTRY_DRIFT`. Normal retrieval stays offline; tests
+  use a local registry fixture.
+
+### Product evidence
+
+- **Runtime accessibility:** Playwright/Chromium headless grader
+  (`scripts/a11y-runtime.ts`) checks dialog open/focus/Escape, tab keyboard
+  navigation and form validity; integrated into the quality benchmark.
+- **N=10 blinded dialog benchmark** across plain / MyGRACE / MyGRACE+MWG arms
+  with runtime grading: static mean quality 96% / 94% / 79%, runtime 3/3 all
+  arms; MyGRACE used 44 641 median tokens and 14 tool calls vs plain 45 555/22;
+  MWG used 81 182/45. No consistent quality gain over plain is claimed.
+- **External adoption kit:** `docs/adoption.md` and an adoption-report issue
+  template. No external production adoption is claimed.
+
+### Maintainability
+
+- `grace-install.ts` → `grace-install-fs.ts` (atomic writes/backups) and
+  `grace-lint.ts` → `grace-lint-git.ts` (changed-scope resolution), both
+  re-exported for compatibility.
+- Coverage gate parser is a side-effect-free module with its own test.
+
+### Remaining (Phase-5 wip)
+
+- External production adoption and independent long-term usage evidence.
+- Larger/multi-task N≥10 runtime benchmark and assistive-technology review.
+- Registry provenance is metadata attestation, not cryptographic publisher
+  signature verification.
+
 ## [3.5.0] — 2026-11-26
 
 ### Security

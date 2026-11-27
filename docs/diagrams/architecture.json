@@ -3,7 +3,7 @@
   "diagram_type": "architecture",
   "meta": {
     "title": "MyGRACE — MyGRACE",
-    "subtitle": "31 modules · 135 dependencies · 31 verifications",
+    "subtitle": "33 modules · 138 dependencies · 33 verifications",
     "output": "architecture.html",
     "quality_profile": "standard"
   },
@@ -15,11 +15,11 @@
       "sublabel": "ORCHESTRATOR · done",
       "tag": "V-M-CAPSULE",
       "pos": [
-        1700,
+        1760,
         180
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -30,11 +30,11 @@
       "sublabel": "ORCHESTRATOR · done",
       "tag": "V-M-CI",
       "pos": [
-        2085,
+        2160,
         180
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -45,11 +45,11 @@
       "sublabel": "ENTRY_POINT · done",
       "tag": "V-M-CLI",
       "pos": [
-        2855,
+        2960,
         180
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -60,11 +60,11 @@
       "sublabel": "INTEGRATION · done",
       "tag": "V-M-CODE-GRAPH",
       "pos": [
-        2085,
+        2160,
         332
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -75,11 +75,11 @@
       "sublabel": "CORE_LOGIC · done",
       "tag": "V-M-COMMON",
       "pos": [
-        930,
+        960,
         180
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -90,11 +90,11 @@
       "sublabel": "FOUNDATION · done",
       "tag": "V-M-CONFIG",
       "pos": [
-        545,
+        560,
         180
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -105,11 +105,11 @@
       "sublabel": "UTILITY · done",
       "tag": "V-M-CONTEXT",
       "pos": [
-        1315,
+        1360,
         180
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -120,11 +120,11 @@
       "sublabel": "INTEGRATION · done",
       "tag": "V-M-DIAGRAM",
       "pos": [
-        2085,
+        2160,
         484
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -135,11 +135,11 @@
       "sublabel": "UTILITY · done",
       "tag": "V-M-DOCTOR",
       "pos": [
-        2085,
+        2160,
         636
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -154,7 +154,7 @@
         180
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -165,11 +165,11 @@
       "sublabel": "CORE_LOGIC · done",
       "tag": "V-M-FILE",
       "pos": [
-        1700,
+        1760,
         332
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -180,11 +180,11 @@
       "sublabel": "INTEGRATION · done",
       "tag": "V-M-GUIDANCE",
       "pos": [
-        1700,
+        1760,
         484
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -195,11 +195,11 @@
       "sublabel": "CORE_LOGIC · done",
       "tag": "V-M-IMPACT",
       "pos": [
-        2470,
+        2560,
         180
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -210,11 +210,11 @@
       "sublabel": "UTILITY · done",
       "tag": "V-M-INIT",
       "pos": [
-        930,
+        960,
         332
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -225,11 +225,26 @@
       "sublabel": "INTEGRATION · done",
       "tag": "V-M-INSTALL",
       "pos": [
-        545,
+        560,
         332
       ],
       "size": [
-        265,
+        280,
+        72
+      ]
+    },
+    {
+      "id": "M-INSTALL-FS",
+      "type": "backend",
+      "label": "Installer filesystem and backups",
+      "sublabel": "UTILITY · done",
+      "tag": "V-M-INSTALL-FS",
+      "pos": [
+        560,
+        484
+      ],
+      "size": [
+        280,
         72
       ]
     },
@@ -240,11 +255,11 @@
       "sublabel": "INTEGRATION · done",
       "tag": "V-M-INTEGRATIONS",
       "pos": [
-        1700,
+        1760,
         636
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -255,11 +270,26 @@
       "sublabel": "CORE_LOGIC · done",
       "tag": "V-M-LINT",
       "pos": [
-        1315,
+        1360,
         332
       ],
       "size": [
-        265,
+        280,
+        72
+      ]
+    },
+    {
+      "id": "M-LINT-GIT",
+      "type": "backend",
+      "label": "Lint changed-scope resolver",
+      "sublabel": "UTILITY · done",
+      "tag": "V-M-LINT-GIT",
+      "pos": [
+        960,
+        484
+      ],
+      "size": [
+        280,
         72
       ]
     },
@@ -270,11 +300,11 @@
       "sublabel": "INTEGRATION · done",
       "tag": "V-M-LINT-PROVIDERS",
       "pos": [
-        2085,
+        2160,
         788
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -285,11 +315,11 @@
       "sublabel": "INTEGRATION · done",
       "tag": "V-M-MCP",
       "pos": [
-        930,
-        484
+        960,
+        636
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -300,11 +330,11 @@
       "sublabel": "INTEGRATION · done",
       "tag": "V-M-MCP-COMMANDS",
       "pos": [
-        545,
-        484
+        560,
+        636
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -315,11 +345,11 @@
       "sublabel": "CORE_LOGIC · done",
       "tag": "V-M-MODULE",
       "pos": [
-        1315,
+        1360,
         484
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -330,11 +360,11 @@
       "sublabel": "ORCHESTRATOR · done",
       "tag": "V-M-NEXT",
       "pos": [
-        2470,
+        2560,
         332
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -345,11 +375,11 @@
       "sublabel": "UTILITY · done",
       "tag": "V-M-PACKET",
       "pos": [
-        1700,
+        1760,
         788
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -360,11 +390,11 @@
       "sublabel": "FOUNDATION · done",
       "tag": "V-M-PATHS",
       "pos": [
-        545,
-        636
+        560,
+        788
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -375,11 +405,11 @@
       "sublabel": "UTILITY · done",
       "tag": "V-M-PROJECTS",
       "pos": [
-        2470,
+        2560,
         484
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -390,11 +420,11 @@
       "sublabel": "CORE_LOGIC · done",
       "tag": "V-M-SHARD",
       "pos": [
-        930,
-        636
+        960,
+        788
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -405,11 +435,11 @@
       "sublabel": "UTILITY · done",
       "tag": "V-M-STATUS",
       "pos": [
-        1700,
+        1760,
         940
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -420,11 +450,11 @@
       "sublabel": "CORE_LOGIC · done",
       "tag": "V-M-TEST",
       "pos": [
-        1315,
+        1360,
         636
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -435,11 +465,11 @@
       "sublabel": "CORE_LOGIC · done",
       "tag": "V-M-TRACE",
       "pos": [
-        2470,
+        2560,
         636
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -450,11 +480,11 @@
       "sublabel": "CORE_LOGIC · done",
       "tag": "V-M-VERIFY",
       "pos": [
-        1700,
+        1760,
         1092
       ],
       "size": [
-        265,
+        280,
         72
       ]
     },
@@ -465,11 +495,11 @@
       "sublabel": "FOUNDATION · done",
       "tag": "V-M-XML",
       "pos": [
-        545,
-        788
+        560,
+        940
       ],
       "size": [
-        265,
+        280,
         72
       ]
     }
@@ -537,6 +567,8 @@
         "M-CONTEXT",
         "M-DOCTOR",
         "M-INIT",
+        "M-INSTALL-FS",
+        "M-LINT-GIT",
         "M-PACKET",
         "M-PROJECTS",
         "M-STATUS"
@@ -615,6 +647,11 @@
       "to": "M-ERRORS"
     },
     {
+      "id": "M-INSTALL-FS-to-M-ERRORS",
+      "from": "M-INSTALL-FS",
+      "to": "M-ERRORS"
+    },
+    {
       "id": "M-INTEGRATIONS-to-M-TEST",
       "from": "M-INTEGRATIONS",
       "to": "M-TEST"
@@ -623,6 +660,11 @@
       "id": "M-LINT-to-M-COMMON",
       "from": "M-LINT",
       "to": "M-COMMON"
+    },
+    {
+      "id": "M-LINT-GIT-to-M-PATHS",
+      "from": "M-LINT-GIT",
+      "to": "M-PATHS"
     },
     {
       "id": "M-LINT-PROVIDERS-to-M-INTEGRATIONS",
@@ -700,16 +742,16 @@
       "dot": "cyan",
       "title": "Graph",
       "items": [
-        "31 modules · 135 declared dependencies",
-        "30 primary edges drawn · 5 phases · 31 verifications"
+        "33 modules · 138 declared dependencies",
+        "32 primary edges drawn · 5 phases · 33 verifications"
       ]
     },
     {
       "dot": "emerald",
       "title": "Verification",
       "items": [
-        "31/31 modules reference a verification file",
-        "41 declared test files"
+        "33/33 modules reference a verification file",
+        "43 declared test files"
       ]
     },
     {

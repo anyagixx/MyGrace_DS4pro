@@ -28,6 +28,11 @@ maintenance burden and update lag.
    package is available in the npx cache. When present it is enforced
    automatically: changed/missing packs are skipped and `--check-lock` fails the
    command; `--lock` regenerates it after review.
+7. Optional registry provenance: `--lock --registry` records npm
+   version/integrity/signature-count metadata; `--check-lock --check-registry`
+   re-fetches it and reports drift. Network is explicit and never used for
+   normal retrieval.
+
 6. Optional Ed25519 attestation: `--keygen` creates a local private key and a
    committed public key; `--lock --sign` signs the canonical lock JSON;
    `--check-lock --require-signature` fails on a missing/invalid signature. This

@@ -15,6 +15,7 @@ import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } fr
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
+import { gradeArtifactRuntime } from "./a11y-runtime";
 
 const ROOT = resolve(import.meta.dir, "..");
 const CLI = join(ROOT, "src", "grace.ts");
@@ -115,6 +116,25 @@ const TASKS: TaskSpec[] = [
   },
 ];
 
+function listArg(flag: string): string[] | null {
+  const index = args.indexOf(flag);
+  if (index === -1) return null;
+  const value = args[index + 1];
+  return typeof value === "string" && value !== "" ? value.split(",").map((item) => item.trim()).filter(Boolean) : null;
+}
+const taskFilter = listArg("--tasks");
+const armFilter = listArg("--arms");
+const runtimeEnabled = args.includes("--runtime");
+const resume = args.includes("--resume");
+function stringArg(flag: string): string | null {
+  const index = args.indexOf(flag);
+  const value = index === -1 ? undefined : args[index + 1];
+  return typeof value === "string" && value !== "" ? value : null;
+}
+const outBase = stringArg("--out") ?? join(ANALYSIS, "web-quality-benchmark");
+const selectedTasks = TASKS.filter((task) => taskFilter === null || taskFilter.includes(task.id));
+const selectedArms = ARMS.filter((arm) => armFilter === null || armFilter.includes(arm));
+
 function run(command: string, commandArgs: string[], cwd: string, timeout = 900_000): { status: number; stdout: string; stderr: string } {
   const result = spawnSync(command, commandArgs, { cwd, encoding: "utf8", timeout, maxBuffer: 32 * 1024 * 1024 });
   return { status: result.status ?? -1, stdout: result.stdout ?? "", stderr: result.stderr ?? "" };
@@ -160,11 +180,12 @@ interface Result {
   max: number;
   checks: Record<string, boolean>;
   notes: string;
+  runtime?: { score: number; max: number; checks: Record<string, boolean>; error: string | null };
 }
 
 mkdirSync(RUNS, { recursive: true });
 const results: Result[] = [];
-for (const arm of ARMS) {
+for (const arm of selectedArms) {
   const armDir = freshArmDir(arm);
   if (arm !== "plain") {
     const init = run("bun", ["run", CLI, "setup", "init", "--path", armDir, "--name", "Express"], armDir);
@@ -173,10 +194,20 @@ for (const arm of ARMS) {
       process.exit(2);
     }
   }
-  for (const task of TASKS) {
+  for (const task of selectedTasks) {
     const taskArms = task.arms ?? ARMS;
     if (!taskArms.includes(arm)) continue;
     for (let rep = 1; rep <= reps; rep += 1) {
+      const armSlug = arm.replace("+", "-");
+      const resultFile = join(RUNS, `${armSlug}-${task.id}-${rep}.result.json`);
+      if (resume && existsSync(resultFile)) {
+        try {
+          results.push(JSON.parse(readFileSync(resultFile, "utf8")) as Result);
+          continue;
+        } catch {
+          // Corrupt cache: rerun this rep.
+        }
+      }
       const file = join(armDir, task.file);
       rmSync(file, { force: true });
       const basePrompt = `Work in an empty workspace. Do not explore or depend on any repository; create the requested file directly. ${task.prompt}`;
@@ -216,6 +247,7 @@ for (const arm of ARMS) {
         }
       }
       const graded = grade(task, content);
+      const runtime = runtimeEnabled && content !== "" && task.id !== "python-cli" ? await gradeArtifactRuntime(file, task.id) : undefined;
       let costTokens = 0;
       const sessionFile = sessionId === "missing" ? "" : join(dshSessions, `${sessionId}.json`);
       if (sessionFile !== "" && existsSync(sessionFile)) {
@@ -236,7 +268,10 @@ for (const arm of ARMS) {
         max: graded.max,
         checks: graded.checks,
         notes: graded.notes,
+        ...(runtime === undefined ? {} : { runtime }),
       });
+      const lastResult = results[results.length - 1];
+      if (lastResult !== undefined) writeFileSync(resultFile, `${JSON.stringify(lastResult, null, 2)}\n`);
       process.stderr.write(`quality ${arm}/${task.id}/rep${rep}: ${graded.score}/${graded.max} tokens=${costTokens} tools=${toolCalls} wall=${wallSeconds}s\n`);
     }
   }
@@ -244,8 +279,8 @@ for (const arm of ARMS) {
 
 interface Row { arm: Arm; task: string; n: number; files: number; medianScore: number; medianMax: number; medianTokens: number; medianTools: number; medianWall: number }
 const rows: Row[] = [];
-for (const arm of ARMS) {
-  for (const task of TASKS) {
+for (const arm of selectedArms) {
+  for (const task of selectedTasks) {
     const items = results.filter((item) => item.arm === arm && item.task === task.id);
     if (items.length === 0) continue;
     rows.push({
@@ -261,14 +296,16 @@ for (const arm of ARMS) {
     });
   }
 }
-const aggregate = ARMS.map((arm) => {
+const aggregate = selectedArms.map((arm) => {
   const items = results.filter((item) => item.arm === arm);
   const normalised = items.map((item) => (item.max === 0 ? 0 : item.score / item.max));
+  const runtimeItems = items.filter((item) => item.runtime !== undefined && item.runtime.max > 0);
   return {
     arm,
     n: items.length,
     files: items.filter((item) => item.fileCreated).length,
     meanQuality: Math.round((normalised.reduce((sum, value) => sum + value, 0) / Math.max(1, normalised.length)) * 1000) / 10,
+    meanRuntime: runtimeItems.length === 0 ? null : Math.round((runtimeItems.reduce((sum, item) => sum + (item.runtime?.score ?? 0) / (item.runtime?.max ?? 1), 0) / runtimeItems.length) * 1000) / 10,
     medianTokens: Math.round(median(items.map((item) => item.costTokens))),
     medianTools: Math.round(median(items.map((item) => item.toolCalls))),
     medianWall: Math.round(median(items.map((item) => item.wallSeconds)) * 10) / 10,
@@ -280,27 +317,31 @@ const payload = {
   generatedAt: new Date().toISOString(),
   repository: "empty workspace (artifact tasks only; no repository context)",
   reps,
-  tasks: TASKS.map((task) => ({ id: task.id, file: task.file, rubricKeys: Object.keys(task.rubric) })),
+  tasks: selectedTasks.map((task) => ({ id: task.id, file: task.file, rubricKeys: Object.keys(task.rubric) })),
+  runtime: runtimeEnabled,
+  arms: selectedArms,
   aggregate,
   rows,
   sessions: results,
   limitations: [
-    "Static rubrics/runtime proxies check source patterns, not real browser accessibility behaviour; a perfect score is not proof of a good UI.",
-    "Empty workspace, four tasks (3 web + Python CLI), N=1 per task/arm; no real browser execution or blinded human grading yet.",
+    runtimeEnabled
+      ? "Runtime checks exercise Chromium via Playwright; they still do not cover every accessibility rule or assistive technology."
+      : "Static rubrics/runtime proxies check source patterns, not real browser accessibility behaviour.",
+    "Tasks/rubrics are hidden from the agent prompt (automated blind grading), but N and scope remain limited; see the report header.",
     "The grace+mwg arm ran only web tasks and used npx @latest at run time; guidance version is not pinned by the harness.",
   ],
 };
-writeFileSync(join(ANALYSIS, "web-quality-benchmark.json"), `${JSON.stringify(payload, null, 2)}\n`);
+writeFileSync(`${outBase}.json`, `${JSON.stringify(payload, null, 2)}\n`);
 const lines = [
-  "# Web-quality benchmark — three artifact tasks",
+  "# Web-quality benchmark — artifact tasks",
   "",
-  `Generated: ${payload.generatedAt} · reps: ${reps} · arms: plain / MyGRACE / MyGRACE+MWG.`,
+  `Generated: ${payload.generatedAt} · reps: ${reps} · runtime: ${runtimeEnabled} · tasks: ${selectedTasks.map((task) => task.id).join(", ")} · arms: ${selectedArms.join(", ")}.`,
   "",
   "## Aggregate quality",
   "",
-  "| Arm | N | files | mean quality % | median tokens | tool calls | wall s |",
-  "|---|---|---|---|---|---|---|",
-  ...aggregate.map((row) => `| ${row.arm} | ${row.n} | ${row.files} | ${row.meanQuality}% | ${row.medianTokens} | ${row.medianTools} | ${row.medianWall} |`),
+  "| Arm | N | files | mean quality % | mean runtime % | median tokens | tool calls | wall s |",
+  "|---|---|---|---|---|---|---|---|",
+  ...aggregate.map((row) => `| ${row.arm} | ${row.n} | ${row.files} | ${row.meanQuality}% | ${row.meanRuntime === null ? "—" : `${row.meanRuntime}%`} | ${row.medianTokens} | ${row.medianTools} | ${row.medianWall} |`),
   "",
   "## Per task",
   "",
@@ -314,5 +355,5 @@ const lines = [
   ...payload.limitations.map((line) => `- ${line}`),
   "",
 ];
-writeFileSync(join(ANALYSIS, "web-quality-benchmark.md"), `${lines.join("\n")}\n`);
+writeFileSync(`${outBase}.md`, `${lines.join("\n")}\n`);
 console.log(lines.join("\n"));

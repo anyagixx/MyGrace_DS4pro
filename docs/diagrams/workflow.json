@@ -3,7 +3,7 @@
   "diagram_type": "workflow",
   "meta": {
     "title": "MyGRACE — MyGRACE delivery plan",
-    "subtitle": "5 phases · 54 steps",
+    "subtitle": "5 phases · 56 steps",
     "output": "workflow.html"
   },
   "lanes": [
@@ -71,7 +71,7 @@
       "col": 5,
       "type": "backend",
       "label": "Hardening and product evidence",
-      "sublabel": "16 steps · wip",
+      "sublabel": "18 steps · wip",
       "width": 300
     }
   ],
@@ -110,7 +110,7 @@
       "dot": "cyan",
       "title": "Plan",
       "items": [
-        "5 phases · 54 steps"
+        "5 phases · 56 steps"
       ]
     },
     {
