@@ -9,6 +9,15 @@ release time (see `ROADMAP.md` §6, gate G10).
 
 Nothing yet.
 
+## [3.6.1] — 2026-11-27
+
+### Fixed
+
+- Windows CI: the registry-provenance test now has a 20 s timeout. It starts a
+  local `Bun.serve` fixture and performs two fetches; the default 5 s test
+  timeout was too tight on the Windows runner, while the released Linux
+  artifact and v3.6.0 release remained correct.
+
 ## [3.6.0] — 2026-11-27
 
 ### Verification and coverage

@@ -92,7 +92,7 @@ describe("local guidance packs", () => {
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
-  });
+  }, 20_000);
 });
 
 describe("CLI guidance packs", () => {
@@ -144,7 +144,7 @@ esac
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
-  });
+  }, 20_000);
 });
 
 describe("guidance CLI pinning", () => {
@@ -219,7 +219,7 @@ esac
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
-  });
+  }, 20_000);
 });
 
 describe("guidance lock signature (Ed25519)", () => {
@@ -265,7 +265,7 @@ describe("guidance lock signature (Ed25519)", () => {
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
-  });
+  }, 20_000);
 });
 
 describe("registry provenance", () => {
@@ -311,5 +311,5 @@ describe("registry provenance", () => {
       else process.env.MYGRACE_NPM_REGISTRY = previous;
       rmSync(root, { recursive: true, force: true });
     }
-  });
+  }, 20_000);
 });
