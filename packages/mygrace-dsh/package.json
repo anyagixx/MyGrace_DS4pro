@@ -1,6 +1,6 @@
 {
   "name": "mygrace-dsh",
-  "description": "UNPUBLISHED PREVIEW \u2014 optional DeepSeek Harness bundle (MCP host + 12 skills + decorative panel). NOT installed by `mygrace setup install` in v1.1.",
+  "description": "UNPUBLISHED PREVIEW \u2014 optional DeepSeek Harness bundle (MCP host + 14 skills + decorative panel). NOT installed by `mygrace setup install` in v1.1.",
   "version": "0.1.0",
   "private": true,
   "dsh": {

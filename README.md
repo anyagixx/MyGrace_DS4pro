@@ -9,11 +9,11 @@ entity they need, instead of re-reading the tree.
 and a five-minute path. Upgrading from v1.x? See
 [`docs/migrations/v2.0.md`](docs/migrations/v2.0.md). Full reference is below.
 
-It is a CLI (`mygrace`, 15 commands) plus an agent methodology (12 skills) and
+It is a CLI (`mygrace`, 15 commands) plus an agent methodology (14 skills) and
 an MCP server (21 tools). It does not generate code, call a model, or send telemetry — it
 enforces traceability and context discipline for the agent you already use.
 
-Current version: `3.6.1`
+Current version: `3.7.0`
 
 > Distribution is **GitHub Releases + source**: there is no npm publication
 > (decision 2026-11-25). `@osovv` is a third-party scope (the project's starting
@@ -121,7 +121,7 @@ bun run src/grace.ts --version
 ### DeepSeek Harness integration
 
 ```bash
-# installs the 12 skills into $DSH_HOME/skills and a PATH-free MCP row
+# installs the 14 skills into $DSH_HOME/skills and a PATH-free MCP row
 # into the profile's cordis.patch.yml (YAML-validated, atomic, backed up)
 bun run src/grace.ts setup install --dry-run      # inspect planned actions
 bun run src/grace.ts setup install                # apply (idempotent)
@@ -407,7 +407,7 @@ committed IRs; `--format json --out <path>` refreshes an IR without Archify.
 Tested against Archify CLI 3.2.0 and 3.3.x (fake-CLI contract in `bun test`,
 real-binary smoke manual: `bun run test:integrations:archify`).
 
-## Skills (12, shared from `skills/mygrace/`)
+## Skills (14, shared from `skills/mygrace/`)
 
 | Skill | Purpose |
 |---|---|
@@ -423,6 +423,10 @@ real-binary smoke manual: `bun run test:integrations:archify`).
 | `mygrace-ask` | Q&A via lazy navigation |
 | `mygrace-cli` | CLI/MCP reference + output budget (merged from token-budget) |
 | `mygrace-explainer` | Methodology reference and honest metrics |
+| `mygrace-grilling` | Relentless frontier-based interview before planning (also `grill-me` / `grill-with-docs`) |
+| `mygrace-domain-modeling` | Glossary + sparse ADRs; terminology and boundaries |
+
+`mygrace-grilling` and `mygrace-domain-modeling` are adapted from Matt Pocock's MIT-licensed skills; see [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
 
 ## Project configuration
 

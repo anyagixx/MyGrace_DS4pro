@@ -100,7 +100,7 @@ class ValidationCollector {
   }
 }
 
-const EXPECTED_SKILL_COUNT = 12;
+const EXPECTED_SKILL_COUNT = 14;
 
 // ─── helpers ────────────────────────────────────────────────────────────
 
@@ -643,8 +643,8 @@ function normalizeBaselineCopy(root: string): void {
   const readme = readText(readmePath);
   if (readme === undefined) return;
   const normalized = readme
-    .replace(/Skills \(\d+/g, "Skills (12")
-    .replace(/\b\d+ skills\b/g, "12 skills")
+    .replace(/Skills \(\d+/g, "Skills (14")
+    .replace(/\b\d+ skills\b/g, "14 skills")
     .replace(/\b\d+ MCP tools\b/g, `${TOOL_NAMES.length} MCP tools`);
   writeFileSync(readmePath, `${normalized}\n<!-- validator self-test tool catalogue: ${TOOL_NAMES.join(" ")} -->\n`);
 }
@@ -657,12 +657,12 @@ function runSelfTest(options: Options): number {
   const cases: SelfTestCase[] = [
     {
       name: "removed skill directory is detected",
-      expected: /Expected exactly 12 skills/,
+      expected: /Expected exactly 14 skills/,
       mutate: (root) => rmSync(join(root, "skills", "mygrace", "grace-status"), { recursive: true, force: true }),
     },
     {
-      name: "extra (13th) skill directory is detected",
-      expected: /Expected exactly 12 skills/,
+      name: "extra (15th) skill directory is detected",
+      expected: /Expected exactly 14 skills/,
       mutate: (root) => {
         const dir = join(root, "skills", "mygrace", "grace-extra");
         mkdirSync(join(dir), { recursive: true });
@@ -674,10 +674,10 @@ function runSelfTest(options: Options): number {
     },
     {
       name: "README skill count drift is detected",
-      expected: /claims 13 skills/,
+      expected: /claims 15 skills/,
       mutate: (root) => {
         const readmePath = join(root, "README.md");
-        writeFileSync(readmePath, readText(readmePath)!.replace("Skills (12", "Skills (13"));
+        writeFileSync(readmePath, readText(readmePath)!.replace("Skills (14", "Skills (15"));
       },
     },
     {

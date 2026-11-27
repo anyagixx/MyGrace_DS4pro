@@ -9,6 +9,20 @@ release time (see `ROADMAP.md` §6, gate G10).
 
 Nothing yet.
 
+## [3.7.0] — 2026-11-27
+
+### Skills
+
+- **Two adapted skills** — `mygrace-grilling` (frontier-based interview before
+  planning; absorbs `grill-me` and `grill-with-docs` triggers) and
+  `mygrace-domain-modeling` (project glossary + sparse ADRs). Adapted from
+  Matt Pocock's MIT-licensed skills; see `THIRD_PARTY_NOTICES.md`.
+- The `grill-me` and `grill-with-docs` wrappers are **not shipped separately**:
+  they were one-line aliases/orchestrations; MyGRACE folds them into the
+  substantive skills. ADR-13 records the decision.
+- DSH bundle, marketplace metadata, README/AGENTS tables, generator and
+  validators now expect **14 skills**; generated assets are back in sync.
+
 ## [3.6.1] — 2026-11-27
 
 ### Fixed

@@ -3,7 +3,7 @@
  * MyGRACE documentation truth check (ROADMAP G8, audit report 02 §5/§7).
  *
  * Every documented `mygrace <command>` / `--flag` / `mygrace_<tool>` and every
- * numeric claim ("12 skills", "21 MCP tools") is resolved against the live code
+ * numeric claim ("14 skills", "21 MCP tools") is resolved against the live code
  * surface and the filesystem. Stale marketing claims are explicit errors.
  *
  * Sources (default): README.md, AGENTS.md, skills/mygrace/star/SKILL.md.
@@ -142,7 +142,7 @@ function collectSources(root: string, includeAll: boolean): DocSource[] {
 
 // ─── checks ─────────────────────────────────────────────────────────────
 
-/** Numeric claims that must match reality ("12 skills", "Skills (15, ...)", "15 MCP tools"). */
+/** Numeric claims that must match reality ("14 skills", "Skills (14, ...)", "21 MCP tools"). */
 function countClaims(content: string, pattern: RegExp): Array<{ value: number; line: number; text: string }> {
   const claims: Array<{ value: number; line: number; text: string }> = [];
   content.split("\n").forEach((line, index) => {
@@ -157,7 +157,7 @@ function countClaims(content: string, pattern: RegExp): Array<{ value: number; l
 }
 
 const STALE_CLAIM_PATTERNS: Array<{ pattern: RegExp; hint: string }> = [
-  { pattern: /\b(?:14|15) skills\b/i, hint: "the repository ships 12 skills; update the claim" },
+  { pattern: /\b(?:15|16) skills\b/i, hint: "the repository ships 14 skills; update the claim" },
   { pattern: /96[-–]97%/, hint: "superseded by the honest line+proxy metric (see scripts/measure-context.ts)" },
   { pattern: /\b(?:7|8) MCP tools?\b/i, hint: "the MCP catalogue exposes the full tool set; count again from code" },
 ];

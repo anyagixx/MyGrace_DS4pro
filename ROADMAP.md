@@ -1,6 +1,6 @@
 # MyGRACE Roadmap — from audit findings to a professional agent engineering harness
 
-> Status: **v3.6.0 shipped 2026-11-27** — product-evidence wave: hard coverage gate, registry provenance, MCP in-process coverage, real Chromium runtime a11y grading, modularized lint/install, N=10 blinded benchmark. Phase-5 remains wip for external adoption. Quality/token gains remain unproven; Wave 7 tracks the remaining harder-rubric/N work. Baseline: v1.0.1 as audited on 2026-11-22
+> Status: **v3.7.0 shipped 2026-11-27** — domain-discovery skills wave: grilling + domain modeling added (14 skills total), with the rest of the v3.6.0 evidence/hardening still in place. Phase-5 remains wip for external adoption. Quality/token gains remain unproven; Wave 7 tracks the remaining harder-rubric/N work. Baseline: v1.0.1 as audited on 2026-11-22
 > (see `analysis/00-EXECUTIVE-ASSESSMENT.md` and appendices 01–04).
 > Target: a tool that AI coding agents can use with confidence on software of **any complexity** —
 > from a 3-module script to a 500-module monorepo, on repos you do not fully trust.
@@ -14,7 +14,7 @@
 > the capsule lifecycle is covered by fake-CLI tests. Real Octocode 0.29.2 graph session verified
 > (warm FastEmbed cache: MCP initialize ~2.1 s; `trace --code` 8/9 symbols; `impact --code-graph`
 > 4 module edges); the adapter now matches the real `graphrag` API.
-> Surface: **15 CLI commands · 21 MCP tools · 12 skills** (v2.0 breaking consolidation; migration guide in `docs/migrations/v2.0.md`; quickstart keeps the daily path to `next` + `ci`). Committed deterministic diagram IRs for
+> Surface: **15 CLI commands · 21 MCP tools · 14 skills** (v2.0 breaking consolidation; migration guide in `docs/migrations/v2.0.md`; quickstart keeps the daily path to `next` + `ci`). Committed deterministic diagram IRs for
 > three kinds; experimental capsules with allowlisted read-only programs, replay qualification,
 > judgment hand-back and deopt-to-skill (no token-savings claims; a 12-session
 > pre-registered pilot was inconclusive, see analysis/capsule-eval/report.md).
@@ -271,6 +271,15 @@ not code changes to the core.
 | Browser a11y was asserted only by static proxies | `scripts/a11y-runtime.ts` runs Playwright Chromium checks (dialog open/focus/Escape, tabs keyboard, form validity) and feeds the quality benchmark. |
 | Large modules | Extracted `grace-install-fs.ts` and `grace-lint-git.ts`; installer/lint re-export the public API, with new module/verification entities. |
 | Product evidence | N=10 blinded dialog benchmark per arm with Chromium runtime grading (plain 96%, MyGRACE 94%, MWG 79%; runtime 3/3) and explicit limitations; external-adoption kit + issue template. No external production users yet. |
+
+### Wave 10 — Domain discovery skills — *v3.7.0*
+
+| Item | Resolution |
+|---|---|
+| Plans started before assumptions were exposed | `mygrace-grilling`: frontier-based interview with recommended answers; facts are agent-owned (including fresh-context subagents), decisions stay with the user; no code/plan writes before shared understanding. |
+| Terms drifted between requirements, modules and code | `mygrace-domain-modeling`: lazy `GLOSSARY.md` (with `_Avoid_` synonyms), code/index cross-checks, sparse ADRs in the existing `docs/adr/ADR-N-slug.md` convention. |
+| External wrappers added skill bloat | `grill-me` and `grill-with-docs` are aliases/orchestrations, not separate skills; triggers folded into `mygrace-grilling`. 12 → 14 skills. |
+| Attribution/licensing | MIT notice and source links in `THIRD_PARTY_NOTICES.md`; ADR-13 records the integration decision. |
 
 ## 6. Release gates checklist (copy into every release PR)
 

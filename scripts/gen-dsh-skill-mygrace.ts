@@ -3,7 +3,7 @@
  * MyGRACE DSH Skill Provider Generator.
  *
  * Generates `packages/dsh-skill-mygrace` — the optional DSH bundled skill
- * provider that registers the 15 MyGRACE skills (skills/mygrace/grace-* →
+ * provider that registers all MyGRACE skills (skills/mygrace/grace-* →
  * mygrace-*) through the DSH skill provider API.
  *
  * The package is OPTIONAL (ADR-7): the CLI itself needs no DSH packages.
