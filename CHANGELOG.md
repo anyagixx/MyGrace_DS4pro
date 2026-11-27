@@ -9,6 +9,23 @@ release time (see `ROADMAP.md` §6, gate G10).
 
 Nothing yet.
 
+## [3.8.0] — 2026-11-27
+
+### Skills
+
+- **`mygrace-show-me` (15th skill):** user-invoked visual explanations —
+  pseudocode, call/component/file trees, Mermaid, focused diffs and bounded
+  self-contained HTML. Adapted from HumanLayer's MIT-licensed `show-me`; see
+  `THIRD_PARTY_NOTICES.md`.
+- Prefers `mygrace diagram` for the docs graph and `inspect file show`/`trace`
+  for facts; never invents structure. HTML goes to `.mygrace/show-me/` (local,
+  gitignored), no external assets/network, opened via `present`/safe argv opener
+  instead of raw `Bash(open)`.
+- DSH provider now supports per-skill `modelInvocable`: `show-me` is
+  user-invocable but **not** model-invocable (`disable-model-invocation: true`).
+- Skill count 14 → 15; generated assets, marketplace, tables, tests and
+  validators updated together. ADR-14 records the decision.
+
 ## [3.7.0] — 2026-11-27
 
 ### Skills

@@ -33,7 +33,7 @@ commands unless `.mygrace/trust.json` is current (`mygrace trust` after review),
 
 ## Skills
 
-The 14 shared skills live in `skills/mygrace/grace-*` and are installed as
+The 15 shared skills live in `skills/mygrace/grace-*` and are installed as
 `mygrace-*`; prefer them over re-deriving the process.
 
 Configuration: `mygrace.config.json` (`sourceDirs`, `markupExts`, `ignoreDirs`,

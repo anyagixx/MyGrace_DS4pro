@@ -23,9 +23,9 @@ describe("dsh-skill-mygrace provider", () => {
     expect(provider.name).toBe("mygrace");
   });
 
-  test("list() returns the 14 MyGRACE skills", async () => {
+  test("list() returns the 15 MyGRACE skills", async () => {
     const skills = await provider.list();
-    expect(skills.length).toBe(14);
+    expect(skills.length).toBe(15);
     for (const s of skills) {
       expect(s.name).toMatch(/^mygrace-[a-z0-9-]+$/);
       expect(s.provider).toBe("mygrace");
@@ -38,18 +38,23 @@ describe("dsh-skill-mygrace provider", () => {
     expect(skills.map((s: any) => s.name)).toContain("mygrace-reviewer");
     expect(skills.map((s: any) => s.name)).toContain("mygrace-grilling");
     expect(skills.map((s: any) => s.name)).toContain("mygrace-domain-modeling");
+    expect(skills.map((s: any) => s.name)).toContain("mygrace-show-me");
+    const showMe = skills.find((s: any) => s.name === "mygrace-show-me")!;
+    expect(showMe.invocation).toEqual({ modelInvocable: false, userInvocable: true });
   });
 
   test("grilling and domain-modeling skills carry the adapted MyGRACE workflow", async () => {
     for (const [name, marker] of [
       ["mygrace-grilling", "frontier"],
       ["mygrace-domain-modeling", "GLOSSARY.md"],
+      ["mygrace-show-me", "Focused HTML artifacts"],
     ] as const) {
       const candidate = (await provider.list()).find((s) => s.name === name)!;
       const loaded = await provider.get(candidate as any);
       expect(loaded.content).toContain(marker);
-      expect(loaded.content).toContain("Adapted from Matt Pocock");
+      expect(loaded.content).toContain("MIT License");
       expect(loaded.content.length).toBeGreaterThan(1500);
+      if (name === "mygrace-show-me") expect(loaded.invocation.modelInvocable).toBe(false);
     }
   });
 
@@ -64,11 +69,12 @@ describe("dsh-skill-mygrace provider", () => {
     expect(loaded.source).toBe("bundled");
   });
 
-  test("package.json is the DSH skill-provider shape and says 14 skills", () => {
+  test("package.json is the DSH skill-provider shape and says 15 skills", () => {
     const pkg = JSON.parse(readFileSync(join(ROOT, "packages", "dsh-skill-mygrace", "package.json"), "utf-8"));
     expect(pkg.name).toBe("dsh-skill-mygrace");
     expect(pkg.files).toContain("assets");
-    expect(pkg.description).toContain("14 MyGRACE skills");
+    expect(pkg.description).toContain("15 MyGRACE skills");
     expect(pkg.private).not.toBe(true); // this one is meant to be publishable
   });
 });
+

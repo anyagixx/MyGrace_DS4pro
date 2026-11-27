@@ -1,6 +1,6 @@
 # MyGRACE Roadmap — from audit findings to a professional agent engineering harness
 
-> Status: **v3.7.0 shipped 2026-11-27** — domain-discovery skills wave: grilling + domain modeling added (14 skills total), with the rest of the v3.6.0 evidence/hardening still in place. Phase-5 remains wip for external adoption. Quality/token gains remain unproven; Wave 7 tracks the remaining harder-rubric/N work. Baseline: v1.0.1 as audited on 2026-11-22
+> Status: **v3.8.0 shipped 2026-11-27** — visual-explanation skill added (`mygrace-show-me`, 15 skills total), user-invoked and sandboxed. The v3.6/v3.7 evidence/hardening remains; Phase-5 stays wip for external adoption. Quality/token gains remain unproven; Wave 7 tracks the remaining harder-rubric/N work. Baseline: v1.0.1 as audited on 2026-11-22
 > (see `analysis/00-EXECUTIVE-ASSESSMENT.md` and appendices 01–04).
 > Target: a tool that AI coding agents can use with confidence on software of **any complexity** —
 > from a 3-module script to a 500-module monorepo, on repos you do not fully trust.
@@ -14,7 +14,7 @@
 > the capsule lifecycle is covered by fake-CLI tests. Real Octocode 0.29.2 graph session verified
 > (warm FastEmbed cache: MCP initialize ~2.1 s; `trace --code` 8/9 symbols; `impact --code-graph`
 > 4 module edges); the adapter now matches the real `graphrag` API.
-> Surface: **15 CLI commands · 21 MCP tools · 14 skills** (v2.0 breaking consolidation; migration guide in `docs/migrations/v2.0.md`; quickstart keeps the daily path to `next` + `ci`). Committed deterministic diagram IRs for
+> Surface: **15 CLI commands · 21 MCP tools · 15 skills** (v2.0 breaking consolidation; migration guide in `docs/migrations/v2.0.md`; quickstart keeps the daily path to `next` + `ci`). Committed deterministic diagram IRs for
 > three kinds; experimental capsules with allowlisted read-only programs, replay qualification,
 > judgment hand-back and deopt-to-skill (no token-savings claims; a 12-session
 > pre-registered pilot was inconclusive, see analysis/capsule-eval/report.md).
@@ -280,6 +280,15 @@ not code changes to the core.
 | Terms drifted between requirements, modules and code | `mygrace-domain-modeling`: lazy `GLOSSARY.md` (with `_Avoid_` synonyms), code/index cross-checks, sparse ADRs in the existing `docs/adr/ADR-N-slug.md` convention. |
 | External wrappers added skill bloat | `grill-me` and `grill-with-docs` are aliases/orchestrations, not separate skills; triggers folded into `mygrace-grilling`. 12 → 14 skills. |
 | Attribution/licensing | MIT notice and source links in `THIRD_PARTY_NOTICES.md`; ADR-13 records the integration decision. |
+
+### Wave 11 — Visual explanations — *v3.8.0*
+
+| Item | Resolution |
+|---|---|
+| No compact way to explain ad-hoc code/flow/UI to a human | `mygrace-show-me`: smallest useful view first (pseudocode → trees → Mermaid → diff → focused HTML), grounded in `inspect file show`/`trace`/`diagram`. |
+| Upstream `Bash(open)`/unbounded HTML risk | Bounded self-contained HTML under `.mygrace/show-me/`; no external assets/network; `present`/safe argv opener; no raw shell. |
+| Skill invocation should be explicit | Frontmatter `disable-model-invocation: true`; generator emits `modelInvocable: false` while keeping user invocation. ADR-14. |
+| Surface/count drift | 14 → 15 skills; DSH assets, marketplace, README/AGENTS/template, tests/validators updated together; MIT attribution in `THIRD_PARTY_NOTICES.md`. |
 
 ## 6. Release gates checklist (copy into every release PR)
 
